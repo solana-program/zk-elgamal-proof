@@ -1,0 +1,41 @@
+{
+    "name": "@solana-program/zk-elgamal-proof",
+    "description": "JavaScript client for the ZK ElGamal Proof program",
+    "version": "0.1.0",
+    "repository": "https://github.com/solana-program/zk-elgamal-proof",
+    "license": "Apache-2.0",
+    "type": "module",
+    "sideEffects": false,
+    "engines": {
+        "node": ">=16"
+    },
+    "files": [
+        "src"
+    ],
+    "scripts": {
+        "build": "tsc --build --verbose",
+        "lint": "eslint --max-warnings 0 .",
+        "lint:fix": "eslint --fix .",
+        "format": "prettier --check src test",
+        "format:fix": "prettier --write src test",
+        "test": "start-server-and-test 'solana-test-validator --reset --quiet' http://127.0.0.1:8899/health 'mocha test'"
+    },
+    "dependencies": {
+        "@solana/web3.js": "^1.95.5",
+        "@solana/zk-sdk": "0.1.1"
+    },
+    "devDependencies": {
+        "@types/chai": "^5.0.1",
+        "@types/node": "^22.10.1",
+        "@types/mocha": "^10.0.10",
+        "mocha": "^11.0.1",
+        "chai": "^5.1.2",
+        "chai-as-promised": "^8.0.1",
+        "typescript": "^5.7.2",
+        "prettier": "^3.4.2",
+        "start-server-and-test": "^2.0.8",
+        "ts-node": "^10.9.2"
+    },
+    "prettier": "@solana/prettier-config-solana",
+    "packageManager": "pnpm@9.1.0"
+}
