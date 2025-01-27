@@ -42,14 +42,14 @@ export enum ZkElGamalProofInstruction {
 export function createCloseContextStateInstruction(
     contextStateAddress: PublicKey,
     contextStateAuthority: PublicKey,
-    destinationAccount: PublicKey
+    destinationAccount: PublicKey,
+    programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ) {
     const keys = [
         { pubkey: contextStateAddress, isSigner: false, isWritable: true },
         { pubkey: destinationAccount, isSigner: false, isWritable: true },
         { pubkey: contextStateAuthority, isSigner: true, isWritable: false },
     ];
-    const programId = ZK_ELGAMAL_PROOF_PROGRAM_ID;
     const data = Buffer.from([ZkElGamalProofInstruction.CloseContextState]);
 
     return new TransactionInstruction({ keys, programId, data });
@@ -68,6 +68,7 @@ export function createVerifyZeroCiphertextInstruction(
     elgamalKeypair: ElGamalKeypair,
     elgamalCiphertext: ElGamalCiphertext,
     contextStateInfo?: contextStateInfo,
+    programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): TransactionInstruction {
     let keys: AccountMeta[] = [];
     if (contextStateInfo) {
@@ -76,7 +77,6 @@ export function createVerifyZeroCiphertextInstruction(
             { pubkey: contextStateInfo.authority, isSigner: false, isWritable: false },
         ]
     }
-    const programId = ZK_ELGAMAL_PROOF_PROGRAM_ID;
 
     let proofData = ZeroCiphertextProofData.new(elgamalKeypair, elgamalCiphertext);
     let proofDataBytes = proofData.toBytes();
@@ -107,6 +107,7 @@ export function createVerifyCiphertextCiphertextEqualityInstruction(
     secondOpening: PedersenOpening,
     amount: bigint,
     contextStateInfo?: contextStateInfo,
+    programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): TransactionInstruction {
     let keys: AccountMeta[] = [];
     if (contextStateInfo) {
@@ -115,7 +116,6 @@ export function createVerifyCiphertextCiphertextEqualityInstruction(
             { pubkey: contextStateInfo.authority, isSigner: false, isWritable: false },
         ]
     }
-    const programId = ZK_ELGAMAL_PROOF_PROGRAM_ID;
 
     let proofData = CiphertextCiphertextEqualityProofData.new(
         firstKeypair,
@@ -151,6 +151,7 @@ export function createVerifyCiphertextCommitmentEqualityInstruction(
     pedersenOpening: PedersenOpening,
     amount: bigint,
     contextStateInfo?: contextStateInfo,
+    programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): TransactionInstruction {
     let keys: AccountMeta[] = [];
     if (contextStateInfo) {
@@ -159,7 +160,6 @@ export function createVerifyCiphertextCommitmentEqualityInstruction(
             { pubkey: contextStateInfo.authority, isSigner: false, isWritable: false },
         ]
     }
-    const programId = ZK_ELGAMAL_PROOF_PROGRAM_ID;
 
     let proofData = CiphertextCommitmentEqualityProofData.new(
         elgamalKeypair,
@@ -186,6 +186,7 @@ export function createVerifyCiphertextCommitmentEqualityInstruction(
 export function createVerifyPubkeyValidityInstruction(
     elgamalKeypair: ElGamalKeypair,
     contextStateInfo?: contextStateInfo,
+    programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): TransactionInstruction {
     let keys: AccountMeta[] = [];
     if (contextStateInfo) {
@@ -194,7 +195,6 @@ export function createVerifyPubkeyValidityInstruction(
             { pubkey: contextStateInfo.authority, isSigner: false, isWritable: false },
         ]
     }
-    const programId = ZK_ELGAMAL_PROOF_PROGRAM_ID;
 
     let proofData = PubkeyValidityProofData.new(elgamalKeypair);
     let proofDataBytes = proofData.toBytes();

@@ -54,12 +54,14 @@ export async function closeContextStateProof(
     contextStateAuthority: Signer,
     destinationAccount: PublicKey,
     confirmOptions?: ConfirmOptions,
+    programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): Promise<TransactionSignature> {
     const transaction = new Transaction().add(
         createCloseContextStateInstruction(
             contextStateAddress,
             contextStateAuthority.publicKey,
             destinationAccount,
+            programId,
         )
     );
     return await sendAndConfirmTransaction(connection, transaction, [payer, contextStateAuthority], confirmOptions);
@@ -84,13 +86,13 @@ export async function verifyZeroCiphertext(
     elgamalCiphertext: ElGamalCiphertext,
     contextStateInfo?: contextStateInfo,
     confirmOptions?: ConfirmOptions,
+    programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): Promise<TransactionSignature> {
     let transaction = new Transaction();
     let signers = [payer];
     if (contextStateInfo && contextStateInfo.keypair) {
         const accountSize = ZERO_CIPHERTEXT_CONTEXT_ACCOUNT_SIZE;
         const lamports = await connection.getMinimumBalanceForRentExemption(accountSize);
-        const programId = ZK_ELGAMAL_PROOF_PROGRAM_ID;
 
         transaction.add(
             SystemProgram.createAccount({
@@ -109,6 +111,7 @@ export async function verifyZeroCiphertext(
             elgamalKeypair,
             elgamalCiphertext,
             contextStateInfo,
+            programId,
         )
     );
     return await sendAndConfirmTransaction(connection, transaction, signers, confirmOptions);
@@ -141,13 +144,13 @@ export async function verifyCiphertextCiphertextEquality(
     amount: bigint,
     contextStateInfo?: contextStateInfo,
     confirmOptions?: ConfirmOptions,
+    programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): Promise<TransactionSignature> {
     let transaction = new Transaction();
     let signers = [payer];
     if (contextStateInfo && contextStateInfo.keypair) {
         const accountSize = CIPHERTEXT_CIPHERTEXT_EQUALITY_CONTEXT_ACCOUNT_SIZE;
         const lamports = await connection.getMinimumBalanceForRentExemption(accountSize);
-        const programId = ZK_ELGAMAL_PROOF_PROGRAM_ID;
 
         transaction.add(
             SystemProgram.createAccount({
@@ -200,13 +203,13 @@ export async function verifyCiphertextCommitmentEquality(
     amount: bigint,
     contextStateInfo?: contextStateInfo,
     confirmOptions?: ConfirmOptions,
+    programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): Promise<TransactionSignature> {
     let transaction = new Transaction();
     let signers = [payer];
     if (contextStateInfo && contextStateInfo.keypair) {
         const accountSize = CIPHERTEXT_COMMITMENT_EQUALITY_CONTEXT_ACCOUNT_SIZE;
         const lamports = await connection.getMinimumBalanceForRentExemption(accountSize);
-        const programId = ZK_ELGAMAL_PROOF_PROGRAM_ID;
 
         transaction.add(
             SystemProgram.createAccount({
@@ -250,13 +253,13 @@ export async function verifyPubkeyValidity(
     elgamalKeypair: ElGamalKeypair,
     contextStateInfo?: contextStateInfo,
     confirmOptions?: ConfirmOptions,
+    programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): Promise<TransactionSignature> {
     let transaction = new Transaction();
     let signers = [payer];
     if (contextStateInfo && contextStateInfo.keypair) {
         const accountSize = PUBKEY_VALIDITY_CONTEXT_ACCOUNT_SIZE;
         const lamports = await connection.getMinimumBalanceForRentExemption(accountSize);
-        const programId = ZK_ELGAMAL_PROOF_PROGRAM_ID;
 
         transaction.add(
             SystemProgram.createAccount({
