@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import type { Connection, Signer } from '@solana/web3.js';
 import { Keypair } from '@solana/web3.js';
 import { newAccountWithLamports, getConnection } from './common';
@@ -75,6 +76,9 @@ describe('ciphertextCiphertextEquality', () => {
             contextStateInfo,
         );
 
+        const createdContextStateInfo = await connection.getAccountInfo(contextStateAddress);
+        expect(createdContextStateInfo).to.not.equal(null);
+
         await closeContextStateProof(
             connection,
             payer,
@@ -82,5 +86,8 @@ describe('ciphertextCiphertextEquality', () => {
             contextStateAuthority,
             destinationAccountAddress,
         )
+
+        const closedContextStateInfo = await connection.getAccountInfo(contextStateAddress);
+        expect(closedContextStateInfo).to.equal(null);
     })
 })
