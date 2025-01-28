@@ -40,8 +40,8 @@ export enum ZkElGamalProofInstruction {
  */
 export function createCloseContextStateInstruction(
     contextStateAddress: PublicKey,
-    contextStateAuthority: PublicKey,
     destinationAccount: PublicKey,
+    contextStateAuthority: PublicKey,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ) {
     const keys = [

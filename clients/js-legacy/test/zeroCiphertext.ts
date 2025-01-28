@@ -62,8 +62,8 @@ describe('zeroCiphertext', () => {
             connection,
             payer,
             contextStateAddress,
-            contextStateAuthority,
             destinationAccountAddress,
+            contextStateAuthority,
         )
 
         const closedContextStateInfo = await connection.getAccountInfo(contextStateAddress);

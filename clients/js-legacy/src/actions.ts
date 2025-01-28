@@ -51,16 +51,16 @@ export async function closeContextStateProof(
     connection: Connection,
     payer: Signer,
     contextStateAddress: PublicKey,
-    contextStateAuthority: Signer,
     destinationAccount: PublicKey,
+    contextStateAuthority: Signer,
     confirmOptions?: ConfirmOptions,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): Promise<TransactionSignature> {
     const transaction = new Transaction().add(
         createCloseContextStateInstruction(
             contextStateAddress,
-            contextStateAuthority.publicKey,
             destinationAccount,
+            contextStateAuthority.publicKey,
             programId,
         )
     );
