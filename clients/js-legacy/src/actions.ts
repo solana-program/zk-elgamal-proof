@@ -1,6 +1,7 @@
 import type { ConfirmOptions, Connection, Signer, TransactionSignature } from '@solana/web3.js';
 import { PublicKey, sendAndConfirmTransaction, SystemProgram, Transaction } from '@solana/web3.js';
 import {
+    ContextStateInfo,
     createCloseContextStateInstruction,
     createVerifyCiphertextCiphertextEqualityInstruction,
     createVerifyCiphertextCommitmentEqualityInstruction,
@@ -21,19 +22,6 @@ import {
     PedersenCommitment,
     PedersenOpening
 } from '@solana/zk-sdk';
-
-/** Context state account information to be used as parameters to functions */
-export interface ContextStateInfo {
-    /**
-     * Keypair of the context state account. If provided, use the system
-     * program to create the context state account.
-     */
-    keypair?: Signer,
-    /** Address of the context state account */
-    address: PublicKey,
-    /** Authority of the context state account */
-    authority: PublicKey,
-}
 
 /**
  * Close a context state account
