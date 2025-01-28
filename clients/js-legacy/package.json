@@ -25,16 +25,24 @@
         "@solana/zk-sdk": "0.1.1"
     },
     "devDependencies": {
+        "@solana/prettier-config-solana": "0.0.5",
+        "@eslint/js": "^9.19.0",
         "@types/chai": "^5.0.1",
-        "@types/node": "^22.10.1",
         "@types/mocha": "^10.0.10",
-        "mocha": "^11.0.1",
+        "@types/node": "^22.10.1",
         "chai": "^5.1.2",
         "chai-as-promised": "^8.0.1",
-        "typescript": "^5.7.2",
+        "eslint": "^8.57.1",
+        "eslint-config-prettier": "^10.0.1",
+        "eslint-plugin-prettier": "^5.2.3",
+        "eslint-plugin-require-extensions": "^0.1.1",
+        "globals": "^15.14.0",
+        "mocha": "^11.0.1",
         "prettier": "^3.4.2",
         "start-server-and-test": "^2.0.8",
-        "ts-node": "^10.9.2"
+        "ts-node": "^10.9.2",
+        "typescript": "^5.7.2",
+        "typescript-eslint": "^8.22.0"
     },
     "prettier": "@solana/prettier-config-solana",
     "packageManager": "pnpm@9.1.0"

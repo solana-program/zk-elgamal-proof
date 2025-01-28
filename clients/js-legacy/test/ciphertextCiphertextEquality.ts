@@ -2,13 +2,14 @@ import { expect } from 'chai';
 import type { Connection, Signer } from '@solana/web3.js';
 import { Keypair, sendAndConfirmTransaction, Transaction } from '@solana/web3.js';
 import { newAccountWithLamports, getConnection } from './common';
+import type { ContextStateInfo } from '../src';
 import {
     closeContextStateProof,
     createVerifyCiphertextCiphertextEqualityInstruction,
-    ContextStateInfo,
     verifyCiphertextCiphertextEquality,
 } from '../src';
-import { ElGamalCiphertext, ElGamalKeypair, ElGamalPubkey, PedersenOpening } from '@solana/zk-sdk';
+import type { ElGamalCiphertext, ElGamalPubkey } from '@solana/zk-sdk';
+import { ElGamalKeypair, PedersenOpening } from '@solana/zk-sdk';
 
 describe('ciphertextCiphertextEquality', () => {
     let connection: Connection;
@@ -33,14 +34,11 @@ describe('ciphertextCiphertextEquality', () => {
         const testSecondElGamalKeypair = ElGamalKeypair.newRand();
         testSecondElGamalPubkey = testSecondElGamalKeypair.pubkeyOwned();
         testSecondPedersenOpening = PedersenOpening.newRand();
-        testSecondElGamalCiphertext = testSecondElGamalPubkey.encryptWithU64(
-            testAmount,
-            testSecondPedersenOpening
-        );
-    })
+        testSecondElGamalCiphertext = testSecondElGamalPubkey.encryptWithU64(testAmount, testSecondPedersenOpening);
+    });
 
     it('verify proof data', async () => {
-        let transaction = new Transaction().add(
+        const transaction = new Transaction().add(
             createVerifyCiphertextCiphertextEqualityInstruction(
                 testFirstElGamalKeypair,
                 testSecondElGamalPubkey,
@@ -48,10 +46,10 @@ describe('ciphertextCiphertextEquality', () => {
                 testSecondElGamalCiphertext,
                 testSecondPedersenOpening,
                 testAmount,
-            )
+            ),
         );
         await sendAndConfirmTransaction(connection, transaction, [payer]);
-    })
+    });
 
     it('verify, create, and close context', async () => {
         const contextState = Keypair.generate();
@@ -86,9 +84,9 @@ describe('ciphertextCiphertextEquality', () => {
             contextStateAddress,
             destinationAccountAddress,
             contextStateAuthority,
-        )
+        );
 
         const closedContextStateInfo = await connection.getAccountInfo(contextStateAddress);
         expect(closedContextStateInfo).to.equal(null);
-    })
-})
+    });
+});

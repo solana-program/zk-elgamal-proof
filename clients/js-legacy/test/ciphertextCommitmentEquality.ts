@@ -2,19 +2,14 @@ import { expect } from 'chai';
 import type { Connection, Signer } from '@solana/web3.js';
 import { Keypair, sendAndConfirmTransaction, Transaction } from '@solana/web3.js';
 import { newAccountWithLamports, getConnection } from './common';
+import type { ContextStateInfo } from '../src';
 import {
     closeContextStateProof,
     createVerifyCiphertextCommitmentEqualityInstruction,
-    ContextStateInfo,
     verifyCiphertextCommitmentEquality,
 } from '../src';
-import {
-    ElGamalCiphertext,
-    ElGamalKeypair,
-    Pedersen,
-    PedersenCommitment,
-    PedersenOpening,
-} from '@solana/zk-sdk';
+import type { ElGamalCiphertext, PedersenCommitment } from '@solana/zk-sdk';
+import { ElGamalKeypair, Pedersen, PedersenOpening } from '@solana/zk-sdk';
 
 describe('ciphertextCommitmentEquality', () => {
     let connection: Connection;
@@ -37,20 +32,20 @@ describe('ciphertextCommitmentEquality', () => {
 
         testPedersenOpening = PedersenOpening.newRand();
         testPedersenCommitment = Pedersen.withU64(testAmount, testPedersenOpening);
-    })
+    });
 
     it('verify proof data', async () => {
-        let transaction = new Transaction().add(
+        const transaction = new Transaction().add(
             createVerifyCiphertextCommitmentEqualityInstruction(
                 testElGamalKeypair,
                 testElGamalCiphertext,
                 testPedersenCommitment,
                 testPedersenOpening,
                 testAmount,
-            )
+            ),
         );
         await sendAndConfirmTransaction(connection, transaction, [payer]);
-    })
+    });
 
     it('verify, create, and close context', async () => {
         const contextState = Keypair.generate();
@@ -84,9 +79,9 @@ describe('ciphertextCommitmentEquality', () => {
             contextStateAddress,
             destinationAccountAddress,
             contextStateAuthority,
-        )
+        );
 
         const closedContextStateInfo = await connection.getAccountInfo(contextStateAddress);
         expect(closedContextStateInfo).to.equal(null);
-    })
-})
+    });
+});

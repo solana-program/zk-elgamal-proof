@@ -18,4 +18,3 @@ export async function getConnection(): Promise<Connection> {
 export const TEST_PROGRAM_ID = process.env.TEST_PROGRAM_ID
     ? new PublicKey(process.env.TEST_PROGRAM_ID)
     : ZK_ELGAMAL_PROOF_PROGRAM_ID;
-

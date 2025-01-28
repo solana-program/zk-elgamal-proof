@@ -1,26 +1,26 @@
 import type { ConfirmOptions, Connection, Signer, TransactionSignature } from '@solana/web3.js';
 import { PublicKey, sendAndConfirmTransaction, SystemProgram, Transaction } from '@solana/web3.js';
+import type { ContextStateInfo } from './instructions.js';
 import {
-    ContextStateInfo,
     createCloseContextStateInstruction,
     createVerifyCiphertextCiphertextEqualityInstruction,
     createVerifyCiphertextCommitmentEqualityInstruction,
     createVerifyPubkeyValidityInstruction,
     createVerifyZeroCiphertextInstruction,
-} from './instructions';
+} from './instructions.js';
 import {
     CIPHERTEXT_CIPHERTEXT_EQUALITY_CONTEXT_ACCOUNT_SIZE,
     CIPHERTEXT_COMMITMENT_EQUALITY_CONTEXT_ACCOUNT_SIZE,
     PUBKEY_VALIDITY_CONTEXT_ACCOUNT_SIZE,
     ZERO_CIPHERTEXT_CONTEXT_ACCOUNT_SIZE,
-    ZK_ELGAMAL_PROOF_PROGRAM_ID
-} from './constants';
-import {
+    ZK_ELGAMAL_PROOF_PROGRAM_ID,
+} from './constants.js';
+import type {
     ElGamalCiphertext,
     ElGamalKeypair,
     ElGamalPubkey,
     PedersenCommitment,
-    PedersenOpening
+    PedersenOpening,
 } from '@solana/zk-sdk';
 
 /**
@@ -50,7 +50,7 @@ export async function closeContextStateProof(
             destinationAccount,
             contextStateAuthority.publicKey,
             programId,
-        )
+        ),
     );
     return await sendAndConfirmTransaction(connection, transaction, [payer, contextStateAuthority], confirmOptions);
 }
@@ -76,8 +76,8 @@ export async function verifyZeroCiphertext(
     confirmOptions?: ConfirmOptions,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): Promise<TransactionSignature> {
-    let transaction = new Transaction();
-    let signers = [payer];
+    const transaction = new Transaction();
+    const signers = [payer];
     if (contextStateInfo && !(contextStateInfo.account instanceof PublicKey)) {
         const accountSize = ZERO_CIPHERTEXT_CONTEXT_ACCOUNT_SIZE;
         const lamports = await connection.getMinimumBalanceForRentExemption(accountSize);
@@ -90,17 +90,12 @@ export async function verifyZeroCiphertext(
                 lamports,
                 programId,
             }),
-        )
+        );
         signers.push(contextStateInfo.account);
     }
 
     transaction.add(
-        createVerifyZeroCiphertextInstruction(
-            elgamalKeypair,
-            elgamalCiphertext,
-            contextStateInfo,
-            programId,
-        )
+        createVerifyZeroCiphertextInstruction(elgamalKeypair, elgamalCiphertext, contextStateInfo, programId),
     );
     return await sendAndConfirmTransaction(connection, transaction, signers, confirmOptions);
 }
@@ -134,8 +129,8 @@ export async function verifyCiphertextCiphertextEquality(
     confirmOptions?: ConfirmOptions,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): Promise<TransactionSignature> {
-    let transaction = new Transaction();
-    let signers = [payer];
+    const transaction = new Transaction();
+    const signers = [payer];
     if (contextStateInfo && !(contextStateInfo.account instanceof PublicKey)) {
         const accountSize = CIPHERTEXT_CIPHERTEXT_EQUALITY_CONTEXT_ACCOUNT_SIZE;
         const lamports = await connection.getMinimumBalanceForRentExemption(accountSize);
@@ -148,7 +143,7 @@ export async function verifyCiphertextCiphertextEquality(
                 lamports,
                 programId,
             }),
-        )
+        );
         signers.push(contextStateInfo.account);
     }
 
@@ -161,7 +156,7 @@ export async function verifyCiphertextCiphertextEquality(
             secondOpening,
             amount,
             contextStateInfo,
-        )
+        ),
     );
     return await sendAndConfirmTransaction(connection, transaction, signers, confirmOptions);
 }
@@ -193,8 +188,8 @@ export async function verifyCiphertextCommitmentEquality(
     confirmOptions?: ConfirmOptions,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): Promise<TransactionSignature> {
-    let transaction = new Transaction();
-    let signers = [payer];
+    const transaction = new Transaction();
+    const signers = [payer];
     if (contextStateInfo && !(contextStateInfo.account instanceof PublicKey)) {
         const accountSize = CIPHERTEXT_COMMITMENT_EQUALITY_CONTEXT_ACCOUNT_SIZE;
         const lamports = await connection.getMinimumBalanceForRentExemption(accountSize);
@@ -207,7 +202,7 @@ export async function verifyCiphertextCommitmentEquality(
                 lamports,
                 programId,
             }),
-        )
+        );
         signers.push(contextStateInfo.account);
     }
 
@@ -219,7 +214,7 @@ export async function verifyCiphertextCommitmentEquality(
             pedersenOpening,
             amount,
             contextStateInfo,
-        )
+        ),
     );
     return await sendAndConfirmTransaction(connection, transaction, signers, confirmOptions);
 }
@@ -243,8 +238,8 @@ export async function verifyPubkeyValidity(
     confirmOptions?: ConfirmOptions,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): Promise<TransactionSignature> {
-    let transaction = new Transaction();
-    let signers = [payer];
+    const transaction = new Transaction();
+    const signers = [payer];
     if (contextStateInfo && !(contextStateInfo.account instanceof PublicKey)) {
         const accountSize = PUBKEY_VALIDITY_CONTEXT_ACCOUNT_SIZE;
         const lamports = await connection.getMinimumBalanceForRentExemption(accountSize);
@@ -257,15 +252,10 @@ export async function verifyPubkeyValidity(
                 lamports,
                 programId,
             }),
-        )
+        );
         signers.push(contextStateInfo.account);
     }
 
-    transaction.add(
-        createVerifyPubkeyValidityInstruction(
-            elgamalKeypair,
-            contextStateInfo,
-        )
-    );
+    transaction.add(createVerifyPubkeyValidityInstruction(elgamalKeypair, contextStateInfo));
     return await sendAndConfirmTransaction(connection, transaction, signers, confirmOptions);
 }

@@ -1,23 +1,26 @@
-import { AccountMeta, PublicKey, Signer, TransactionInstruction } from '@solana/web3.js';
-import {
-    CiphertextCiphertextEqualityProofData,
-    CiphertextCommitmentEqualityProofData,
+import type { AccountMeta, Signer } from '@solana/web3.js';
+import { PublicKey, TransactionInstruction } from '@solana/web3.js';
+import type {
     ElGamalCiphertext,
     ElGamalKeypair,
     ElGamalPubkey,
     PedersenOpening,
     PedersenCommitment,
+} from '@solana/zk-sdk';
+import {
+    CiphertextCiphertextEqualityProofData,
+    CiphertextCommitmentEqualityProofData,
     PubkeyValidityProofData,
     ZeroCiphertextProofData,
 } from '@solana/zk-sdk';
-import { ZK_ELGAMAL_PROOF_PROGRAM_ID } from './constants';
+import { ZK_ELGAMAL_PROOF_PROGRAM_ID } from './constants.js';
 
 /** Context state account information to be used as parameters to functions */
 export interface ContextStateInfo {
     /** The context state account keypair or public key */
-    account: (Signer | PublicKey)
+    account: Signer | PublicKey;
     /** Authority of the context state account */
-    authority: PublicKey,
+    authority: PublicKey;
 }
 
 export enum ZkElGamalProofInstruction {
@@ -80,18 +83,21 @@ export function createVerifyZeroCiphertextInstruction(
 ): TransactionInstruction {
     let keys: AccountMeta[] = [];
     if (contextStateInfo) {
-        const contextStateAccount = contextStateInfo.account instanceof PublicKey ? contextStateInfo.account : contextStateInfo.account.publicKey;
+        const contextStateAccount =
+            contextStateInfo.account instanceof PublicKey
+                ? contextStateInfo.account
+                : contextStateInfo.account.publicKey;
 
         keys = [
             { pubkey: contextStateAccount, isSigner: false, isWritable: true },
             { pubkey: contextStateInfo.authority, isSigner: false, isWritable: false },
-        ]
+        ];
     }
 
-    let proofData = ZeroCiphertextProofData.new(elgamalKeypair, elgamalCiphertext);
-    let proofDataBytes = proofData.toBytes();
+    const proofData = ZeroCiphertextProofData.new(elgamalKeypair, elgamalCiphertext);
+    const proofDataBytes = proofData.toBytes();
 
-    let data = Buffer.from([ZkElGamalProofInstruction.VerifyZeroCiphertext, ...proofDataBytes]);
+    const data = Buffer.from([ZkElGamalProofInstruction.VerifyZeroCiphertext, ...proofDataBytes]);
 
     return new TransactionInstruction({ keys, programId, data });
 }
@@ -123,25 +129,28 @@ export function createVerifyCiphertextCiphertextEqualityInstruction(
 ): TransactionInstruction {
     let keys: AccountMeta[] = [];
     if (contextStateInfo) {
-        const contextStateAccount = contextStateInfo.account instanceof PublicKey ? contextStateInfo.account : contextStateInfo.account.publicKey;
+        const contextStateAccount =
+            contextStateInfo.account instanceof PublicKey
+                ? contextStateInfo.account
+                : contextStateInfo.account.publicKey;
 
         keys = [
             { pubkey: contextStateAccount, isSigner: false, isWritable: true },
             { pubkey: contextStateInfo.authority, isSigner: false, isWritable: false },
-        ]
+        ];
     }
 
-    let proofData = CiphertextCiphertextEqualityProofData.new(
+    const proofData = CiphertextCiphertextEqualityProofData.new(
         firstKeypair,
         secondPubkey,
         firstCiphertext,
         secondCiphertext,
         secondOpening,
-        amount
+        amount,
     );
-    let proofDataBytes = proofData.toBytes();
+    const proofDataBytes = proofData.toBytes();
 
-    let data = Buffer.from([ZkElGamalProofInstruction.VerifyCiphertextCiphertextEquality, ...proofDataBytes]);
+    const data = Buffer.from([ZkElGamalProofInstruction.VerifyCiphertextCiphertextEquality, ...proofDataBytes]);
 
     return new TransactionInstruction({ keys, programId, data });
 }
@@ -171,24 +180,27 @@ export function createVerifyCiphertextCommitmentEqualityInstruction(
 ): TransactionInstruction {
     let keys: AccountMeta[] = [];
     if (contextStateInfo) {
-        const contextStateAccount = contextStateInfo.account instanceof PublicKey ? contextStateInfo.account : contextStateInfo.account.publicKey;
+        const contextStateAccount =
+            contextStateInfo.account instanceof PublicKey
+                ? contextStateInfo.account
+                : contextStateInfo.account.publicKey;
 
         keys = [
             { pubkey: contextStateAccount, isSigner: false, isWritable: true },
             { pubkey: contextStateInfo.authority, isSigner: false, isWritable: false },
-        ]
+        ];
     }
 
-    let proofData = CiphertextCommitmentEqualityProofData.new(
+    const proofData = CiphertextCommitmentEqualityProofData.new(
         elgamalKeypair,
         elgamalCiphertext,
         pedersenCommitment,
         pedersenOpening,
-        amount
+        amount,
     );
-    let proofDataBytes = proofData.toBytes();
+    const proofDataBytes = proofData.toBytes();
 
-    let data = Buffer.from([ZkElGamalProofInstruction.VerifyCiphertextCommitmentEquality, ...proofDataBytes]);
+    const data = Buffer.from([ZkElGamalProofInstruction.VerifyCiphertextCommitmentEquality, ...proofDataBytes]);
 
     return new TransactionInstruction({ keys, programId, data });
 }
@@ -210,18 +222,21 @@ export function createVerifyPubkeyValidityInstruction(
 ): TransactionInstruction {
     let keys: AccountMeta[] = [];
     if (contextStateInfo) {
-        const contextStateAccount = contextStateInfo.account instanceof PublicKey ? contextStateInfo.account : contextStateInfo.account.publicKey;
+        const contextStateAccount =
+            contextStateInfo.account instanceof PublicKey
+                ? contextStateInfo.account
+                : contextStateInfo.account.publicKey;
 
         keys = [
             { pubkey: contextStateAccount, isSigner: false, isWritable: true },
             { pubkey: contextStateInfo.authority, isSigner: false, isWritable: false },
-        ]
+        ];
     }
 
-    let proofData = PubkeyValidityProofData.new(elgamalKeypair);
-    let proofDataBytes = proofData.toBytes();
+    const proofData = PubkeyValidityProofData.new(elgamalKeypair);
+    const proofDataBytes = proofData.toBytes();
 
-    let data = Buffer.from([ZkElGamalProofInstruction.VerifyPubkeyValidity, ...proofDataBytes]);
+    const data = Buffer.from([ZkElGamalProofInstruction.VerifyPubkeyValidity, ...proofDataBytes]);
 
     return new TransactionInstruction({ keys, programId, data });
 }
