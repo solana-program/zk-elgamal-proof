@@ -1,5 +1,5 @@
 {
-    "name": "@solana-program/zk-elgamal-proof",
+    "name": "@solana/zk-elgamal-proof",
     "description": "JavaScript client for the ZK ElGamal Proof program",
     "version": "0.1.0",
     "repository": "https://github.com/solana-program/zk-elgamal-proof",
