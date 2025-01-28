@@ -1,9 +1,10 @@
 import { expect } from 'chai';
 import type { Connection, Signer } from '@solana/web3.js';
-import { Keypair } from '@solana/web3.js';
+import { Keypair, sendAndConfirmTransaction, Transaction } from '@solana/web3.js';
 import { newAccountWithLamports, getConnection } from './common';
 import {
     closeContextStateProof,
+    createVerifyCiphertextCommitmentEqualityInstruction,
     ContextStateInfo,
     verifyCiphertextCommitmentEquality,
 } from '../src';
@@ -39,15 +40,16 @@ describe('ciphertextCommitmentEquality', () => {
     })
 
     it('verify proof data', async () => {
-        await verifyCiphertextCommitmentEquality(
-            connection,
-            payer,
-            testElGamalKeypair,
-            testElGamalCiphertext,
-            testPedersenCommitment,
-            testPedersenOpening,
-            testAmount,
+        let transaction = new Transaction().add(
+            createVerifyCiphertextCommitmentEqualityInstruction(
+                testElGamalKeypair,
+                testElGamalCiphertext,
+                testPedersenCommitment,
+                testPedersenOpening,
+                testAmount,
+            )
         );
+        await sendAndConfirmTransaction(connection, transaction, [payer]);
     })
 
     it('verify, create, and close context', async () => {

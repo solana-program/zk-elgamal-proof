@@ -72,7 +72,7 @@ export async function verifyZeroCiphertext(
     payer: Signer,
     elgamalKeypair: ElGamalKeypair,
     elgamalCiphertext: ElGamalCiphertext,
-    contextStateInfo?: ContextStateInfo,
+    contextStateInfo: ContextStateInfo,
     confirmOptions?: ConfirmOptions,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): Promise<TransactionSignature> {
@@ -130,7 +130,7 @@ export async function verifyCiphertextCiphertextEquality(
     secondCiphertext: ElGamalCiphertext,
     secondOpening: PedersenOpening,
     amount: bigint,
-    contextStateInfo?: ContextStateInfo,
+    contextStateInfo: ContextStateInfo,
     confirmOptions?: ConfirmOptions,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): Promise<TransactionSignature> {
@@ -189,7 +189,7 @@ export async function verifyCiphertextCommitmentEquality(
     pedersenCommitment: PedersenCommitment,
     pedersenOpening: PedersenOpening,
     amount: bigint,
-    contextStateInfo?: ContextStateInfo,
+    contextStateInfo: ContextStateInfo,
     confirmOptions?: ConfirmOptions,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): Promise<TransactionSignature> {
@@ -239,7 +239,7 @@ export async function verifyPubkeyValidity(
     connection: Connection,
     payer: Signer,
     elgamalKeypair: ElGamalKeypair,
-    contextStateInfo?: ContextStateInfo,
+    contextStateInfo: ContextStateInfo,
     confirmOptions?: ConfirmOptions,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): Promise<TransactionSignature> {

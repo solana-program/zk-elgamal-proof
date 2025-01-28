@@ -1,9 +1,10 @@
 import { expect } from 'chai';
 import type { Connection, Signer } from '@solana/web3.js';
-import { Keypair } from '@solana/web3.js';
+import { Keypair, sendAndConfirmTransaction, Transaction } from '@solana/web3.js';
 import { newAccountWithLamports, getConnection } from './common';
 import {
     closeContextStateProof,
+    createVerifyZeroCiphertextInstruction,
     ContextStateInfo,
     verifyZeroCiphertext,
 } from '../src';
@@ -26,12 +27,13 @@ describe('zeroCiphertext', () => {
     })
 
     it('verify proof data', async () => {
-        await verifyZeroCiphertext(
-            connection,
-            payer,
-            testElGamalKeypair,
-            testElGamalCiphertext
+        let transaction = new Transaction().add(
+            createVerifyZeroCiphertextInstruction(
+                testElGamalKeypair,
+                testElGamalCiphertext,
+            )
         );
+        await sendAndConfirmTransaction(connection, transaction, [payer]);
     })
 
     it('verify, create, and close context', async () => {

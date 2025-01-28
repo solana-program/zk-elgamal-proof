@@ -64,6 +64,8 @@ export function createCloseContextStateInstruction(
 /**
  * Create a VerifyZeroCiphertext instruction
  *
+ * A `contextStateInfo` should be provided when creating a context state info.
+ *
  * @param elgamalKeypair            ElGamal keypair associated with the ciphertext
  * @param elgamalCiphertext         ElGamal encryption of zero
  * @param contextStateInfo          Optional context state info
@@ -96,6 +98,8 @@ export function createVerifyZeroCiphertextInstruction(
 
 /**
  * Create a VerifyCiphertextCiphertextEquality instruction
+ *
+ * A `contextStateInfo` should be provided when creating a context state info.
  *
  * @param firstKeypair              ElGamal keypair associated with the first ciphertext
  * @param secondPubkey              ElGamal pubkey associated with the second ciphertext
@@ -145,6 +149,8 @@ export function createVerifyCiphertextCiphertextEqualityInstruction(
 /**
  * Create a VerifyCiphertextCommitmentEquality instruction
  *
+ * A `contextStateInfo` should be provided when creating a context state info.
+ *
  * @param elgamalKeypair            ElGamal keypair associated with the ciphertext
  * @param elgamalCiphertext         ElGamal ciphertext to be proved
  * @param pedersenCommitment        Pedersen commitment to be proved
@@ -189,6 +195,8 @@ export function createVerifyCiphertextCommitmentEqualityInstruction(
 
 /**
  * Create a VerifyPubkeyValidity instruction
+ *
+ * A `contextStateInfo` should be provided when creating a context state info.
  *
  * @param elgamalKeypair            ElGamal keypair to be proved
  * @param contextStateInfo          Optional context state info

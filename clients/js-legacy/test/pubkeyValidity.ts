@@ -1,9 +1,10 @@
 import { expect } from 'chai';
 import type { Connection, Signer } from '@solana/web3.js';
-import { Keypair } from '@solana/web3.js';
+import { Keypair, sendAndConfirmTransaction, Transaction } from '@solana/web3.js';
 import { newAccountWithLamports, getConnection } from './common';
 import {
     closeContextStateProof,
+    createVerifyPubkeyValidityInstruction,
     ContextStateInfo,
     verifyPubkeyValidity,
 } from '../src';
@@ -20,7 +21,12 @@ describe('pubkeyValidity', () => {
     })
 
     it('verify proof data', async () => {
-        await verifyPubkeyValidity(connection, payer, testElGamalKeypair);
+        let transaction = new Transaction().add(
+            createVerifyPubkeyValidityInstruction(
+                testElGamalKeypair,
+            )
+        );
+        await sendAndConfirmTransaction(connection, transaction, [payer]);
     })
 
     it('verify, create, and close context', async () => {
