@@ -14,13 +14,8 @@ import { ZK_ELGAMAL_PROOF_PROGRAM_ID } from './constants';
 
 /** Context state account information to be used as parameters to functions */
 export interface ContextStateInfo {
-    /**
-     * Keypair of the context state account. If provided, use the system
-     * program to create the context state account.
-     */
-    keypair?: Signer,
-    /** Address of the context state account */
-    address: PublicKey,
+    /** The context state account keypair or public key */
+    account: (Signer | PublicKey)
     /** Authority of the context state account */
     authority: PublicKey,
 }
@@ -83,8 +78,10 @@ export function createVerifyZeroCiphertextInstruction(
 ): TransactionInstruction {
     let keys: AccountMeta[] = [];
     if (contextStateInfo) {
+        const contextStateAccount = contextStateInfo.account instanceof PublicKey ? contextStateInfo.account : contextStateInfo.account.publicKey;
+
         keys = [
-            { pubkey: contextStateInfo.address, isSigner: false, isWritable: true },
+            { pubkey: contextStateAccount, isSigner: false, isWritable: true },
             { pubkey: contextStateInfo.authority, isSigner: false, isWritable: false },
         ]
     }
@@ -122,8 +119,10 @@ export function createVerifyCiphertextCiphertextEqualityInstruction(
 ): TransactionInstruction {
     let keys: AccountMeta[] = [];
     if (contextStateInfo) {
+        const contextStateAccount = contextStateInfo.account instanceof PublicKey ? contextStateInfo.account : contextStateInfo.account.publicKey;
+
         keys = [
-            { pubkey: contextStateInfo.address, isSigner: false, isWritable: true },
+            { pubkey: contextStateAccount, isSigner: false, isWritable: true },
             { pubkey: contextStateInfo.authority, isSigner: false, isWritable: false },
         ]
     }
@@ -166,8 +165,10 @@ export function createVerifyCiphertextCommitmentEqualityInstruction(
 ): TransactionInstruction {
     let keys: AccountMeta[] = [];
     if (contextStateInfo) {
+        const contextStateAccount = contextStateInfo.account instanceof PublicKey ? contextStateInfo.account : contextStateInfo.account.publicKey;
+
         keys = [
-            { pubkey: contextStateInfo.address, isSigner: false, isWritable: true },
+            { pubkey: contextStateAccount, isSigner: false, isWritable: true },
             { pubkey: contextStateInfo.authority, isSigner: false, isWritable: false },
         ]
     }
@@ -201,8 +202,10 @@ export function createVerifyPubkeyValidityInstruction(
 ): TransactionInstruction {
     let keys: AccountMeta[] = [];
     if (contextStateInfo) {
+        const contextStateAccount = contextStateInfo.account instanceof PublicKey ? contextStateInfo.account : contextStateInfo.account.publicKey;
+
         keys = [
-            { pubkey: contextStateInfo.address, isSigner: false, isWritable: true },
+            { pubkey: contextStateAccount, isSigner: false, isWritable: true },
             { pubkey: contextStateInfo.authority, isSigner: false, isWritable: false },
         ]
     }

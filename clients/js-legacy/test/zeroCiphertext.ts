@@ -39,8 +39,7 @@ describe('zeroCiphertext', () => {
         const contextStateAddress = contextState.publicKey;
         const contextStateAuthority = Keypair.generate();
         const contextStateInfo: ContextStateInfo = {
-            keypair: contextState,
-            address: contextStateAddress,
+            account: contextState,
             authority: contextStateAuthority.publicKey,
         };
 

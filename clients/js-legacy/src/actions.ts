@@ -78,20 +78,20 @@ export async function verifyZeroCiphertext(
 ): Promise<TransactionSignature> {
     let transaction = new Transaction();
     let signers = [payer];
-    if (contextStateInfo && contextStateInfo.keypair) {
+    if (contextStateInfo && !(contextStateInfo.account instanceof PublicKey)) {
         const accountSize = ZERO_CIPHERTEXT_CONTEXT_ACCOUNT_SIZE;
         const lamports = await connection.getMinimumBalanceForRentExemption(accountSize);
 
         transaction.add(
             SystemProgram.createAccount({
                 fromPubkey: payer.publicKey,
-                newAccountPubkey: contextStateInfo.keypair.publicKey,
+                newAccountPubkey: contextStateInfo.account.publicKey,
                 space: accountSize,
                 lamports,
                 programId,
             }),
         )
-        signers.push(contextStateInfo.keypair);
+        signers.push(contextStateInfo.account);
     }
 
     transaction.add(
@@ -136,20 +136,20 @@ export async function verifyCiphertextCiphertextEquality(
 ): Promise<TransactionSignature> {
     let transaction = new Transaction();
     let signers = [payer];
-    if (contextStateInfo && contextStateInfo.keypair) {
+    if (contextStateInfo && !(contextStateInfo.account instanceof PublicKey)) {
         const accountSize = CIPHERTEXT_CIPHERTEXT_EQUALITY_CONTEXT_ACCOUNT_SIZE;
         const lamports = await connection.getMinimumBalanceForRentExemption(accountSize);
 
         transaction.add(
             SystemProgram.createAccount({
                 fromPubkey: payer.publicKey,
-                newAccountPubkey: contextStateInfo.keypair.publicKey,
+                newAccountPubkey: contextStateInfo.account.publicKey,
                 space: accountSize,
                 lamports,
                 programId,
             }),
         )
-        signers.push(contextStateInfo.keypair);
+        signers.push(contextStateInfo.account);
     }
 
     transaction.add(
@@ -195,20 +195,20 @@ export async function verifyCiphertextCommitmentEquality(
 ): Promise<TransactionSignature> {
     let transaction = new Transaction();
     let signers = [payer];
-    if (contextStateInfo && contextStateInfo.keypair) {
+    if (contextStateInfo && !(contextStateInfo.account instanceof PublicKey)) {
         const accountSize = CIPHERTEXT_COMMITMENT_EQUALITY_CONTEXT_ACCOUNT_SIZE;
         const lamports = await connection.getMinimumBalanceForRentExemption(accountSize);
 
         transaction.add(
             SystemProgram.createAccount({
                 fromPubkey: payer.publicKey,
-                newAccountPubkey: contextStateInfo.keypair.publicKey,
+                newAccountPubkey: contextStateInfo.account.publicKey,
                 space: accountSize,
                 lamports,
                 programId,
             }),
         )
-        signers.push(contextStateInfo.keypair);
+        signers.push(contextStateInfo.account);
     }
 
     transaction.add(
@@ -245,20 +245,20 @@ export async function verifyPubkeyValidity(
 ): Promise<TransactionSignature> {
     let transaction = new Transaction();
     let signers = [payer];
-    if (contextStateInfo && contextStateInfo.keypair) {
+    if (contextStateInfo && !(contextStateInfo.account instanceof PublicKey)) {
         const accountSize = PUBKEY_VALIDITY_CONTEXT_ACCOUNT_SIZE;
         const lamports = await connection.getMinimumBalanceForRentExemption(accountSize);
 
         transaction.add(
             SystemProgram.createAccount({
                 fromPubkey: payer.publicKey,
-                newAccountPubkey: contextStateInfo.keypair.publicKey,
+                newAccountPubkey: contextStateInfo.account.publicKey,
                 space: accountSize,
                 lamports,
                 programId,
             }),
         )
-        signers.push(contextStateInfo.keypair);
+        signers.push(contextStateInfo.account);
     }
 
     transaction.add(
