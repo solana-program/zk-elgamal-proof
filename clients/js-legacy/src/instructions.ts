@@ -35,7 +35,6 @@ export enum ZkElGamalProofInstruction {
  * @param contextStateAddress       Address of the context state account
  * @param contextStateAuthority     Authority of the context state account
  * @param destinationAccount        Destination account for the lamports
- * @param confirmOptions            Options for confirming the transaction
  *
  * @return Instruction to add to a transaction
  */
