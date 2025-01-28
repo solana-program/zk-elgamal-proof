@@ -4,7 +4,7 @@ import { Keypair } from '@solana/web3.js';
 import { newAccountWithLamports, getConnection } from './common';
 import {
     closeContextStateProof,
-    contextStateInfo,
+    ContextStateInfo,
     verifyPubkeyValidity,
 } from '../src';
 import { ElGamalKeypair } from '@solana/zk-sdk';
@@ -27,7 +27,7 @@ describe('pubkeyValidity', () => {
         const contextState = Keypair.generate();
         const contextStateAddress = contextState.publicKey;
         const contextStateAuthority = Keypair.generate();
-        const contextStateInfo: contextStateInfo = {
+        const contextStateInfo: ContextStateInfo = {
             keypair: contextState,
             address: contextStateAddress,
             authority: contextStateAuthority.publicKey,

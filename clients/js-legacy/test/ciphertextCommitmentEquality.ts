@@ -4,7 +4,7 @@ import { Keypair } from '@solana/web3.js';
 import { newAccountWithLamports, getConnection } from './common';
 import {
     closeContextStateProof,
-    contextStateInfo,
+    ContextStateInfo,
     verifyCiphertextCommitmentEquality,
 } from '../src';
 import {
@@ -54,7 +54,7 @@ describe('ciphertextCommitmentEquality', () => {
         const contextState = Keypair.generate();
         const contextStateAddress = contextState.publicKey;
         const contextStateAuthority = Keypair.generate();
-        const contextStateInfo: contextStateInfo = {
+        const contextStateInfo: ContextStateInfo = {
             keypair: contextState,
             address: contextStateAddress,
             authority: contextStateAuthority.publicKey,

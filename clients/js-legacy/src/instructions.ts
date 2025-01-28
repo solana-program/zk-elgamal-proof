@@ -10,7 +10,7 @@ import {
     PubkeyValidityProofData,
     ZeroCiphertextProofData,
 } from '@solana/zk-sdk';
-import { contextStateInfo } from './actions';
+import { ContextStateInfo } from './actions';
 import { ZK_ELGAMAL_PROOF_PROGRAM_ID } from './constants';
 
 export enum ZkElGamalProofInstruction {
@@ -66,7 +66,7 @@ export function createCloseContextStateInstruction(
 export function createVerifyZeroCiphertextInstruction(
     elgamalKeypair: ElGamalKeypair,
     elgamalCiphertext: ElGamalCiphertext,
-    contextStateInfo?: contextStateInfo,
+    contextStateInfo?: ContextStateInfo,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): TransactionInstruction {
     let keys: AccountMeta[] = [];
@@ -105,7 +105,7 @@ export function createVerifyCiphertextCiphertextEqualityInstruction(
     secondCiphertext: ElGamalCiphertext,
     secondOpening: PedersenOpening,
     amount: bigint,
-    contextStateInfo?: contextStateInfo,
+    contextStateInfo?: ContextStateInfo,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): TransactionInstruction {
     let keys: AccountMeta[] = [];
@@ -149,7 +149,7 @@ export function createVerifyCiphertextCommitmentEqualityInstruction(
     pedersenCommitment: PedersenCommitment,
     pedersenOpening: PedersenOpening,
     amount: bigint,
-    contextStateInfo?: contextStateInfo,
+    contextStateInfo?: ContextStateInfo,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): TransactionInstruction {
     let keys: AccountMeta[] = [];
@@ -184,7 +184,7 @@ export function createVerifyCiphertextCommitmentEqualityInstruction(
  */
 export function createVerifyPubkeyValidityInstruction(
     elgamalKeypair: ElGamalKeypair,
-    contextStateInfo?: contextStateInfo,
+    contextStateInfo?: ContextStateInfo,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): TransactionInstruction {
     let keys: AccountMeta[] = [];

@@ -23,7 +23,7 @@ import {
 } from '@solana/zk-sdk';
 
 /** Context state account information to be used as parameters to functions */
-export interface contextStateInfo {
+export interface ContextStateInfo {
     /**
      * Keypair of the context state account. If provided, use the system
      * program to create the context state account.
@@ -84,7 +84,7 @@ export async function verifyZeroCiphertext(
     payer: Signer,
     elgamalKeypair: ElGamalKeypair,
     elgamalCiphertext: ElGamalCiphertext,
-    contextStateInfo?: contextStateInfo,
+    contextStateInfo?: ContextStateInfo,
     confirmOptions?: ConfirmOptions,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): Promise<TransactionSignature> {
@@ -142,7 +142,7 @@ export async function verifyCiphertextCiphertextEquality(
     secondCiphertext: ElGamalCiphertext,
     secondOpening: PedersenOpening,
     amount: bigint,
-    contextStateInfo?: contextStateInfo,
+    contextStateInfo?: ContextStateInfo,
     confirmOptions?: ConfirmOptions,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): Promise<TransactionSignature> {
@@ -201,7 +201,7 @@ export async function verifyCiphertextCommitmentEquality(
     pedersenCommitment: PedersenCommitment,
     pedersenOpening: PedersenOpening,
     amount: bigint,
-    contextStateInfo?: contextStateInfo,
+    contextStateInfo?: ContextStateInfo,
     confirmOptions?: ConfirmOptions,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): Promise<TransactionSignature> {
@@ -251,7 +251,7 @@ export async function verifyPubkeyValidity(
     connection: Connection,
     payer: Signer,
     elgamalKeypair: ElGamalKeypair,
-    contextStateInfo?: contextStateInfo,
+    contextStateInfo?: ContextStateInfo,
     confirmOptions?: ConfirmOptions,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): Promise<TransactionSignature> {
