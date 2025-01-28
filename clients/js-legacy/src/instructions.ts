@@ -86,7 +86,7 @@ export function createVerifyZeroCiphertextInstruction(
 }
 
 /**
- * Verify a VerifyCiphertextCiphertextEquality instruction
+ * Create a VerifyCiphertextCiphertextEquality instruction
  *
  * @param firstKeypair              ElGamal keypair associated with the first ciphertext
  * @param secondPubkey              ElGamal pubkey associated with the second ciphertext
@@ -132,7 +132,7 @@ export function createVerifyCiphertextCiphertextEqualityInstruction(
 }
 
 /**
- * Verify a VerifyCiphertextCommitmentEquality instruction
+ * Create a VerifyCiphertextCommitmentEquality instruction
  *
  * @param elgamalKeypair            ElGamal keypair associated with the ciphertext
  * @param elgamalCiphertext         ElGamal ciphertext to be proved
