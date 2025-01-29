@@ -1,0 +1,40 @@
+name: Main
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  format_and_lint_client_js_legacy:
+    name: Format & Lint Client JS Legacy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup
+
+      - name: Format Client JS Legacy
+        run: pnpm clients:js-legacy:format
+
+      - name: Lint Client JS Legacy
+        run: pnpm clients:js-legacy:lint
+
+  test_client_js_legacy:
+    name: Test Client JS Legacy
+    runs-on: ubuntu-latest
+    needs: [format_and_lint_client_js_legacy]
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup
+        with:
+          solana: true
+
+      - name: Test Client JS Legacy
+        run: pnpm clients:js-legacy:test
