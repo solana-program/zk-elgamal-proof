@@ -18,7 +18,7 @@
         "lint:fix": "eslint --fix .",
         "format": "prettier --check src test",
         "format:fix": "prettier --write src test",
-        "test": "start-server-and-test 'solana-test-validator --reset --quiet' http://127.0.0.1:8899/health 'mocha test'"
+        "test": "mocha test/*"
     },
     "dependencies": {
         "@solana/web3.js": "^1.95.5",
