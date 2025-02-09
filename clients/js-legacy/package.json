@@ -21,11 +21,13 @@
         "test": "mocha test/*"
     },
     "dependencies": {
+        "@solana/codecs-numbers": "^2.0.0",
         "@solana/web3.js": "^1.95.5",
         "@solana/zk-sdk": "0.1.1"
     },
     "devDependencies": {
         "@solana/prettier-config-solana": "0.0.5",
+        "@solana/spl-record": "^0.1.0",
         "@eslint/js": "^9.19.0",
         "@types/chai": "^5.0.1",
         "@types/mocha": "^10.0.10",
