@@ -27,7 +27,7 @@ if (!restart && isValidatorRunning) {
 const verb = isValidatorRunning ? 'Restarting' : 'Starting';
 
 // Get programs and accounts.
-const programs = [];
+const programs = [...getFixturePrograms()];
 const programPluralized = programs.length === 1 ? 'program' : 'programs';
 const accounts = [];
 const accountsPluralized = accounts.length === 1 ? 'account' : 'accounts';
@@ -94,4 +94,12 @@ try {
 } finally {
     fs.rmSync(cliLogs);
     process.exit();
+}
+
+function getFixturePrograms() {
+    const binaryDir = path.join(__dirname, '..', 'clients', 'js-legacy', 'test', 'fixtures');
+    return [{
+        programId: 'recr1L3PCGKLbckBqMNcJhuuyU1zgo8nBhfLVsJNwr5',
+        deployPath: path.join(binaryDir, 'spl_record.so'),
+    }];
 }
