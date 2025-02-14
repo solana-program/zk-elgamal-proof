@@ -1,6 +1,13 @@
 import type { ConfirmOptions, Connection, Signer, TransactionSignature } from '@solana/web3.js';
 import { PublicKey, sendAndConfirmTransaction, SystemProgram, Transaction } from '@solana/web3.js';
-import type { ContextStateInfo } from './instructions.js';
+import type {
+    ContextStateInfo,
+    RecordAccountInfo,
+    CiphertextCiphertextEqualityProofInput,
+    CiphertextCommitmentEqualityProofInput,
+    PubkeyValidityProofInput,
+    ZeroCiphertextProofInput,
+} from './instructions.js';
 import {
     createCloseContextStateInstruction,
     createVerifyCiphertextCiphertextEqualityInstruction,
@@ -15,13 +22,6 @@ import {
     ZERO_CIPHERTEXT_CONTEXT_ACCOUNT_SIZE,
     ZK_ELGAMAL_PROOF_PROGRAM_ID,
 } from './constants.js';
-import type {
-    ElGamalCiphertext,
-    ElGamalKeypair,
-    ElGamalPubkey,
-    PedersenCommitment,
-    PedersenOpening,
-} from '@solana/zk-sdk';
 
 /**
  * Close a context state account
@@ -70,8 +70,7 @@ export async function closeContextStateProof(
 export async function verifyZeroCiphertext(
     connection: Connection,
     payer: Signer,
-    elgamalKeypair: ElGamalKeypair,
-    elgamalCiphertext: ElGamalCiphertext,
+    proofInput: ZeroCiphertextProofInput | RecordAccountInfo,
     contextStateInfo: ContextStateInfo,
     confirmOptions?: ConfirmOptions,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
@@ -94,9 +93,7 @@ export async function verifyZeroCiphertext(
         signers.push(contextStateInfo.account);
     }
 
-    transaction.add(
-        createVerifyZeroCiphertextInstruction(elgamalKeypair, elgamalCiphertext, contextStateInfo, programId),
-    );
+    transaction.add(createVerifyZeroCiphertextInstruction(proofInput, contextStateInfo, programId));
     return await sendAndConfirmTransaction(connection, transaction, signers, confirmOptions);
 }
 
@@ -119,12 +116,7 @@ export async function verifyZeroCiphertext(
 export async function verifyCiphertextCiphertextEquality(
     connection: Connection,
     payer: Signer,
-    firstKeypair: ElGamalKeypair,
-    secondPubkey: ElGamalPubkey,
-    firstCiphertext: ElGamalCiphertext,
-    secondCiphertext: ElGamalCiphertext,
-    secondOpening: PedersenOpening,
-    amount: bigint,
+    proofInput: CiphertextCiphertextEqualityProofInput | RecordAccountInfo,
     contextStateInfo: ContextStateInfo,
     confirmOptions?: ConfirmOptions,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
@@ -147,17 +139,7 @@ export async function verifyCiphertextCiphertextEquality(
         signers.push(contextStateInfo.account);
     }
 
-    transaction.add(
-        createVerifyCiphertextCiphertextEqualityInstruction(
-            firstKeypair,
-            secondPubkey,
-            firstCiphertext,
-            secondCiphertext,
-            secondOpening,
-            amount,
-            contextStateInfo,
-        ),
-    );
+    transaction.add(createVerifyCiphertextCiphertextEqualityInstruction(proofInput, contextStateInfo));
     return await sendAndConfirmTransaction(connection, transaction, signers, confirmOptions);
 }
 
@@ -179,11 +161,7 @@ export async function verifyCiphertextCiphertextEquality(
 export async function verifyCiphertextCommitmentEquality(
     connection: Connection,
     payer: Signer,
-    elgamalKeypair: ElGamalKeypair,
-    elgamalCiphertext: ElGamalCiphertext,
-    pedersenCommitment: PedersenCommitment,
-    pedersenOpening: PedersenOpening,
-    amount: bigint,
+    proofInput: CiphertextCommitmentEqualityProofInput | RecordAccountInfo,
     contextStateInfo: ContextStateInfo,
     confirmOptions?: ConfirmOptions,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
@@ -206,16 +184,7 @@ export async function verifyCiphertextCommitmentEquality(
         signers.push(contextStateInfo.account);
     }
 
-    transaction.add(
-        createVerifyCiphertextCommitmentEqualityInstruction(
-            elgamalKeypair,
-            elgamalCiphertext,
-            pedersenCommitment,
-            pedersenOpening,
-            amount,
-            contextStateInfo,
-        ),
-    );
+    transaction.add(createVerifyCiphertextCommitmentEqualityInstruction(proofInput, contextStateInfo));
     return await sendAndConfirmTransaction(connection, transaction, signers, confirmOptions);
 }
 
@@ -233,7 +202,7 @@ export async function verifyCiphertextCommitmentEquality(
 export async function verifyPubkeyValidity(
     connection: Connection,
     payer: Signer,
-    elgamalKeypair: ElGamalKeypair,
+    proofInput: PubkeyValidityProofInput | RecordAccountInfo,
     contextStateInfo: ContextStateInfo,
     confirmOptions?: ConfirmOptions,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
@@ -256,6 +225,6 @@ export async function verifyPubkeyValidity(
         signers.push(contextStateInfo.account);
     }
 
-    transaction.add(createVerifyPubkeyValidityInstruction(elgamalKeypair, contextStateInfo));
+    transaction.add(createVerifyPubkeyValidityInstruction(proofInput, contextStateInfo));
     return await sendAndConfirmTransaction(connection, transaction, signers, confirmOptions);
 }
