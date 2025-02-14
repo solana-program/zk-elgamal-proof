@@ -62,6 +62,9 @@ describe('zeroCiphertext', () => {
         const destinationAccountAddress = destinationAccount.publicKey;
 
         await closeRecord(connection, payer, recordAccountAddress, recordAuthority, destinationAccountAddress);
+
+        const closedRecordAccountInfo = await connection.getAccountInfo(recordAccountAddress);
+        expect(closedRecordAccountInfo).to.equal(null);
     });
 
     it('verify, create, and close context', async () => {
@@ -133,6 +136,9 @@ describe('zeroCiphertext', () => {
         await verifyZeroCiphertext(connection, payer, recordAccountInfo, contextStateInfo);
 
         await closeRecord(connection, payer, recordAccountAddress, recordAuthority, destinationAccountAddress);
+
+        const closedRecordAccountInfo = await connection.getAccountInfo(recordAccountAddress);
+        expect(closedRecordAccountInfo).to.equal(null);
 
         const createdContextStateInfo = await connection.getAccountInfo(contextStateAddress);
         expect(createdContextStateInfo).to.not.equal(null);
