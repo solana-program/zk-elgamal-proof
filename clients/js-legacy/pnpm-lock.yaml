@@ -15,8 +15,8 @@ importers:
         specifier: ^1.95.5
         version: 1.98.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       '@solana/zk-sdk':
-        specifier: 0.1.1
-        version: 0.1.1
+        specifier: 0.1.2
+        version: 0.1.2
     devDependencies:
       '@eslint/js':
         specifier: ^9.19.0
@@ -218,8 +218,8 @@ packages:
   '@solana/web3.js@1.98.0':
     resolution: {integrity: sha512-nz3Q5OeyGFpFCR+erX2f6JPt3sKhzhYcSycBCSPkWjzSVDh/Rr1FqTVMRe58FKO16/ivTUcuJjeS5MyBvpkbzA==}
 
-  '@solana/zk-sdk@0.1.1':
-    resolution: {integrity: sha512-udavyWNQLdwriv3fZB6xG1GRghq39WTUmUpoaJaxa9uXZdpYGBwWWmfH3DAHq2jkOsFDwSPE+Vuu+YkeYbiYHg==}
+  '@solana/zk-sdk@0.1.2':
+    resolution: {integrity: sha512-uhuj4d8bk55ArICoe23mxDfYKZYJ7OGyg4fwY+k8mWxroaww/1wHG873086Aanb68tW32EMm9FjRRvztDUVDhA==}
 
   '@swc/helpers@0.5.15':
     resolution: {integrity: sha512-JQ5TuMi45Owi4/BIMAJBoSQoOJu12oOk/gADqlcUL9JEdHB8vyjUSsxqeNXnmXHjYKMi2WcYtezGEEhqUI/E2g==}
@@ -1527,7 +1527,7 @@ snapshots:
       - encoding
       - utf-8-validate
 
-  '@solana/zk-sdk@0.1.1': {}
+  '@solana/zk-sdk@0.1.2': {}
 
   '@swc/helpers@0.5.15':
     dependencies:
