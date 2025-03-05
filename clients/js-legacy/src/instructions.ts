@@ -1,5 +1,6 @@
 import type { AccountMeta, Signer } from '@solana/web3.js';
 import { PublicKey, TransactionInstruction } from '@solana/web3.js';
+import { getU32Codec } from '@solana/codecs-numbers';
 import type {
     ElGamalCiphertext,
     ElGamalKeypair,
@@ -21,6 +22,14 @@ export interface ContextStateInfo {
     account: Signer | PublicKey;
     /** Authority of the context state account */
     authority: PublicKey;
+}
+
+/** Record account information to be used as parameters to functions */
+export interface RecordAccountInfo {
+    /** The record account address */
+    account: PublicKey;
+    /** The offset for which the proof is to be read from */
+    offset: number;
 }
 
 export enum ZkElGamalProofInstruction {
@@ -64,6 +73,12 @@ export function createCloseContextStateInstruction(
     return new TransactionInstruction({ keys, programId, data });
 }
 
+/** Data input needed to generate a zero-ciphertext proof */
+export interface ZeroCiphertextProofInput {
+    elgamalKeypair: ElGamalKeypair;
+    elgamalCiphertext: ElGamalCiphertext;
+}
+
 /**
  * Create a VerifyZeroCiphertext instruction
  *
@@ -76,30 +91,43 @@ export function createCloseContextStateInstruction(
  * @return Instruction to add to a transaction
  */
 export function createVerifyZeroCiphertextInstruction(
-    elgamalKeypair: ElGamalKeypair,
-    elgamalCiphertext: ElGamalCiphertext,
+    proofInput: ZeroCiphertextProofInput | RecordAccountInfo,
     contextStateInfo?: ContextStateInfo,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): TransactionInstruction {
-    let keys: AccountMeta[] = [];
+    const keys: AccountMeta[] = [];
+    if ('account' in proofInput) {
+        keys.push({ pubkey: proofInput.account, isSigner: false, isWritable: false });
+    }
     if (contextStateInfo) {
         const contextStateAccount =
             contextStateInfo.account instanceof PublicKey
                 ? contextStateInfo.account
                 : contextStateInfo.account.publicKey;
 
-        keys = [
-            { pubkey: contextStateAccount, isSigner: false, isWritable: true },
-            { pubkey: contextStateInfo.authority, isSigner: false, isWritable: false },
-        ];
+        keys.push({ pubkey: contextStateAccount, isSigner: false, isWritable: true });
+        keys.push({ pubkey: contextStateInfo.authority, isSigner: false, isWritable: false });
     }
 
-    const proofData = ZeroCiphertextProofData.new(elgamalKeypair, elgamalCiphertext);
-    const proofDataBytes = proofData.toBytes();
+    const data = [ZkElGamalProofInstruction.VerifyZeroCiphertext];
+    if ('offset' in proofInput) {
+        data.push(...getU32Codec().encode(proofInput.offset));
+    } else {
+        const proofData = ZeroCiphertextProofData.new(proofInput.elgamalKeypair, proofInput.elgamalCiphertext);
+        data.push(...proofData.toBytes());
+    }
 
-    const data = Buffer.from([ZkElGamalProofInstruction.VerifyZeroCiphertext, ...proofDataBytes]);
+    return new TransactionInstruction({ keys, programId, data: Buffer.from(data) });
+}
 
-    return new TransactionInstruction({ keys, programId, data });
+/** Data input needed to generate a ciphertext-ciphertext equality proof */
+export interface CiphertextCiphertextEqualityProofInput {
+    firstKeypair: ElGamalKeypair;
+    secondPubkey: ElGamalPubkey;
+    firstCiphertext: ElGamalCiphertext;
+    secondCiphertext: ElGamalCiphertext;
+    secondOpening: PedersenOpening;
+    amount: bigint;
 }
 
 /**
@@ -118,41 +146,49 @@ export function createVerifyZeroCiphertextInstruction(
  * @return Instruction to add to a transaction
  */
 export function createVerifyCiphertextCiphertextEqualityInstruction(
-    firstKeypair: ElGamalKeypair,
-    secondPubkey: ElGamalPubkey,
-    firstCiphertext: ElGamalCiphertext,
-    secondCiphertext: ElGamalCiphertext,
-    secondOpening: PedersenOpening,
-    amount: bigint,
+    proofInput: CiphertextCiphertextEqualityProofInput | RecordAccountInfo,
     contextStateInfo?: ContextStateInfo,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): TransactionInstruction {
-    let keys: AccountMeta[] = [];
+    const keys: AccountMeta[] = [];
+    if ('account' in proofInput) {
+        keys.push({ pubkey: proofInput.account, isSigner: false, isWritable: false });
+    }
     if (contextStateInfo) {
         const contextStateAccount =
             contextStateInfo.account instanceof PublicKey
                 ? contextStateInfo.account
                 : contextStateInfo.account.publicKey;
 
-        keys = [
-            { pubkey: contextStateAccount, isSigner: false, isWritable: true },
-            { pubkey: contextStateInfo.authority, isSigner: false, isWritable: false },
-        ];
+        keys.push({ pubkey: contextStateAccount, isSigner: false, isWritable: true });
+        keys.push({ pubkey: contextStateInfo.authority, isSigner: false, isWritable: false });
     }
 
-    const proofData = CiphertextCiphertextEqualityProofData.new(
-        firstKeypair,
-        secondPubkey,
-        firstCiphertext,
-        secondCiphertext,
-        secondOpening,
-        amount,
-    );
-    const proofDataBytes = proofData.toBytes();
+    const data = [ZkElGamalProofInstruction.VerifyCiphertextCiphertextEquality];
+    if ('offset' in proofInput) {
+        data.push(...getU32Codec().encode(proofInput.offset));
+    } else {
+        const proofData = CiphertextCiphertextEqualityProofData.new(
+            proofInput.firstKeypair,
+            proofInput.secondPubkey,
+            proofInput.firstCiphertext,
+            proofInput.secondCiphertext,
+            proofInput.secondOpening,
+            proofInput.amount,
+        );
+        data.push(...proofData.toBytes());
+    }
 
-    const data = Buffer.from([ZkElGamalProofInstruction.VerifyCiphertextCiphertextEquality, ...proofDataBytes]);
+    return new TransactionInstruction({ keys, programId, data: Buffer.from(data) });
+}
 
-    return new TransactionInstruction({ keys, programId, data });
+/** Data input needed to generate a zero-ciphertext proof */
+export interface CiphertextCommitmentEqualityProofInput {
+    elgamalKeypair: ElGamalKeypair;
+    elgamalCiphertext: ElGamalCiphertext;
+    pedersenCommitment: PedersenCommitment;
+    pedersenOpening: PedersenOpening;
+    amount: bigint;
 }
 
 /**
@@ -170,39 +206,44 @@ export function createVerifyCiphertextCiphertextEqualityInstruction(
  * @return Instruction to add to a transaction
  */
 export function createVerifyCiphertextCommitmentEqualityInstruction(
-    elgamalKeypair: ElGamalKeypair,
-    elgamalCiphertext: ElGamalCiphertext,
-    pedersenCommitment: PedersenCommitment,
-    pedersenOpening: PedersenOpening,
-    amount: bigint,
+    proofInput: CiphertextCommitmentEqualityProofInput | RecordAccountInfo,
     contextStateInfo?: ContextStateInfo,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): TransactionInstruction {
-    let keys: AccountMeta[] = [];
+    const keys: AccountMeta[] = [];
+    if ('account' in proofInput) {
+        keys.push({ pubkey: proofInput.account, isSigner: false, isWritable: false });
+    }
     if (contextStateInfo) {
         const contextStateAccount =
             contextStateInfo.account instanceof PublicKey
                 ? contextStateInfo.account
                 : contextStateInfo.account.publicKey;
 
-        keys = [
-            { pubkey: contextStateAccount, isSigner: false, isWritable: true },
-            { pubkey: contextStateInfo.authority, isSigner: false, isWritable: false },
-        ];
+        keys.push({ pubkey: contextStateAccount, isSigner: false, isWritable: true });
+        keys.push({ pubkey: contextStateInfo.authority, isSigner: false, isWritable: false });
     }
 
-    const proofData = CiphertextCommitmentEqualityProofData.new(
-        elgamalKeypair,
-        elgamalCiphertext,
-        pedersenCommitment,
-        pedersenOpening,
-        amount,
-    );
-    const proofDataBytes = proofData.toBytes();
+    const data = [ZkElGamalProofInstruction.VerifyCiphertextCommitmentEquality];
+    if ('offset' in proofInput) {
+        data.push(...getU32Codec().encode(proofInput.offset));
+    } else {
+        const proofData = CiphertextCommitmentEqualityProofData.new(
+            proofInput.elgamalKeypair,
+            proofInput.elgamalCiphertext,
+            proofInput.pedersenCommitment,
+            proofInput.pedersenOpening,
+            proofInput.amount,
+        );
+        data.push(...proofData.toBytes());
+    }
 
-    const data = Buffer.from([ZkElGamalProofInstruction.VerifyCiphertextCommitmentEquality, ...proofDataBytes]);
+    return new TransactionInstruction({ keys, programId, data: Buffer.from(data) });
+}
 
-    return new TransactionInstruction({ keys, programId, data });
+/** Data input needed to generate a zero-ciphertext proof */
+export interface PubkeyValidityProofInput {
+    elgamalKeypair: ElGamalKeypair;
 }
 
 /**
@@ -216,27 +257,31 @@ export function createVerifyCiphertextCommitmentEqualityInstruction(
  * @return Instruction to add to a transaction
  */
 export function createVerifyPubkeyValidityInstruction(
-    elgamalKeypair: ElGamalKeypair,
+    proofInput: PubkeyValidityProofInput | RecordAccountInfo,
     contextStateInfo?: ContextStateInfo,
     programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
 ): TransactionInstruction {
-    let keys: AccountMeta[] = [];
+    const keys: AccountMeta[] = [];
+    if ('account' in proofInput) {
+        keys.push({ pubkey: proofInput.account, isSigner: false, isWritable: false });
+    }
     if (contextStateInfo) {
         const contextStateAccount =
             contextStateInfo.account instanceof PublicKey
                 ? contextStateInfo.account
                 : contextStateInfo.account.publicKey;
 
-        keys = [
-            { pubkey: contextStateAccount, isSigner: false, isWritable: true },
-            { pubkey: contextStateInfo.authority, isSigner: false, isWritable: false },
-        ];
+        keys.push({ pubkey: contextStateAccount, isSigner: false, isWritable: true });
+        keys.push({ pubkey: contextStateInfo.authority, isSigner: false, isWritable: false });
     }
 
-    const proofData = PubkeyValidityProofData.new(elgamalKeypair);
-    const proofDataBytes = proofData.toBytes();
+    const data = [ZkElGamalProofInstruction.VerifyPubkeyValidity];
+    if ('offset' in proofInput) {
+        data.push(...getU32Codec().encode(proofInput.offset));
+    } else {
+        const proofData = PubkeyValidityProofData.new(proofInput.elgamalKeypair);
+        data.push(...proofData.toBytes());
+    }
 
-    const data = Buffer.from([ZkElGamalProofInstruction.VerifyPubkeyValidity, ...proofDataBytes]);
-
-    return new TransactionInstruction({ keys, programId, data });
+    return new TransactionInstruction({ keys, programId, data: Buffer.from(data) });
 }
