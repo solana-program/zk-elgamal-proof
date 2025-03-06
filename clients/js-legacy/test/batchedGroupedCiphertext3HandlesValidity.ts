@@ -17,7 +17,7 @@ import {
 } from '@solana/zk-sdk';
 import { RECORD_META_DATA_SIZE, createInitializeWriteRecord, closeRecord } from '@solana/spl-record';
 
-describe('batchedGroupedCiphertext2HandlesValidity', () => {
+describe('batchedGroupedCiphertext3HandlesValidity', () => {
     let connection: Connection;
     let payer: Signer;
 
