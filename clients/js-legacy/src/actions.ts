@@ -1,23 +1,35 @@
 import type { ConfirmOptions, Connection, Signer, TransactionSignature } from '@solana/web3.js';
 import { PublicKey, sendAndConfirmTransaction, SystemProgram, Transaction } from '@solana/web3.js';
 import type {
+    BatchedGroupedCiphertext2HandlesValidityProofInput,
+    BatchedGroupedCiphertext3HandlesValidityProofInput,
     ContextStateInfo,
     RecordAccountInfo,
     CiphertextCiphertextEqualityProofInput,
     CiphertextCommitmentEqualityProofInput,
+    GroupedCiphertext2HandlesValidityProofInput,
+    GroupedCiphertext3HandlesValidityProofInput,
     PubkeyValidityProofInput,
     ZeroCiphertextProofInput,
 } from './instructions.js';
 import {
     createCloseContextStateInstruction,
+    createVerifyBatchedGroupedCiphertext2HandlesValidityInstruction,
+    createVerifyBatchedGroupedCiphertext3HandlesValidityInstruction,
     createVerifyCiphertextCiphertextEqualityInstruction,
     createVerifyCiphertextCommitmentEqualityInstruction,
+    createVerifyGroupedCiphertext2HandlesValidityInstruction,
+    createVerifyGroupedCiphertext3HandlesValidityInstruction,
     createVerifyPubkeyValidityInstruction,
     createVerifyZeroCiphertextInstruction,
 } from './instructions.js';
 import {
+    BATCHED_GROUPED_CIPHERTEXT_2_HANDLES_VALIDITY_CONTEXT_ACCOUNT_SIZE,
+    BATCHED_GROUPED_CIPHERTEXT_3_HANDLES_VALIDITY_CONTEXT_ACCOUNT_SIZE,
     CIPHERTEXT_CIPHERTEXT_EQUALITY_CONTEXT_ACCOUNT_SIZE,
     CIPHERTEXT_COMMITMENT_EQUALITY_CONTEXT_ACCOUNT_SIZE,
+    GROUPED_CIPHERTEXT_2_HANDLES_VALIDITY_CONTEXT_ACCOUNT_SIZE,
+    GROUPED_CIPHERTEXT_3_HANDLES_VALIDITY_CONTEXT_ACCOUNT_SIZE,
     PUBKEY_VALIDITY_CONTEXT_ACCOUNT_SIZE,
     ZERO_CIPHERTEXT_CONTEXT_ACCOUNT_SIZE,
     ZK_ELGAMAL_PROOF_PROGRAM_ID,
@@ -226,5 +238,125 @@ export async function verifyPubkeyValidity(
     }
 
     transaction.add(createVerifyPubkeyValidityInstruction(proofInput, contextStateInfo));
+    return await sendAndConfirmTransaction(connection, transaction, signers, confirmOptions);
+}
+
+export async function verifyGroupedCiphertext2HandlesValidity(
+    connection: Connection,
+    payer: Signer,
+    proofInput: GroupedCiphertext2HandlesValidityProofInput | RecordAccountInfo,
+    contextStateInfo: ContextStateInfo,
+    confirmOptions?: ConfirmOptions,
+    programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
+): Promise<TransactionSignature> {
+    const transaction = new Transaction();
+    const signers = [payer];
+    if (contextStateInfo && !(contextStateInfo.account instanceof PublicKey)) {
+        const accountSize = GROUPED_CIPHERTEXT_2_HANDLES_VALIDITY_CONTEXT_ACCOUNT_SIZE;
+        const lamports = await connection.getMinimumBalanceForRentExemption(accountSize);
+
+        transaction.add(
+            SystemProgram.createAccount({
+                fromPubkey: payer.publicKey,
+                newAccountPubkey: contextStateInfo.account.publicKey,
+                space: accountSize,
+                lamports,
+                programId,
+            }),
+        );
+        signers.push(contextStateInfo.account);
+    }
+
+    transaction.add(createVerifyGroupedCiphertext2HandlesValidityInstruction(proofInput, contextStateInfo));
+    return await sendAndConfirmTransaction(connection, transaction, signers, confirmOptions);
+}
+
+export async function verifyGroupedCiphertext3HandlesValidity(
+    connection: Connection,
+    payer: Signer,
+    proofInput: GroupedCiphertext3HandlesValidityProofInput | RecordAccountInfo,
+    contextStateInfo: ContextStateInfo,
+    confirmOptions?: ConfirmOptions,
+    programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
+): Promise<TransactionSignature> {
+    const transaction = new Transaction();
+    const signers = [payer];
+    if (contextStateInfo && !(contextStateInfo.account instanceof PublicKey)) {
+        const accountSize = GROUPED_CIPHERTEXT_3_HANDLES_VALIDITY_CONTEXT_ACCOUNT_SIZE;
+        const lamports = await connection.getMinimumBalanceForRentExemption(accountSize);
+
+        transaction.add(
+            SystemProgram.createAccount({
+                fromPubkey: payer.publicKey,
+                newAccountPubkey: contextStateInfo.account.publicKey,
+                space: accountSize,
+                lamports,
+                programId,
+            }),
+        );
+        signers.push(contextStateInfo.account);
+    }
+
+    transaction.add(createVerifyGroupedCiphertext3HandlesValidityInstruction(proofInput, contextStateInfo));
+    return await sendAndConfirmTransaction(connection, transaction, signers, confirmOptions);
+}
+
+export async function verifyBatchedGroupedCiphertext2HandlesValidity(
+    connection: Connection,
+    payer: Signer,
+    proofInput: BatchedGroupedCiphertext2HandlesValidityProofInput | RecordAccountInfo,
+    contextStateInfo: ContextStateInfo,
+    confirmOptions?: ConfirmOptions,
+    programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
+): Promise<TransactionSignature> {
+    const transaction = new Transaction();
+    const signers = [payer];
+    if (contextStateInfo && !(contextStateInfo.account instanceof PublicKey)) {
+        const accountSize = BATCHED_GROUPED_CIPHERTEXT_2_HANDLES_VALIDITY_CONTEXT_ACCOUNT_SIZE;
+        const lamports = await connection.getMinimumBalanceForRentExemption(accountSize);
+
+        transaction.add(
+            SystemProgram.createAccount({
+                fromPubkey: payer.publicKey,
+                newAccountPubkey: contextStateInfo.account.publicKey,
+                space: accountSize,
+                lamports,
+                programId,
+            }),
+        );
+        signers.push(contextStateInfo.account);
+    }
+
+    transaction.add(createVerifyBatchedGroupedCiphertext2HandlesValidityInstruction(proofInput, contextStateInfo));
+    return await sendAndConfirmTransaction(connection, transaction, signers, confirmOptions);
+}
+
+export async function verifyBatchedGroupedCiphertext3HandlesValidity(
+    connection: Connection,
+    payer: Signer,
+    proofInput: BatchedGroupedCiphertext3HandlesValidityProofInput | RecordAccountInfo,
+    contextStateInfo: ContextStateInfo,
+    confirmOptions?: ConfirmOptions,
+    programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
+): Promise<TransactionSignature> {
+    const transaction = new Transaction();
+    const signers = [payer];
+    if (contextStateInfo && !(contextStateInfo.account instanceof PublicKey)) {
+        const accountSize = BATCHED_GROUPED_CIPHERTEXT_3_HANDLES_VALIDITY_CONTEXT_ACCOUNT_SIZE;
+        const lamports = await connection.getMinimumBalanceForRentExemption(accountSize);
+
+        transaction.add(
+            SystemProgram.createAccount({
+                fromPubkey: payer.publicKey,
+                newAccountPubkey: contextStateInfo.account.publicKey,
+                space: accountSize,
+                lamports,
+                programId,
+            }),
+        );
+        signers.push(contextStateInfo.account);
+    }
+
+    transaction.add(createVerifyBatchedGroupedCiphertext3HandlesValidityInstruction(proofInput, contextStateInfo));
     return await sendAndConfirmTransaction(connection, transaction, signers, confirmOptions);
 }

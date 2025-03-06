@@ -40,7 +40,7 @@
     "dependencies": {
         "@solana/codecs-numbers": "^2.0.0",
         "@solana/web3.js": "^1.95.5",
-        "@solana/zk-sdk": "0.1.1"
+        "@solana/zk-sdk": "0.1.2"
     },
     "devDependencies": {
         "@solana/prettier-config-solana": "0.0.5",

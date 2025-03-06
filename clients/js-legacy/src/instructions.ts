@@ -5,12 +5,18 @@ import type {
     ElGamalCiphertext,
     ElGamalKeypair,
     ElGamalPubkey,
+    GroupedElGamalCiphertext2Handles,
+    GroupedElGamalCiphertext3Handles,
     PedersenOpening,
     PedersenCommitment,
 } from '@solana/zk-sdk';
 import {
+    BatchedGroupedCiphertext2HandlesValidityProofData,
+    BatchedGroupedCiphertext3HandlesValidityProofData,
     CiphertextCiphertextEqualityProofData,
     CiphertextCommitmentEqualityProofData,
+    GroupedCiphertext2HandlesValidityProofData,
+    GroupedCiphertext3HandlesValidityProofData,
     PubkeyValidityProofData,
     ZeroCiphertextProofData,
 } from '@solana/zk-sdk';
@@ -280,6 +286,198 @@ export function createVerifyPubkeyValidityInstruction(
         data.push(...getU32Codec().encode(proofInput.offset));
     } else {
         const proofData = PubkeyValidityProofData.new(proofInput.elgamalKeypair);
+        data.push(...proofData.toBytes());
+    }
+
+    return new TransactionInstruction({ keys, programId, data: Buffer.from(data) });
+}
+
+export interface GroupedCiphertext2HandlesValidityProofInput {
+    firstPubkey: ElGamalPubkey;
+    secondPubkey: ElGamalPubkey;
+    groupedCiphertext: GroupedElGamalCiphertext2Handles;
+    amount: bigint;
+    opening: PedersenOpening;
+}
+
+export function createVerifyGroupedCiphertext2HandlesValidityInstruction(
+    proofInput: GroupedCiphertext2HandlesValidityProofInput | RecordAccountInfo,
+    contextStateInfo?: ContextStateInfo,
+    programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
+): TransactionInstruction {
+    const keys: AccountMeta[] = [];
+    if ('account' in proofInput) {
+        keys.push({ pubkey: proofInput.account, isSigner: false, isWritable: false });
+    }
+    if (contextStateInfo) {
+        const contextStateAccount =
+            contextStateInfo.account instanceof PublicKey
+                ? contextStateInfo.account
+                : contextStateInfo.account.publicKey;
+
+        keys.push({ pubkey: contextStateAccount, isSigner: false, isWritable: true });
+        keys.push({ pubkey: contextStateInfo.authority, isSigner: false, isWritable: false });
+    }
+
+    const data = [ZkElGamalProofInstruction.VerifyGroupedCiphertext2HandlesValidity];
+    if ('offset' in proofInput) {
+        data.push(...getU32Codec().encode(proofInput.offset));
+    } else {
+        const proofData = GroupedCiphertext2HandlesValidityProofData.new(
+            proofInput.firstPubkey,
+            proofInput.secondPubkey,
+            proofInput.groupedCiphertext,
+            proofInput.amount,
+            proofInput.opening,
+        );
+        data.push(...proofData.toBytes());
+    }
+
+    return new TransactionInstruction({ keys, programId, data: Buffer.from(data) });
+}
+
+export interface GroupedCiphertext3HandlesValidityProofInput {
+    firstPubkey: ElGamalPubkey;
+    secondPubkey: ElGamalPubkey;
+    thirdPubkey: ElGamalPubkey;
+    groupedCiphertext: GroupedElGamalCiphertext3Handles;
+    amount: bigint;
+    opening: PedersenOpening;
+}
+
+export function createVerifyGroupedCiphertext3HandlesValidityInstruction(
+    proofInput: GroupedCiphertext3HandlesValidityProofInput | RecordAccountInfo,
+    contextStateInfo?: ContextStateInfo,
+    programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
+): TransactionInstruction {
+    const keys: AccountMeta[] = [];
+    if ('account' in proofInput) {
+        keys.push({ pubkey: proofInput.account, isSigner: false, isWritable: false });
+    }
+    if (contextStateInfo) {
+        const contextStateAccount =
+            contextStateInfo.account instanceof PublicKey
+                ? contextStateInfo.account
+                : contextStateInfo.account.publicKey;
+
+        keys.push({ pubkey: contextStateAccount, isSigner: false, isWritable: true });
+        keys.push({ pubkey: contextStateInfo.authority, isSigner: false, isWritable: false });
+    }
+
+    const data = [ZkElGamalProofInstruction.VerifyGroupedCiphertext3HandlesValidity];
+    if ('offset' in proofInput) {
+        data.push(...getU32Codec().encode(proofInput.offset));
+    } else {
+        const proofData = GroupedCiphertext3HandlesValidityProofData.new(
+            proofInput.firstPubkey,
+            proofInput.secondPubkey,
+            proofInput.thirdPubkey,
+            proofInput.groupedCiphertext,
+            proofInput.amount,
+            proofInput.opening,
+        );
+        data.push(...proofData.toBytes());
+    }
+
+    return new TransactionInstruction({ keys, programId, data: Buffer.from(data) });
+}
+
+export interface BatchedGroupedCiphertext2HandlesValidityProofInput {
+    firstPubkey: ElGamalPubkey;
+    secondPubkey: ElGamalPubkey;
+    groupedCiphertextLo: GroupedElGamalCiphertext2Handles;
+    groupedCiphertextHi: GroupedElGamalCiphertext2Handles;
+    amountLo: bigint;
+    amountHi: bigint;
+    openingLo: PedersenOpening;
+    openingHi: PedersenOpening;
+}
+
+export function createVerifyBatchedGroupedCiphertext2HandlesValidityInstruction(
+    proofInput: BatchedGroupedCiphertext2HandlesValidityProofInput | RecordAccountInfo,
+    contextStateInfo?: ContextStateInfo,
+    programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
+): TransactionInstruction {
+    const keys: AccountMeta[] = [];
+    if ('account' in proofInput) {
+        keys.push({ pubkey: proofInput.account, isSigner: false, isWritable: false });
+    }
+    if (contextStateInfo) {
+        const contextStateAccount =
+            contextStateInfo.account instanceof PublicKey
+                ? contextStateInfo.account
+                : contextStateInfo.account.publicKey;
+
+        keys.push({ pubkey: contextStateAccount, isSigner: false, isWritable: true });
+        keys.push({ pubkey: contextStateInfo.authority, isSigner: false, isWritable: false });
+    }
+
+    const data = [ZkElGamalProofInstruction.VerifyBatchedGroupedCiphertext2HandlesValidity];
+    if ('offset' in proofInput) {
+        data.push(...getU32Codec().encode(proofInput.offset));
+    } else {
+        const proofData = BatchedGroupedCiphertext2HandlesValidityProofData.new(
+            proofInput.firstPubkey,
+            proofInput.secondPubkey,
+            proofInput.groupedCiphertextLo,
+            proofInput.groupedCiphertextHi,
+            proofInput.amountLo,
+            proofInput.amountHi,
+            proofInput.openingLo,
+            proofInput.openingHi,
+        );
+        data.push(...proofData.toBytes());
+    }
+
+    return new TransactionInstruction({ keys, programId, data: Buffer.from(data) });
+}
+
+export interface BatchedGroupedCiphertext3HandlesValidityProofInput {
+    firstPubkey: ElGamalPubkey;
+    secondPubkey: ElGamalPubkey;
+    thirdPubkey: ElGamalPubkey;
+    groupedCiphertextLo: GroupedElGamalCiphertext2Handles;
+    groupedCiphertextHi: GroupedElGamalCiphertext2Handles;
+    amountLo: bigint;
+    amountHi: bigint;
+    openingLo: PedersenOpening;
+    openingHi: PedersenOpening;
+}
+
+export function createVerifyBatchedGroupedCiphertext3HandlesValidityInstruction(
+    proofInput: BatchedGroupedCiphertext3HandlesValidityProofInput | RecordAccountInfo,
+    contextStateInfo?: ContextStateInfo,
+    programId = ZK_ELGAMAL_PROOF_PROGRAM_ID,
+): TransactionInstruction {
+    const keys: AccountMeta[] = [];
+    if ('account' in proofInput) {
+        keys.push({ pubkey: proofInput.account, isSigner: false, isWritable: false });
+    }
+    if (contextStateInfo) {
+        const contextStateAccount =
+            contextStateInfo.account instanceof PublicKey
+                ? contextStateInfo.account
+                : contextStateInfo.account.publicKey;
+
+        keys.push({ pubkey: contextStateAccount, isSigner: false, isWritable: true });
+        keys.push({ pubkey: contextStateInfo.authority, isSigner: false, isWritable: false });
+    }
+
+    const data = [ZkElGamalProofInstruction.VerifyBatchedGroupedCiphertext3HandlesValidity];
+    if ('offset' in proofInput) {
+        data.push(...getU32Codec().encode(proofInput.offset));
+    } else {
+        const proofData = BatchedGroupedCiphertext3HandlesValidityProofData.new(
+            proofInput.firstPubkey,
+            proofInput.secondPubkey,
+            proofInput.thirdPubkey,
+            proofInput.groupedCiphertextLo,
+            proofInput.groupedCiphertextHi,
+            proofInput.amountLo,
+            proofInput.amountHi,
+            proofInput.openingLo,
+            proofInput.openingHi,
+        );
         data.push(...proofData.toBytes());
     }
 
