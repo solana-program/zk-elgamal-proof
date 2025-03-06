@@ -8,8 +8,8 @@ import {
     createVerifyGroupedCiphertext3HandlesValidityInstruction,
     verifyGroupedCiphertext3HandlesValidity,
 } from '../src';
+import type { ElGamalPubkey } from '@solana/zk-sdk';
 import {
-    ElGamalPubkey,
     ElGamalKeypair,
     PedersenOpening,
     GroupedCiphertext3HandlesValidityProofData,
