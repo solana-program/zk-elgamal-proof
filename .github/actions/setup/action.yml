@@ -1,8 +1,17 @@
 name: Setup environment
 
 inputs:
+  clippy:
+    description: Install Clippy if `true`. Defaults to `false`.
+    required: false
+  rustfmt:
+    description: Install Rustfmt if `true`. Defaults to `false`.
+    required: false
   solana:
     description: Install Solana if `true`. Defaults to `false`.
+    required: false
+  wasm:
+    description: Install wasm target for Rust if `true`. Defaults to `false`.
     required: false
 
 runs:
@@ -25,9 +34,28 @@ runs:
       shell: bash
       run: pnpm zx ./scripts/ci/set-env.mjs
 
+    - name: Install Rustfmt
+      if: ${{ inputs.rustfmt == 'true' }}
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ env.TOOLCHAIN_FORMAT }}
+        components: rustfmt
+
+    - name: Install Clippy
+      if: ${{ inputs.clippy == 'true' }}
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ env.TOOLCHAIN_LINT }}
+        components: clippy
+
     - name: Install Solana
       if: ${{ inputs.solana == 'true' }}
       uses: solana-program/actions/install-solana@v1
       with:
         version: ${{ env.SOLANA_VERSION }}
         cache: true
+
+    - name: Install wasm target
+      if: ${{ inputs.wasm == 'true' }}
+      shell: bash
+      run: rustup target add wasm32-unknown-unknown
