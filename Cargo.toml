@@ -55,11 +55,6 @@ zeroize = { version = "1.7", default-features = false }
 split-debuginfo = "unpacked"
 lto = "thin"
 
-[profile.release-with-lto]
-inherits = "release"
-lto = "fat"
-codegen-units = 1
-
 # Enable basic optimizations for unittests
 [profile.test]
 opt-level = 1
