@@ -50,6 +50,7 @@ impl BatchedGroupedCiphertext3HandlesValidityProof {
     ///
     /// The function simply batches the input openings and invokes the standard grouped ciphertext
     /// validity proof constructor.
+    #[allow(clippy::too_many_arguments)]
     pub fn new<T: Into<Scalar>>(
         first_pubkey: &ElGamalPubkey,
         second_pubkey: &ElGamalPubkey,

@@ -72,6 +72,7 @@ pub struct PercentageWithCapProofContext {
 #[cfg(not(target_os = "solana"))]
 #[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 impl PercentageWithCapProofData {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         percentage_commitment: &PedersenCommitment,
         percentage_opening: &PedersenOpening,
