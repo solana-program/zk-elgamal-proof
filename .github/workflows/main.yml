@@ -7,6 +7,27 @@ on:
     branches: [main]
 
 jobs:
+  format_and_lint_zk_sdk:
+    name: Format & Lint ZK SDK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup
+        with:
+          clippy: true
+          rustfmt: true
+          cargo-cache-key: cargo-zk-sdk-lint
+          cargo-cache-fallback-key: cargo-zk-sdk
+
+      - name: Format ZK SDK
+        run: pnpm zk-sdk:format
+
+      - name: Lint ZK SDK
+        run: pnpm zk-sdk:lint
+
   format_and_lint_client_js_legacy:
     name: Format & Lint Client JS Legacy
     runs-on: ubuntu-latest
@@ -38,3 +59,79 @@ jobs:
 
       - name: Test Client JS Legacy
         run: pnpm clients:js-legacy:test
+
+  test_zk_sdk:
+    name: Test ZK SDK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup
+        with:
+          cargo-cache-key: cargo-zk-sdk-test
+          cargo-cache-fallback-key: cargo-zk-sdk
+
+      - name: Test ZK SDK
+        run: pnpm zk-sdk:test
+
+  audit_rust:
+    name: Audit Rust
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup
+        with:
+          cargo-cache-key: cargo-audit
+
+      - name: Install cargo-audit
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit
+
+      - name: Run cargo-audit
+        run: pnpm rust:audit
+
+  wasm:
+    name: Check ZK SDK wasm build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup
+        with:
+          cargo-cache-key: cargo-wasm
+          wasm: true
+
+      - name: Build ZK SDK Wasm
+        run: pnpm zk-sdk:build-wasm
+
+  build_programs:
+    name: Check ZK SDK SBF build
+    runs-on: ubuntu-latest
+    needs: format_and_lint_zk_sdk
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup
+        with:
+          cargo-cache-key: cargo-zk-sdk
+          solana: true
+
+      - name: Build ZK SDK
+        run: pnpm zk-sdk:build-sbf
+
+      - name: Upload Program Builds
+        uses: actions/upload-artifact@v4
+        with:
+          name: program-builds
+          path: ./target/deploy/*.so
+          if-no-files-found: error

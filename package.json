@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "zk-sdk:build-sbf": "zx ./scripts/rust/build.mjs zk-sdk",
+    "zk-sdk:build-sbf": "zx ./scripts/rust/build-sbf.mjs zk-sdk",
     "zk-sdk:build-wasm": "zx ./scripts/rust/build-wasm.mjs zk-sdk",
     "zk-sdk:test": "zx ./scripts/rust/test.mjs zk-sdk",
     "zk-sdk:format": "zx ./scripts/rust/format.mjs zk-sdk",
