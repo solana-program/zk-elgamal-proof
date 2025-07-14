@@ -22,8 +22,8 @@ solana = "2.2.11"
 # Specify Rust toolchains for rustfmt, clippy, and build.
 # Any unprovided toolchains default to stable.
 [workspace.metadata.toolchains]
-format = "nightly-2024-11-22"
-lint = "nightly-2024-11-22"
+format = "nightly-2025-03-29"
+lint = "nightly-2025-03-29"
 
 [workspace.dependencies]
 aes-gcm-siv = "0.11.1"
