@@ -68,6 +68,7 @@ pub struct BatchedGroupedCiphertext3HandlesValidityProofContext {
 #[cfg(not(target_os = "solana"))]
 #[cfg(not(target_arch = "wasm32"))]
 impl BatchedGroupedCiphertext3HandlesValidityProofData {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         first_pubkey: &ElGamalPubkey,
         second_pubkey: &ElGamalPubkey,

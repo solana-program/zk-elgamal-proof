@@ -138,6 +138,7 @@ impl GroupedCiphertext3HandlesValidityProof {
     /// * `second_handle` - The second decryption handle
     /// * `third_handle` - The third decryption handle
     /// * `transcript` - The transcript that does the bookkeeping for the Fiat-Shamir heuristic
+    #[allow(clippy::too_many_arguments)]
     pub fn verify(
         self,
         commitment: &PedersenCommitment,

@@ -1,6 +1,11 @@
 {
   "private": true,
   "scripts": {
+    "zk-sdk:build-sbf": "zx ./scripts/rust/build.mjs zk-sdk",
+    "zk-sdk:build-wasm": "zx ./scripts/rust/build-wasm.mjs zk-sdk",
+    "zk-sdk:test": "zx ./scripts/rust/test.mjs zk-sdk",
+    "zk-sdk:format": "zx ./scripts/rust/format.mjs zk-sdk",
+    "zk-sdk:lint": "zx ./scripts/rust/lint.mjs zk-sdk",
     "solana:check": "zx ./scripts/check-solana-version.mjs",
     "solana:link": "zx ./scripts/link-solana-version.mjs",
     "validator:start": "zx ./scripts/start-validator.mjs",
@@ -8,7 +13,7 @@
     "validator:stop": "zx ./scripts/stop-validator.mjs",
     "template:upgrade": "zx ./scripts/upgrade-template.mjs",
     "rust:spellcheck": "cargo spellcheck --code 1",
-    "rust:audit": "zx ./scripts/audit-rust.mjs",
+    "rust:audit": "zx ./scripts/rust/audit.mjs",
     "rust:semver": "cargo semver-checks",
     "clients:js-legacy:format": "zx ./scripts/js/format.mjs clients/js-legacy",
     "clients:js-legacy:lint": "zx ./scripts/js/lint.mjs clients/js-legacy",
