@@ -51,13 +51,6 @@ tiny-bip39 = "0.8.2"
 wasm-bindgen = "0.2"
 zeroize = { version = "1.7", default-features = false }
 
-
-[profile.release-with-debug]
-inherits = "release"
-debug = true
-strip = false
-split-debuginfo = "off"
-
 [profile.release]
 split-debuginfo = "unpacked"
 lto = "thin"
