@@ -87,7 +87,8 @@ impl PubkeyValidityProof {
         Self { Y, z }
     }
 
-    /// Verifies a public key validity proof.
+    /// Verifies a public key validity proof. The function rejects identity public keys
+    /// even if the verifying algebraic relation holds.
     ///
     /// * `elgamal_pubkey` - The ElGamal public key to be proved
     /// * `transcript` - The transcript that does the bookkeeping for the Fiat-Shamir heuristic
@@ -100,6 +101,10 @@ impl PubkeyValidityProof {
 
         // extract the relevant scalar and Ristretto points from the input
         let P = elgamal_pubkey.get_point();
+
+        if P.is_identity() {
+            return Err(SigmaProofVerificationError::PubkeyIsIdentity.into());
+        }
 
         // include Y to transcript and extract challenge
         transcript.validate_and_append_point(b"Y", &self.Y)?;
