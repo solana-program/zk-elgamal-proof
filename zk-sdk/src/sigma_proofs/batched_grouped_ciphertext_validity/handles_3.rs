@@ -12,13 +12,16 @@
 //! The protocol guarantees computational soundness (by the hardness of discrete log) and perfect
 //! zero-knowledge in the random oracle model.
 
-#[cfg(not(target_os = "solana"))]
-use crate::encryption::{
-    elgamal::{DecryptHandle, ElGamalPubkey},
-    pedersen::{PedersenCommitment, PedersenOpening},
-};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
+#[cfg(not(target_os = "solana"))]
+use {
+    crate::encryption::{
+        elgamal::{DecryptHandle, ElGamalPubkey},
+        pedersen::{PedersenCommitment, PedersenOpening},
+    },
+    zeroize::Zeroize,
+};
 use {
     crate::{
         sigma_proofs::{
@@ -65,17 +68,25 @@ impl BatchedGroupedCiphertext3HandlesValidityProof {
 
         let t = transcript.challenge_scalar(b"t");
 
-        let batched_message = amount_lo.into() + amount_hi.into() * t;
-        let batched_opening = opening_lo + &(opening_hi * &t);
+        let mut batched_message = amount_lo.into() + amount_hi.into() * t;
+        let mut batched_opening = opening_lo + &(opening_hi * &t);
 
-        BatchedGroupedCiphertext3HandlesValidityProof(GroupedCiphertext3HandlesValidityProof::new(
-            first_pubkey,
-            second_pubkey,
-            third_pubkey,
-            batched_message,
-            &batched_opening,
-            transcript,
-        ))
+        let proof = BatchedGroupedCiphertext3HandlesValidityProof(
+            GroupedCiphertext3HandlesValidityProof::new(
+                first_pubkey,
+                second_pubkey,
+                third_pubkey,
+                batched_message,
+                &batched_opening,
+                transcript,
+            ),
+        );
+
+        // zeroize all sensitive owned variables
+        batched_message.zeroize();
+        batched_opening.zeroize();
+
+        proof
     }
 
     /// Verifies a batched grouped ciphertext validity proof.

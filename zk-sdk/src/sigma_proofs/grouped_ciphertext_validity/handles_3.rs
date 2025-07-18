@@ -90,7 +90,7 @@ impl GroupedCiphertext3HandlesValidityProof {
         let P_second = second_pubkey.get_point();
         let P_third = third_pubkey.get_point();
 
-        let x = amount.into();
+        let mut x = amount.into();
         let r = opening.get_scalar();
 
         // generate random masking factors that also serves as nonces
@@ -115,6 +115,8 @@ impl GroupedCiphertext3HandlesValidityProof {
         let z_r = &(&c * r) + &y_r;
         let z_x = &(&c * &x) + &y_x;
 
+        // zeroize all sensitive owned variables
+        x.zeroize();
         y_r.zeroize();
         y_x.zeroize();
 

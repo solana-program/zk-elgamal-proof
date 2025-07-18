@@ -69,7 +69,7 @@ impl PubkeyValidityProof {
         let s = elgamal_keypair.secret().get_scalar();
 
         assert!(s != &Scalar::ZERO);
-        let s_inv = s.invert();
+        let mut s_inv = s.invert();
 
         // generate a random masking factor that also serves as a nonce
         let mut y = Scalar::random(&mut OsRng);
@@ -82,6 +82,8 @@ impl PubkeyValidityProof {
         // compute masked secret key
         let z = &(&c * s_inv) + &y;
 
+        // zeroize all sensitive non-reference variables
+        s_inv.zeroize();
         y.zeroize();
 
         Self { Y, z }
