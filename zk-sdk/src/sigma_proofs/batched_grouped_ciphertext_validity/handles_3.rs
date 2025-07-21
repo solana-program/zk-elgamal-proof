@@ -69,7 +69,7 @@ impl BatchedGroupedCiphertext3HandlesValidityProof {
         let t = transcript.challenge_scalar(b"t");
 
         let mut batched_message = amount_lo.into() + amount_hi.into() * t;
-        let mut batched_opening = opening_lo + &(opening_hi * &t);
+        let batched_opening = opening_lo + &(opening_hi * &t);
 
         let proof = BatchedGroupedCiphertext3HandlesValidityProof(
             GroupedCiphertext3HandlesValidityProof::new(
@@ -84,7 +84,6 @@ impl BatchedGroupedCiphertext3HandlesValidityProof {
 
         // zeroize all sensitive owned variables
         batched_message.zeroize();
-        batched_opening.zeroize();
 
         proof
     }
