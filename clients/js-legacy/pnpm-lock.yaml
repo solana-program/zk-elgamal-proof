@@ -28,8 +28,8 @@ importers:
         specifier: ^0.1.0
         version: 0.1.0(@solana/web3.js@1.98.0(bufferutil@4.0.9)(utf-8-validate@5.0.10))(typescript@5.7.3)
       '@types/chai':
-        specifier: ^5.0.1
-        version: 5.0.1
+        specifier: ^5.2.2
+        version: 5.2.2
       '@types/mocha':
         specifier: ^10.0.10
         version: 10.0.10
@@ -37,11 +37,11 @@ importers:
         specifier: ^22.10.1
         version: 22.10.7
       chai:
-        specifier: ^5.1.2
-        version: 5.1.2
+        specifier: ^5.2.1
+        version: 5.2.1
       chai-as-promised:
         specifier: ^8.0.1
-        version: 8.0.1(chai@5.1.2)
+        version: 8.0.1(chai@5.2.1)
       eslint:
         specifier: ^8.57.1
         version: 8.57.1
@@ -236,8 +236,8 @@ packages:
   '@tsconfig/node16@1.0.4':
     resolution: {integrity: sha512-vxhUy4J8lyeyinH7Azl1pdd43GJhZH/tP2weN8TntQblOY+A0XbT8DJk1/oCPuOOyg/Ja757rG0CgHcWC8OfMA==}
 
-  '@types/chai@5.0.1':
-    resolution: {integrity: sha512-5T8ajsg3M/FOncpLYW7sdOcD6yf4+722sze/tc4KQV0P8Z2rAr3SAuHCIkYmYpt8VbcQlnz8SxlOlPQYefe4cA==}
+  '@types/chai@5.2.2':
+    resolution: {integrity: sha512-8kB30R7Hwqf40JPiKhVzodJs2Qc1ZJ5zuT3uzw5Hq/dhNCl3G3l83jfpdI1e20BP348+fV7VIL/+FxaXkqBmWg==}
 
   '@types/connect@3.4.38':
     resolution: {integrity: sha512-K6uROf1LD88uDQqJCktA4yzL1YYAK6NgfsI0v/mTgyPKWsX1CnJ0XPSDhViejru1GcRkLWb8RlzFYJRqGUbaug==}
@@ -446,9 +446,9 @@ packages:
     peerDependencies:
       chai: '>= 2.1.2 < 6'
 
-  chai@5.1.2:
-    resolution: {integrity: sha512-aGtmf24DW6MLHHG5gCx4zaI3uBq3KRtxeVs0DjFH6Z0rDNbsvTxFASFvdj79pxjxZ8/5u3PIiN3IwEIQkiiuPw==}
-    engines: {node: '>=12'}
+  chai@5.2.1:
+    resolution: {integrity: sha512-5nFxhUrX0PqtyogoYOA8IPswy5sZFTOsBFl/9bNsmDLgsxYTzSZQJDPppDnZPTQbzSEm0hqGjWPzRemQCYbD6A==}
+    engines: {node: '>=18'}
 
   chalk@4.1.2:
     resolution: {integrity: sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA==}
@@ -908,8 +908,8 @@ packages:
     resolution: {integrity: sha512-8XPvpAA8uyhfteu8pIvQxpJZ7SYYdpUivZpGy6sFsBuKRY/7rQGavedeB8aK+Zkyq6upMFVL/9AW6vOYzfRyLg==}
     engines: {node: '>=10'}
 
-  loupe@3.1.2:
-    resolution: {integrity: sha512-23I4pFZHmAemUnz8WZXbYRSKYj801VDaNv9ETuMh7IrMc7VuVVSo+Z9iLE3ni30+U48iDWfi30d3twAXBYmnCg==}
+  loupe@3.1.4:
+    resolution: {integrity: sha512-wJzkKwJrheKtknCOKNEtDK4iqg/MxmZheEMtSTYvnzRdEYaZzmgH976nenp8WdJRdx5Vc1X/9MO0Oszl6ezeXg==}
 
   lru-cache@10.4.3:
     resolution: {integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==}
@@ -1038,8 +1038,8 @@ packages:
     resolution: {integrity: sha512-Xa4Nw17FS9ApQFJ9umLiJS4orGjm7ZzwUrwamcGQuHSzDyth9boKDaycYdDcZDuqYATXw4HFXgaqWTctW/v1HA==}
     engines: {node: '>=16 || 14 >=14.18'}
 
-  pathval@2.0.0:
-    resolution: {integrity: sha512-vE7JKRyES09KiunauX7nd2Q9/L7lhok4smP9RZTDeD4MVs72Dp2qNFVz39Nz5a0FVEW0BJR6C0DYrq6unoziZA==}
+  pathval@2.0.1:
+    resolution: {integrity: sha512-//nshmD55c46FuFw26xV/xFAaB5HF9Xdap7HJBBnrKdAd6/GxDBaNA1870O79+9ueg61cZLSVc+OaFlfmObYVQ==}
     engines: {node: '>= 14.16'}
 
   pause-stream@0.0.11:
@@ -1541,7 +1541,7 @@ snapshots:
 
   '@tsconfig/node16@1.0.4': {}
 
-  '@types/chai@5.0.1':
+  '@types/chai@5.2.2':
     dependencies:
       '@types/deep-eql': 4.0.2
 
@@ -1770,18 +1770,18 @@ snapshots:
 
   camelcase@6.3.0: {}
 
-  chai-as-promised@8.0.1(chai@5.1.2):
+  chai-as-promised@8.0.1(chai@5.2.1):
     dependencies:
-      chai: 5.1.2
+      chai: 5.2.1
       check-error: 2.1.1
 
-  chai@5.1.2:
+  chai@5.2.1:
     dependencies:
       assertion-error: 2.0.1
       check-error: 2.1.1
       deep-eql: 5.0.2
-      loupe: 3.1.2
-      pathval: 2.0.0
+      loupe: 3.1.4
+      pathval: 2.0.1
 
   chalk@4.1.2:
     dependencies:
@@ -2236,7 +2236,7 @@ snapshots:
       chalk: 4.1.2
       is-unicode-supported: 0.1.0
 
-  loupe@3.1.2: {}
+  loupe@3.1.4: {}
 
   lru-cache@10.4.3: {}
 
@@ -2361,7 +2361,7 @@ snapshots:
       lru-cache: 10.4.3
       minipass: 7.1.2
 
-  pathval@2.0.0: {}
+  pathval@2.0.1: {}
 
   pause-stream@0.0.11:
     dependencies:
