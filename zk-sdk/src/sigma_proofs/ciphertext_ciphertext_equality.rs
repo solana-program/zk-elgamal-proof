@@ -85,7 +85,7 @@ impl CiphertextCiphertextEqualityProof {
         let P_second = second_pubkey.get_point();
 
         let s = first_keypair.secret().get_scalar();
-        let x = Scalar::from(amount);
+        let mut x = Scalar::from(amount);
         let r = second_opening.get_scalar();
 
         // generate random masking factors that also serves as nonces
@@ -112,7 +112,8 @@ impl CiphertextCiphertextEqualityProof {
         let z_x = &(&c * &x) + &y_x;
         let z_r = &(&c * r) + &y_r;
 
-        // zeroize random scalars
+        // zeroize all sensitive non-reference variables
+        x.zeroize();
         y_s.zeroize();
         y_x.zeroize();
         y_r.zeroize();
