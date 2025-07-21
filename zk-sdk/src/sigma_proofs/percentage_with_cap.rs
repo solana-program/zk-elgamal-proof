@@ -27,6 +27,7 @@ use {
         UNIT_LEN,
     },
     rand::rngs::OsRng,
+    zeroize::Zeroize,
 };
 use {
     crate::{
@@ -197,7 +198,7 @@ impl PercentageWithCapProof {
         let z_x = Scalar::random(&mut OsRng);
         let z_delta = Scalar::random(&mut OsRng);
         let z_claimed = Scalar::random(&mut OsRng);
-        let c_equality = Scalar::random(&mut OsRng);
+        let mut c_equality = Scalar::random(&mut OsRng);
 
         let Y_delta = RistrettoPoint::multiscalar_mul(
             vec![z_x, z_delta, -c_equality],
@@ -222,7 +223,7 @@ impl PercentageWithCapProof {
         // generate max proof
         let r_percentage = percentage_opening.get_scalar();
 
-        let y_max_proof = Scalar::random(&mut OsRng);
+        let mut y_max_proof = Scalar::random(&mut OsRng);
         let Y_max_proof = (y_max_proof * &(*H)).compress();
 
         transcript.append_point(b"Y_max_proof", &Y_max_proof);
@@ -241,6 +242,10 @@ impl PercentageWithCapProof {
             z_max_proof,
             c_max_proof,
         };
+
+        // zeroize all sensitive owned variables
+        c_equality.zeroize();
+        y_max_proof.zeroize();
 
         Self {
             percentage_max_proof,
@@ -286,14 +291,14 @@ impl PercentageWithCapProof {
         };
 
         // generate equality proof
-        let x = Scalar::from(delta_amount);
+        let mut x = Scalar::from(delta_amount);
 
         let r_delta = delta_opening.get_scalar();
         let r_claimed = claimed_opening.get_scalar();
 
-        let y_x = Scalar::random(&mut OsRng);
-        let y_delta = Scalar::random(&mut OsRng);
-        let y_claimed = Scalar::random(&mut OsRng);
+        let mut y_x = Scalar::random(&mut OsRng);
+        let mut y_delta = Scalar::random(&mut OsRng);
+        let mut y_claimed = Scalar::random(&mut OsRng);
 
         let Y_delta =
             RistrettoPoint::multiscalar_mul(vec![y_x, y_delta], vec![&G, &(*H)]).compress();
@@ -305,7 +310,7 @@ impl PercentageWithCapProof {
         transcript.append_point(b"Y_claimed", &Y_claimed);
 
         let c = transcript.challenge_scalar(b"c");
-        let c_equality = c - c_max_proof;
+        let mut c_equality = c - c_max_proof;
 
         transcript.challenge_scalar(b"w");
 
@@ -320,6 +325,13 @@ impl PercentageWithCapProof {
             z_delta,
             z_claimed,
         };
+
+        // zeroize all sensitive owned variables
+        c_equality.zeroize();
+        x.zeroize();
+        y_x.zeroize();
+        y_delta.zeroize();
+        y_claimed.zeroize();
 
         Self {
             percentage_max_proof,

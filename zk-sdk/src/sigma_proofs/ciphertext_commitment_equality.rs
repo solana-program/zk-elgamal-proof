@@ -88,7 +88,7 @@ impl CiphertextCommitmentEqualityProof {
         let D = ciphertext.handle.get_point();
 
         let s = keypair.secret().get_scalar();
-        let x = Scalar::from(amount);
+        let mut x = Scalar::from(amount);
         let r = opening.get_scalar();
 
         // generate random masking factors that also serves as nonces
@@ -114,6 +114,7 @@ impl CiphertextCommitmentEqualityProof {
         let z_r = &(&c * r) + &y_r;
 
         // zeroize random scalars
+        x.zeroize();
         y_s.zeroize();
         y_x.zeroize();
         y_r.zeroize();
