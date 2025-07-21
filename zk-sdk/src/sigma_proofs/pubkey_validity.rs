@@ -151,6 +151,8 @@ mod test {
         crate::{
             encryption::pod::elgamal::PodElGamalPubkey, sigma_proofs::pod::PodPubkeyValidityProof,
         },
+        bytemuck::Zeroable,
+        curve25519_dalek::traits::Identity,
         solana_keypair::Keypair,
         solana_pubkey::Pubkey,
         std::str::FromStr,
@@ -195,5 +197,29 @@ mod test {
         let mut verifier_transcript = Transcript::new(b"test");
 
         proof.verify(&pubkey, &mut verifier_transcript).unwrap();
+    }
+
+    #[test]
+    fn test_pubkey_proof_verify_identity() {
+        // An identity ElGamal pubkey
+        let identity_pubkey: ElGamalPubkey = PodElGamalPubkey::zeroed().try_into().unwrap();
+
+        // A dummy proof
+        let proof = PubkeyValidityProof {
+            Y: RistrettoPoint::identity().compress(),
+            z: Scalar::ZERO,
+        };
+
+        let mut verifier_transcript = Transcript::new(b"test");
+        let err = proof
+            .verify(&identity_pubkey, &mut verifier_transcript)
+            .unwrap_err();
+
+        assert_eq!(
+            err,
+            PubkeyValidityProofVerificationError::from(
+                SigmaProofVerificationError::PubkeyIsIdentity
+            )
+        );
     }
 }
