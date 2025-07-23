@@ -53,10 +53,7 @@ jobs:
           clippy: true
           rustfmt: true
           solana: true
-          cli: true
-          purge: true
-          cargo-cache-key: cargo-test-publish-${{ inputs.package_path }}
-          cargo-cache-fallback-key: cargo-test-publish
+          wasm: true
 
       - name: Format
         run: pnpm zx ./scripts/rust/format.mjs "${{ inputs.package_path }}"
