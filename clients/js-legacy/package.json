@@ -58,7 +58,7 @@
         "globals": "^15.14.0",
         "mocha": "^11.0.1",
         "prettier": "^3.4.2",
-        "shx": "^0.3.4",
+        "shx": "^0.4.0",
         "start-server-and-test": "^2.0.12",
         "ts-node": "^10.9.2",
         "typescript": "^5.7.2",
