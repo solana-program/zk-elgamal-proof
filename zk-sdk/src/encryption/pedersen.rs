@@ -309,10 +309,10 @@ mod tests {
 
         let (commitment, opening) = Pedersen::new(amount_0);
         let scalar = Scalar::from(amount_1);
-        let commitment_addition = Pedersen::with(amount_0 * amount_1, &(opening * scalar));
+        let commitment_multiplication = Pedersen::with(amount_0 * amount_1, &(opening * scalar));
 
-        assert_eq!(commitment_addition, commitment * scalar);
-        assert_eq!(commitment_addition, scalar * commitment);
+        assert_eq!(commitment_multiplication, commitment * scalar);
+        assert_eq!(commitment_multiplication, scalar * commitment);
     }
 
     #[test]
@@ -361,5 +361,60 @@ mod tests {
         let decoded: PedersenOpening = bincode::deserialize(&encoded).unwrap();
 
         assert_eq!(opening, decoded);
+    }
+
+    #[test]
+    fn test_homomorphic_addition_with_zero() {
+        let amount: u64 = 77;
+        let (commitment_0, opening_0) = Pedersen::new(amount);
+        let (commitment_1, opening_1) = Pedersen::new(0_u64);
+
+        // C(m+0, r1+r2) should equal C(m, r1) + C(0, r2)
+        let expected_commitment = Pedersen::with(amount, &(opening_0.clone() + opening_1.clone()));
+        assert_eq!(expected_commitment, commitment_0 + commitment_1);
+    }
+
+    #[test]
+    fn test_pedersen_encode() {
+        let amount: u64 = 123;
+
+        // Create commitment with zero opening explicitly
+        let zero_opening = PedersenOpening::default(); // default is a zero scalar
+        let commitment_with_zero = Pedersen::with(amount, &zero_opening);
+
+        // Compare with the encode function
+        let encoded_commitment = Pedersen::encode(amount);
+
+        assert_eq!(encoded_commitment, commitment_with_zero);
+
+        // Also verify it's not equal to a commitment with a random opening
+        let (random_commitment, _) = Pedersen::new(amount);
+        assert_ne!(encoded_commitment, random_commitment);
+    }
+
+    #[test]
+    fn test_invalid_commitment_verification() {
+        let amount: u64 = 50;
+        let wrong_amount: u64 = 51;
+
+        let (commitment, opening) = Pedersen::new(amount);
+
+        // Re-create commitment with the WRONG amount but correct opening
+        let forged_commitment = Pedersen::with(wrong_amount, &opening);
+
+        assert_ne!(commitment, forged_commitment);
+    }
+
+    #[test]
+    fn test_pedersen_commitment_from_invalid_bytes() {
+        // These bytes have the correct length (32) but do not represent a valid
+        // point on the curve. This is the compressed form of the point of order 4,
+        // which is invalid in the Ristretto group.
+        let invalid_bytes = [
+            1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+            0, 0, 0,
+        ];
+
+        assert_eq!(PedersenCommitment::from_bytes(&invalid_bytes), None);
     }
 }
