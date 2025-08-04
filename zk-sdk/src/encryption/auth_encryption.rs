@@ -134,6 +134,8 @@ impl AeKey {
         signer: &dyn Signer,
         public_seed: &[u8],
     ) -> Result<Vec<u8>, SignerError> {
+        // TODO: This function uses a non-standard KDF and should be refactored.
+        // See: https://github.com/solana-program/zk-elgamal-proof/issues/35
         let message = [b"AeKey", public_seed].concat();
         let signature = signer.try_sign_message(&message)?;
 
