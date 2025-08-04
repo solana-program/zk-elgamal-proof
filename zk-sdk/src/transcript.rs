@@ -6,16 +6,13 @@ use {
 
 pub trait TranscriptProtocol {
     /// Append a `scalar` with the given `label`.
-    #[cfg(not(target_os = "solana"))]
     fn append_scalar(&mut self, label: &'static [u8], scalar: &Scalar);
 
     /// Append a `point` with the given `label`.
-    #[cfg(not(target_os = "solana"))]
     fn append_point(&mut self, label: &'static [u8], point: &CompressedRistretto);
 
     /// Check that a point is not the identity, then append it to the
     /// transcript.  Otherwise, return an error.
-    #[cfg(not(target_os = "solana"))]
     fn validate_and_append_point(
         &mut self,
         label: &'static [u8],
@@ -50,22 +47,18 @@ pub trait TranscriptProtocol {
     fn pubkey_proof_domain_separator(&mut self);
 
     /// Compute a `label`ed challenge variable.
-    #[cfg(not(target_os = "solana"))]
     fn challenge_scalar(&mut self, label: &'static [u8]) -> Scalar;
 }
 
 impl TranscriptProtocol for Transcript {
-    #[cfg(not(target_os = "solana"))]
     fn append_scalar(&mut self, label: &'static [u8], scalar: &Scalar) {
         self.append_message(label, scalar.as_bytes());
     }
 
-    #[cfg(not(target_os = "solana"))]
     fn append_point(&mut self, label: &'static [u8], point: &CompressedRistretto) {
         self.append_message(label, point.as_bytes());
     }
 
-    #[cfg(not(target_os = "solana"))]
     fn validate_and_append_point(
         &mut self,
         label: &'static [u8],
@@ -119,7 +112,6 @@ impl TranscriptProtocol for Transcript {
         self.append_message(b"dom-sep", b"pubkey-proof")
     }
 
-    #[cfg(not(target_os = "solana"))]
     fn challenge_scalar(&mut self, label: &'static [u8]) -> Scalar {
         let mut buf = [0u8; 64];
         self.challenge_bytes(label, &mut buf);

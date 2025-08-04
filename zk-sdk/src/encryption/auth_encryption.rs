@@ -1,7 +1,8 @@
 //! Authenticated encryption implementation.
 //!
-//! This module is a simple wrapper of the `Aes128GcmSiv` implementation specialized for SPL
-//! token-2022 where the plaintext is always `u64`.
+//! This module is a simple wrapper of the `Aes128GcmSiv` implementation
+//! specialized for SPL Token2022 program where the plaintext is always a `u64`
+//! number.
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 use {
@@ -94,7 +95,7 @@ pub struct AeKey([u8; AE_KEY_LEN]);
 impl AeKey {
     /// Generates a random authenticated encryption key.
     ///
-    /// This function is randomized. It internally samples a scalar element using `OsRng`.
+    /// This function is randomized. It internally samples a 128-bit key using `OsRng`.
     #[cfg_attr(target_arch = "wasm32", wasm_bindgen(js_name = newRand))]
     pub fn new_rand() -> Self {
         AuthenticatedEncryption::keygen()
@@ -133,6 +134,8 @@ impl AeKey {
         signer: &dyn Signer,
         public_seed: &[u8],
     ) -> Result<Vec<u8>, SignerError> {
+        // TODO: This function uses a non-standard KDF and should be refactored.
+        // See: https://github.com/solana-program/zk-elgamal-proof/issues/35
         let message = [b"AeKey", public_seed].concat();
         let signature = signer.try_sign_message(&message)?;
 
@@ -347,7 +350,51 @@ mod tests {
 
     #[test]
     fn test_aes_key_try_from_error() {
-        let too_many_bytes = vec![0_u8; 32];
+        let too_short_bytes = vec![0_u8; AE_KEY_LEN - 1];
+        assert!(AeKey::try_from(too_short_bytes.as_slice()).is_err());
+
+        let too_many_bytes = vec![0_u8; AE_KEY_LEN + 1];
         assert!(AeKey::try_from(too_many_bytes.as_slice()).is_err());
+    }
+
+    #[test]
+    fn test_tampered_ciphertext_fails_decryption() {
+        let key = AeKey::new_rand();
+        let amount = 99_u64;
+
+        let ciphertext = key.encrypt(amount);
+        let mut tampered_bytes = ciphertext.to_bytes();
+
+        // Flip the first bit of the actual ciphertext component
+        tampered_bytes[NONCE_LEN] ^= 1;
+
+        let tampered_ciphertext = AeCiphertext::from_bytes(&tampered_bytes).unwrap();
+        assert!(tampered_ciphertext.decrypt(&key).is_none());
+    }
+
+    #[test]
+    fn test_tampered_nonce_fails_decryption() {
+        let key = AeKey::new_rand();
+        let amount = 99_u64;
+
+        let ciphertext = key.encrypt(amount);
+        let mut tampered_bytes = ciphertext.to_bytes();
+
+        // Flip the first bit of the nonce
+        tampered_bytes[0] ^= 1;
+
+        let tampered_ciphertext = AeCiphertext::from_bytes(&tampered_bytes).unwrap();
+        assert!(tampered_ciphertext.decrypt(&key).is_none());
+    }
+
+    #[test]
+    fn test_encryption_is_non_deterministic() {
+        let key = AeKey::new_rand();
+        let amount = 123_u64;
+
+        let ciphertext1 = key.encrypt(amount);
+        let ciphertext2 = key.encrypt(amount);
+
+        assert_ne!(ciphertext1.to_bytes(), ciphertext2.to_bytes());
     }
 }
