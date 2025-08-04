@@ -120,6 +120,8 @@ impl<const N: usize> GroupedElGamal<N> {
     ///
     /// If the originally encrypted amount is not a positive 32-bit number, then the function
     /// Result contains `None`.
+    ///
+    /// NOTE: This function is not constant time.
     fn decrypt_u32(
         grouped_ciphertext: &GroupedElGamalCiphertext<N>,
         secret: &ElGamalSecretKey,
@@ -211,6 +213,8 @@ impl<const N: usize> GroupedElGamalCiphertext<N> {
     ///
     /// If the originally encrypted amount is not a positive 32-bit number, then the function
     /// returns `None`.
+    ///
+    /// NOTE: This function is not constant time.
     pub fn decrypt_u32(
         &self,
         secret: &ElGamalSecretKey,
@@ -244,8 +248,8 @@ mod grouped_elgamal_wasm {
             ))
         }
 
-        #[wasm_bindgen(js_name = encryptionWithU64)]
-        pub fn encryption_with_u64(
+        #[wasm_bindgen(js_name = encryptWithU64)]
+        pub fn encrypt_with_u64(
             first_pubkey: &ElGamalPubkey,
             second_pubkey: &ElGamalPubkey,
             amount: u64,
@@ -277,8 +281,8 @@ mod grouped_elgamal_wasm {
             ))
         }
 
-        #[wasm_bindgen(js_name = encryptionWithU64)]
-        pub fn encryption_with_u64(
+        #[wasm_bindgen(js_name = encryptWithU64)]
+        pub fn encrypt_with_u64(
             first_pubkey: &ElGamalPubkey,
             second_pubkey: &ElGamalPubkey,
             third_pubkey: &ElGamalPubkey,
@@ -384,5 +388,71 @@ mod tests {
                 .decrypt_u32(elgamal_keypair_2.secret(), 2)
                 .unwrap()
         );
+    }
+
+    #[test]
+    fn test_decrypt_with_wrong_key_at_valid_index() {
+        let keypair_0 = ElGamalKeypair::new_rand();
+        let keypair_1 = ElGamalKeypair::new_rand();
+        let amount: u64 = 50;
+
+        let grouped_ciphertext =
+            GroupedElGamal::encrypt([keypair_0.pubkey(), keypair_1.pubkey()], amount);
+
+        // Attempt to decrypt handle 1 with secret key 0. This must fail.
+        let result = grouped_ciphertext
+            .decrypt_u32(keypair_0.secret(), 1)
+            .unwrap();
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_zero_sized_group() {
+        let amount: u64 = 42;
+        let grouped_ciphertext = GroupedElGamal::<0>::encrypt([], amount);
+
+        // Check byte serialization
+        let bytes = grouped_ciphertext.to_bytes();
+        assert_eq!(bytes.len(), 32); // Only the commitment
+
+        // Check roundtrip
+        let decoded_ciphertext = GroupedElGamalCiphertext::<0>::from_bytes(&bytes).unwrap();
+        assert_eq!(grouped_ciphertext, decoded_ciphertext);
+
+        // Decryption should fail as there are no handles
+        let keypair = ElGamalKeypair::new_rand();
+        assert_eq!(
+            grouped_ciphertext
+                .decrypt_u32(keypair.secret(), 0)
+                .unwrap_err(),
+            GroupedElGamalError::IndexOutOfBounds
+        );
+    }
+
+    #[test]
+    fn test_malformed_bytes_deserialization() {
+        let amount: u64 = 42;
+
+        // Case 1: Bytes too short
+        let short_bytes = vec![0; 63]; // Expected 64 for N=1
+        assert!(GroupedElGamalCiphertext::<1>::from_bytes(&short_bytes).is_none());
+
+        // Case 2: Bytes too long
+        let long_bytes = vec![0; 65]; // Expected 64 for N=1
+        assert!(GroupedElGamalCiphertext::<1>::from_bytes(&long_bytes).is_none());
+
+        // Case 3: Correct length, but invalid point data for the commitment
+        let mut malformed_commitment = vec![0; 64];
+        // This is the compressed form of an invalid point (order 4)
+        malformed_commitment[0] = 1;
+        assert!(GroupedElGamalCiphertext::<1>::from_bytes(&malformed_commitment).is_none());
+
+        // Case 4: Correct length, but invalid point data for a handle
+        let keypair = ElGamalKeypair::new_rand();
+        let ciphertext = GroupedElGamal::<1>::encrypt([keypair.pubkey()], amount);
+        let mut bytes = ciphertext.to_bytes();
+        // Invalidate the handle part
+        bytes[32] = 1;
+        assert!(GroupedElGamalCiphertext::<1>::from_bytes(&bytes).is_none());
     }
 }

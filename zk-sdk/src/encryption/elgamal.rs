@@ -135,6 +135,8 @@ impl ElGamal {
     ///
     /// If the originally encrypted amount is not a positive 32-bit number, then the function
     /// returns `None`.
+    ///
+    /// NOTE: This function is not constant time.
     fn decrypt_u32(secret: &ElGamalSecretKey, ciphertext: &ElGamalCiphertext) -> Option<u64> {
         let discrete_log_instance = Self::decrypt(secret, ciphertext);
         discrete_log_instance.decode_u32()
@@ -487,6 +489,8 @@ impl ElGamalSecretKey {
     }
 
     /// Decrypts a ciphertext using the ElGamal secret key interpreting the message as type `u32`.
+    ///
+    /// NOTE: This function is not constant time.
     pub fn decrypt_u32(&self, ciphertext: &ElGamalCiphertext) -> Option<u64> {
         ElGamal::decrypt_u32(self, ciphertext)
     }
@@ -533,6 +537,9 @@ impl ElGamalSecretKey {
     }
 
     /// Derive an ElGamal secret key from a signature.
+    ///
+    /// TODO: This function uses a non-standard KDF and should be refactored.
+    /// See: https://github.com/solana-program/zk-elgamal-proof/issues/35
     pub fn seed_from_signature(signature: &Signature) -> Vec<u8> {
         let mut hasher = Sha3_512::new();
         hasher.update(signature.as_ref());
@@ -686,6 +693,8 @@ impl ElGamalCiphertext {
     ///
     /// If the originally encrypted amount is not a positive 32-bit number, then the function
     /// returns `None`.
+    ///
+    /// NOTE: This function is not constant time.
     pub fn decrypt_u32(&self, secret: &ElGamalSecretKey) -> Option<u64> {
         ElGamal::decrypt_u32(secret, self)
     }
@@ -1146,5 +1155,36 @@ mod tests {
         let decoded: DecryptHandle = bincode::deserialize(&encoded).unwrap();
 
         assert_eq!(handle, decoded);
+    }
+
+    #[test]
+    fn test_decryption_with_wrong_key() {
+        let keypair1 = ElGamalKeypair::new_rand();
+        let keypair2 = ElGamalKeypair::new_rand(); // A different key
+        let amount: u64 = 100;
+
+        let ciphertext = keypair1.pubkey().encrypt(amount);
+
+        // Decryption with the wrong key should fail
+        assert!(keypair2.secret().decrypt_u32(&ciphertext).is_none());
+    }
+
+    #[test]
+    fn test_elgamal_encode_decryption() {
+        let keypair1 = ElGamalKeypair::new_rand();
+        let keypair2 = ElGamalKeypair::new_rand();
+        let amount: u64 = 12345;
+
+        let encoded_ciphertext = ElGamal::encode(amount);
+
+        // ANY key should be able to "decrypt" the message
+        assert_eq!(
+            encoded_ciphertext.decrypt_u32(keypair1.secret()).unwrap(),
+            amount
+        );
+        assert_eq!(
+            encoded_ciphertext.decrypt_u32(keypair2.secret()).unwrap(),
+            amount
+        );
     }
 }
