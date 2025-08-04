@@ -30,7 +30,7 @@ aes-gcm-siv = "0.11.1"
 base64 = "0.22.1"
 bincode = "1.3.3"
 bytemuck = "1.23.1"
-bytemuck_derive = "1.9.3"
+bytemuck_derive = "1.10.0"
 curve25519-dalek = { version = "4.1.3", features = ["digest", "rand_core"] }
 itertools = "0.12.1"
 js-sys = "0.3.77"
