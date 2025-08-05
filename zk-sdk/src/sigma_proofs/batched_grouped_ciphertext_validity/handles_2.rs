@@ -5,6 +5,15 @@
 //! ElGamal private keys that are associated with each of the two decryption handles. To generate
 //! the proof, a prover must provide the Pedersen opening associated with the commitment.
 //!
+//! This protocol reduces two `GroupedCiphertext2HandlesValidityProof` instances into a single
+//! proof. The batching is achieved by compressing the two separate statements into one using a
+//! random linear combination.
+//!
+//! The verifier provides a random challenge scalar `t` sampled from the transcript. The prover and
+//! verifier then use this scalar to compute a linear combination of their respective inputs. A
+//! single `GroupedCiphertext3HandlesValidityProof` is then generated and verified for this new
+//! batched statement and witness.
+//!
 //! The protocol guarantees computational soundness (by the hardness of discrete log) and perfect
 //! zero-knowledge in the random oracle model.
 
