@@ -70,44 +70,24 @@ pub struct PercentageWithCapProof {
 impl PercentageWithCapProof {
     /// Creates a percentage-with-cap sigma proof.
     ///
-    /// A typical percentage-with-cap application is defined with respect to the following values:
-    /// - a commitment encoding a `base_amount` and a commitment encoding a `percentage_amount`
-    /// - two constants `percentage_rate_basis_point`, which defines the percentage rate in units
-    ///   of 0.01% and `max_value`, which defines the max cap amount.
+    /// This proof certifies that a committed `percentage_amount` satisfies one of two conditions,
+    /// without revealing which condition is met:
+    /// 1. The `percentage_amount` is equal to `max_value`.
+    /// 2. A related `delta_commitment` and `claimed_commitment` encode the same value.
     ///
-    /// This setting requires that the `percentage_amount` is either a certain percentage of the
-    /// `base_amount` (determined by the `percentage_rate_basis_point`) or is equal to the max cap
-    /// amount (determined by `max_value`).
+    /// The logic ensures that if the percentage is capped, the first condition is proven. If it is
+    /// not capped, the second is proven. This is achieved in zero-knowledge by generating a real
+    /// proof for the true condition and a simulated proof for the alternative.
     ///
-    /// If `percentage_amount < max_value`, then assuming that there is no division rounding, the
-    /// `percentage_amount` must satisfy the relation `transfer_amount *
-    /// (percentage_rate_basis_point / 10_000) = percentage_amount` or equivalently, `(base_amount
-    /// * percentage_rate_basis_point) - (10_000 * percentage_amount) = 0`. More generally, let
-    /// `delta_amount = (base_amount * percentage_rate_basis_point) - (10_000 * percentage_amount)`.
-    /// Then assuming that a division rounding could occur, the `delta_amount` must satisfy the
-    /// bound `0 <= delta_amount < 10_000`.
+    /// For a detailed explanation of the underlying protocol, see the
+    /// [design document](https://github.com/anza-xyz/agave/blob/master/docs/src/runtime/zk-docs/percentage_with_cap.pdf).
     ///
-    /// If `percentage_amount >= max_amount`, then `percentage_amount = max_value` and therefore,
-    /// the prover can generate a proof certifying that a percentage commitment exactly encodes
-    /// `max_value`. If `percentage_amount < max_value`, then the prover can create a commitment
-    /// (referred to as the `claimed_amount`) to `delta_amount` and create a range proof certifying
-    /// that the committed value satisfies the bound `0 <= delta_amount < 10_000`.
+    /// Note: The function computes proofs for both conditions and selects the correct one in
+    /// constant time to avoid leaking information through timing.
     ///
-    /// Since the type of proof that a prover generates reveals information about the base and
-    /// percentage amounts, the prover must generate and include both types of proofs. If
-    /// `percentage_amount >= max_value`, then the prover generates a valid `percentage_max_proof`,
-    /// but commits to 0 as the `claimed_amount` and simulates ("fakes") a proof
-    /// (`percentage_equality_proof`) that this is valid. If `percentage_amount > max_value`, then
-    /// the prover simulates a `percentage_max_proof`, and creates a valid
-    /// `percentage_equality_proof` certifying that the claimed delta value is equal to the "real"
-    /// delta value.
-    ///
-    /// Note: In the implementation, the proof is generated twice via `create_proof_above_max`
-    /// and `create_proof_below_max` to enforce that the function executes in constant time.
-    ///
-    /// * `percentage_commitment` - The Pedersen commitment to a percentage amount
-    /// * `percentage_opening` - The Pedersen opening of a percentage amount
-    /// * `percentage_amount` - The percentage amount
+    /// * `fee_commitment` - The Pedersen commitment to a percentage amount
+    /// * `fee_opening` - The Pedersen opening of a percentage amount
+    /// * `fee_amount` - The percentage amount
     /// * `delta_commitment` - The Pedersen commitment to a delta amount
     /// * `delta_opening` - The Pedersen opening of a delta amount
     /// * `delta_amount` - The delta amount
@@ -117,9 +97,9 @@ impl PercentageWithCapProof {
     /// * `transcript` - The transcript that does the bookkeeping for the Fiat-Shamir heuristic
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        percentage_commitment: &PedersenCommitment,
-        percentage_opening: &PedersenOpening,
-        percentage_amount: u64,
+        fee_commitment: &PedersenCommitment,
+        fee_opening: &PedersenOpening,
+        fee_amount: u64,
         delta_commitment: &PedersenCommitment,
         delta_opening: &PedersenOpening,
         delta_amount: u64,
@@ -129,20 +109,31 @@ impl PercentageWithCapProof {
         transcript: &mut Transcript,
     ) -> Self {
         transcript.percentage_with_cap_proof_domain_separator();
+
+        // clone the transcript twice for the two executions of the proof generation
         let mut transcript_percentage_above_max = transcript.clone();
         let mut transcript_percentage_below_max = transcript.clone();
 
         // compute proof for both cases `percentage_amount' >= `max_value` and
         // `percentage_amount` < `max_value`
+
+        // compute proof for both cases:
+        // 1. the percentage-calculated amount is greater than `max_value` and therefore, the fee
+        //    is set to `max_value`
+        // 2. the percentage-calculated amount is less than `max_value` and therefore, the fee
+        //    is set to the percentage-calculated amount
+
+        // `proof_above_max` will be invalid in case 2, but it will be discarded below
         let proof_above_max = Self::create_proof_percentage_above_max(
-            percentage_opening,
+            fee_opening,
             delta_commitment,
             claimed_commitment,
             &mut transcript_percentage_above_max,
         );
 
+        // `proof_above_max` will be invalid in case 1, but it will be discarded below
         let proof_below_max = Self::create_proof_percentage_below_max(
-            percentage_commitment,
+            fee_commitment,
             delta_opening,
             delta_amount,
             claimed_opening,
@@ -150,10 +141,10 @@ impl PercentageWithCapProof {
             &mut transcript_percentage_below_max,
         );
 
-        let below_max = u64::ct_gt(&max_value, &percentage_amount);
+        let below_max = u64::ct_gt(&max_value, &fee_amount);
 
-        // choose one of `proof_above_max` or `proof_below_max` according to whether the
-        // percentage amount is greater than `max_value` or not
+        // choose one of `proof_above_max` or `proof_below_max` dependeing on whether the computed
+        // fee is less than the max value
         let percentage_max_proof = PercentageMaxProof::conditional_select(
             &proof_above_max.percentage_max_proof,
             &proof_below_max.percentage_max_proof,
@@ -166,6 +157,7 @@ impl PercentageWithCapProof {
             below_max,
         );
 
+        // the original prover transcript was initially cloned, so update the prover transcript
         transcript.append_point(b"Y_max_proof", &percentage_max_proof.Y_max_proof);
         transcript.append_point(b"Y_delta", &percentage_equality_proof.Y_delta);
         transcript.append_point(b"Y_claimed", &percentage_equality_proof.Y_claimed);
@@ -377,14 +369,14 @@ impl PercentageWithCapProof {
 
     /// Verifies a percentage-with-cap proof.
     ///
-    /// * `percentage_commitment` - The Pedersen commitment of the value being proved
+    /// * `fee_commitment` - The Pedersen commitment of the value being proved
     /// * `delta_commitment` - The Pedersen commitment of the "real" delta value
     /// * `claimed_commitment` - The Pedersen commitment of the "claimed" delta value
     /// * `max_value` - The maximum cap bound
     /// * `transcript` - The transcript that does the bookkeeping for the Fiat-Shamir heuristic
     pub fn verify(
         self,
-        percentage_commitment: &PedersenCommitment,
+        fee_commitment: &PedersenCommitment,
         delta_commitment: &PedersenCommitment,
         claimed_commitment: &PedersenCommitment,
         max_value: u64,
@@ -395,7 +387,7 @@ impl PercentageWithCapProof {
         // extract the relevant scalar and Ristretto points from the input
         let m = Scalar::from(max_value);
 
-        let C_max = percentage_commitment.get_point();
+        let C_max = fee_commitment.get_point();
         let C_delta = delta_commitment.get_point();
         let C_claimed = claimed_commitment.get_point();
 
