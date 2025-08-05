@@ -9,6 +9,15 @@
 //! second_handle_1, third_handle_1)`. The proof certifies the anagolous decryptable
 //! properties for each one of these pairs of commitment and decryption handles.
 //!
+//! This protocol reduces two `GroupedCiphertext3HandlesValidityProof` instances into a single
+//! proof. The batching is achieved by compressing the two separate statements into one using a
+//! random linear combination.
+//!
+//! The verifier provides a random challenge scalar `t` sampled from the transcript. The prover and
+//! verifier then use this scalar to compute a linear combination of their respective inputs. A
+//! single `GroupedCiphertext3HandlesValidityProof` is then generated and verified for this new
+//! batched statement and witness.
+//!
 //! The protocol guarantees computational soundness (by the hardness of discrete log) and perfect
 //! zero-knowledge in the random oracle model.
 
@@ -50,6 +59,10 @@ pub struct BatchedGroupedCiphertext3HandlesValidityProof(GroupedCiphertext3Handl
 #[cfg(not(target_os = "solana"))]
 impl BatchedGroupedCiphertext3HandlesValidityProof {
     /// Creates a batched grouped ciphertext validity proof.
+    ///
+    /// The function does *not* hash the public keys, commitment, or decryption handles into the
+    /// transcript. For security, the caller (the main protocol) should hash these public
+    /// components prior to invoking this constructor.
     ///
     /// The function simply batches the input openings and invokes the standard grouped ciphertext
     /// validity proof constructor.
@@ -217,6 +230,11 @@ mod test {
                 &mut verifier_transcript,
             )
             .unwrap();
+
+        assert_eq!(
+            prover_transcript.challenge_scalar(b"test"),
+            verifier_transcript.challenge_scalar(b"test"),
+        )
     }
 
     #[test]

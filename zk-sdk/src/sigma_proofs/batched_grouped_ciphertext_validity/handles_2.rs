@@ -5,6 +5,15 @@
 //! ElGamal private keys that are associated with each of the two decryption handles. To generate
 //! the proof, a prover must provide the Pedersen opening associated with the commitment.
 //!
+//! This protocol reduces two `GroupedCiphertext2HandlesValidityProof` instances into a single
+//! proof. The batching is achieved by compressing the two separate statements into one using a
+//! random linear combination.
+//!
+//! The verifier provides a random challenge scalar `t` sampled from the transcript. The prover and
+//! verifier then use this scalar to compute a linear combination of their respective inputs. A
+//! single `GroupedCiphertext2HandlesValidityProof` is then generated and verified for this new
+//! batched statement and witness.
+//!
 //! The protocol guarantees computational soundness (by the hardness of discrete log) and perfect
 //! zero-knowledge in the random oracle model.
 
@@ -51,6 +60,10 @@ impl BatchedGroupedCiphertext2HandlesValidityProof {
     ///
     /// The function simply batches the input openings and invokes the standard grouped ciphertext
     /// validity proof constructor.
+    ///
+    /// The function does *not* hash the public keys, commitment, or decryption handles into the
+    /// transcript. For security, the caller (the main protocol) should hash these public
+    /// components prior to invoking this constructor.
     ///
     /// This function is randomized. It uses `OsRng` internally to generate random scalars.
     pub fn new<T: Into<Scalar>>(
@@ -196,6 +209,11 @@ mod test {
                 &mut verifier_transcript,
             )
             .unwrap();
+
+        assert_eq!(
+            prover_transcript.challenge_scalar(b"test"),
+            verifier_transcript.challenge_scalar(b"test"),
+        )
     }
 
     #[test]

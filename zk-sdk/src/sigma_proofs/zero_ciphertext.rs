@@ -58,9 +58,6 @@ impl ZeroCiphertextProof {
     ///
     /// This function is randomized. It uses `OsRng` internally to generate random scalars.
     ///
-    /// Note that the proof constructor does not take the actual ElGamal ciphertext as input; it
-    /// uses the ElGamal private key instead to generate the proof.
-    ///
     /// * `elgamal_keypair` - The ElGamal keypair associated with the ciphertext to be proved
     /// * `ciphertext` - The main ElGamal ciphertext to be proved
     /// * `transcript` - The transcript that does the bookkeeping for the Fiat-Shamir heuristic
@@ -86,10 +83,12 @@ impl ZeroCiphertextProof {
         transcript.append_point(b"Y_D", &Y_D);
 
         let c = transcript.challenge_scalar(b"c");
-        transcript.challenge_scalar(b"w");
 
         // compute the masked secret key
         let z = &(&c * s) + &y;
+
+        transcript.append_scalar(b"z", &z);
+        let _w = transcript.challenge_scalar(b"w");
 
         // zeroize random scalar
         y.zeroize();
@@ -224,6 +223,11 @@ mod test {
                 &mut verifier_transcript
             )
             .is_err());
+
+        assert_eq!(
+            prover_transcript.challenge_scalar(b"test"),
+            verifier_transcript.challenge_scalar(b"test"),
+        )
     }
 
     #[test]

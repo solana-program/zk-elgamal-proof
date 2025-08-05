@@ -7,7 +7,22 @@ use {
     std::mem::size_of,
 };
 
-/// The proof context account state
+/// The on-chain state for a verified zero-knowledge proof statement.
+///
+/// In a zero-knowledge proof system, there is a distinction between a **proof** and a
+/// **statement**.
+/// - The **statement** consists of the public values that a proof is certifying. For example, in a
+///   `VerifyZeroCiphertext` instruction, the statement is the ElGamal ciphertext itself.
+/// - The **proof** is the cryptographic data that demonstrates the statement's validity without
+///   revealing any secret information.
+///
+/// A proof is ephemeral and is discarded after it is successfully verified by a proof
+/// instruction. However, the instruction can optionally store the verified public statement
+/// on-chain in a dedicated account. The `ProofContextState` struct defines the layout of this
+/// account.
+///
+/// Storing the statement on-chain acts as a verifiable receipt or certificate that a specific
+/// proof was successfully processed. This state can then be referenced by other on-chain programs.
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(C)]
 pub struct ProofContextState<T: Pod> {
@@ -21,7 +36,7 @@ pub struct ProofContextState<T: Pod> {
 
 // `bytemuck::Pod` cannot be derived for generic structs unless the struct is marked
 // `repr(packed)`, which may cause unnecessary complications when referencing its fields. Directly
-// mark `ProofContextState` as `Zeroable` and `Pod` since since none of its fields has an alignment
+// mark `ProofContextState` as `Zeroable` and `Pod` since none of its fields has an alignment
 // requirement greater than 1 and therefore, guaranteed to be `packed`.
 unsafe impl<T: Pod> Zeroable for ProofContextState<T> {}
 unsafe impl<T: Pod> Pod for ProofContextState<T> {}

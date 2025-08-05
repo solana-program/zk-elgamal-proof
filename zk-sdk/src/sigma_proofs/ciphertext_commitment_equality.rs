@@ -1,9 +1,9 @@
 //! The ciphertext-commitment equality sigma proof system.
 //!
 //! A ciphertext-commitment equality proof is defined with respect to a twisted ElGamal ciphertext
-//! and a Pedersen commitment. The proof certifies that a given ciphertext and a commitment pair
-//! encrypts/encodes the same message. To generate the proof, a prover must provide the decryption
-//! key for the first ciphertext and the Pedersen opening for the commitment.
+//! and a Pedersen commitment. The proof certifies that a given ElGamal ciphertext and Pedersen
+//! commitment pair encrypt and encode the same message. To generate the proof, a prover must provide
+//! the decryption key for the first ciphertext and the Pedersen opening for the commitment.
 //!
 //! The protocol guarantees computational soundness (by the hardness of discrete log) and perfect
 //! zero-knowledge in the random oracle model.
@@ -106,12 +106,17 @@ impl CiphertextCommitmentEqualityProof {
         transcript.append_point(b"Y_2", &Y_2);
 
         let c = transcript.challenge_scalar(b"c");
-        transcript.challenge_scalar(b"w");
 
         // compute the masked values
         let z_s = &(&c * s) + &y_s;
         let z_x = &(&c * &x) + &y_x;
         let z_r = &(&c * r) + &y_r;
+
+        // compute challenge `w` for consistency with verification
+        transcript.append_scalar(b"z_s", &z_s);
+        transcript.append_scalar(b"z_x", &z_x);
+        transcript.append_scalar(b"z_r", &z_r);
+        let _w = transcript.challenge_scalar(b"w");
 
         // zeroize random scalars
         x.zeroize();
@@ -322,6 +327,11 @@ mod test {
                 &mut verifier_transcript
             )
             .is_err());
+
+        assert_eq!(
+            prover_transcript.challenge_scalar(b"test"),
+            verifier_transcript.challenge_scalar(b"test"),
+        )
     }
 
     #[test]
