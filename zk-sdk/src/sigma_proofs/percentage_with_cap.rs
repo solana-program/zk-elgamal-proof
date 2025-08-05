@@ -10,12 +10,13 @@
 //! max cap value.
 //!
 //! A more detailed description of the context and how the proof is computed is provided in the
-//! [`ZK Token proof program`] documentation.
+//! [`ZK Token proof program`] documentation, specifically the percentage-with-cap [`specification`].
 //!
 //! The protocol guarantees computational soundness (by the hardness of discrete log) and perfect
 //! zero-knowledge in the random oracle model.
 //!
 //! [`ZK Token proof program`]: https://docs.solanalabs.com/runtime/zk-token-proof
+//! [`specification`](https://github.com/anza-xyz/agave/blob/master/docs/src/runtime/zk-docs/percentage_with_cap.pdf).
 
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
@@ -85,9 +86,9 @@ impl PercentageWithCapProof {
     /// Note: The function computes proofs for both conditions and selects the correct one in
     /// constant time to avoid leaking information through timing.
     ///
-    /// * `fee_commitment` - The Pedersen commitment to a percentage amount
-    /// * `fee_opening` - The Pedersen opening of a percentage amount
-    /// * `fee_amount` - The percentage amount
+    /// * `percentage_commitment` - The Pedersen commitment to a percentage amount
+    /// * `percentage_opening` - The Pedersen opening of a percentage amount
+    /// * `percentage_amount` - The percentage amount
     /// * `delta_commitment` - The Pedersen commitment to a delta amount
     /// * `delta_opening` - The Pedersen opening of a delta amount
     /// * `delta_amount` - The delta amount
@@ -97,9 +98,9 @@ impl PercentageWithCapProof {
     /// * `transcript` - The transcript that does the bookkeeping for the Fiat-Shamir heuristic
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        fee_commitment: &PedersenCommitment,
-        fee_opening: &PedersenOpening,
-        fee_amount: u64,
+        percentage_commitment: &PedersenCommitment,
+        percentage_opening: &PedersenOpening,
+        percentage_amount: u64,
         delta_commitment: &PedersenCommitment,
         delta_opening: &PedersenOpening,
         delta_amount: u64,
@@ -125,7 +126,7 @@ impl PercentageWithCapProof {
 
         // `proof_above_max` will be invalid in case 2, but it will be discarded below
         let proof_above_max = Self::create_proof_percentage_above_max(
-            fee_opening,
+            percentage_opening,
             delta_commitment,
             claimed_commitment,
             &mut transcript_percentage_above_max,
@@ -133,7 +134,7 @@ impl PercentageWithCapProof {
 
         // `proof_above_max` will be invalid in case 1, but it will be discarded below
         let proof_below_max = Self::create_proof_percentage_below_max(
-            fee_commitment,
+            percentage_commitment,
             delta_opening,
             delta_amount,
             claimed_opening,
@@ -141,7 +142,7 @@ impl PercentageWithCapProof {
             &mut transcript_percentage_below_max,
         );
 
-        let below_max = u64::ct_gt(&max_value, &fee_amount);
+        let below_max = u64::ct_gt(&max_value, &percentage_amount);
 
         // choose one of `proof_above_max` or `proof_below_max` depending on whether the computed
         // fee is less than the max value
@@ -181,16 +182,16 @@ impl PercentageWithCapProof {
     /// The equality proof component is simulated while the max proof component is correctly
     /// computed.
     ///
-    /// For the function to produce a valid proof, the `fee_opening` must be a proper opening to
+    /// For the function to produce a valid proof, the `percentage_opening` must be a proper opening to
     /// a Pedersen commitment of a max proof. However, the function can still be executed on any
     /// input.
     ///
-    /// * `fee_opening` - The Pedersen opening of the fee
+    /// * `percentage_opening` - The Pedersen opening of the percentage amount
     /// * `delta_commitment` - The Pedersen commitment to a delta amount
     /// * `claimed_commitment` - The Pedersen commitment to a claimed amount
     /// * `transcript` - The transcript that does the bookkeeping for the Fiat-Shamir heuristic
     fn create_proof_percentage_above_max(
-        fee_opening: &PedersenOpening,
+        percentage_opening: &PedersenOpening,
         delta_commitment: &PedersenCommitment,
         claimed_commitment: &PedersenCommitment,
         transcript: &mut Transcript,
@@ -228,9 +229,9 @@ impl PercentageWithCapProof {
         };
 
         // generate max proof properly
-        let r_percentage = fee_opening.get_scalar();
+        let r_percentage = percentage_opening.get_scalar();
 
-        let mut y_max_proof = Scalar::random(&mut OsRng); // blinding factor for the fee opening
+        let mut y_max_proof = Scalar::random(&mut OsRng); // blinding factor for the percentage opening
         let Y_max_proof = (y_max_proof * &(*H)).compress(); // commitment to blinding factor
 
         // provide the simulated `Y_max_proof`, `Y_delta`, and the properly generated `Y_claimed`
@@ -282,14 +283,14 @@ impl PercentageWithCapProof {
     /// For the function to produce a valid proof, the inputs to the function must satisfy a proper
     /// delta relation. However, the function can still be executed on any input.
     ///
-    /// * `fee_commitment` - The Pedersen commitment to a fee
+    /// * `percentage_commitment` - The Pedersen commitment to a percentage amount
     /// * `delta_opening` - The Pedersen opening of a delta amount
     /// * `delta_amount` - The delta amount
     /// * `claimed_opening` - The Pedersen opening of a claimed amount
     /// * `max_value` - The maximum cap bound
     /// * `transcript` - The transcript that does the bookkeeping for the Fiat-Shamir heuristic
     fn create_proof_percentage_below_max(
-        fee_commitment: &PedersenCommitment,
+        percentage_commitment: &PedersenCommitment,
         delta_opening: &PedersenOpening,
         delta_amount: u64,
         claimed_opening: &PedersenOpening,
@@ -300,7 +301,7 @@ impl PercentageWithCapProof {
         // 1. sample random values for the scalar components
         // 2. solave for `Y_max_proof` value that will satisfy the algebraic verification relation
         let m = Scalar::from(max_value);
-        let C_percentage = fee_commitment.get_point();
+        let C_percentage = percentage_commitment.get_point();
 
         let z_max_proof = Scalar::random(&mut OsRng);
         let c_max_proof = Scalar::random(&mut OsRng); // random challenge
@@ -382,14 +383,14 @@ impl PercentageWithCapProof {
 
     /// Verifies a percentage-with-cap proof.
     ///
-    /// * `fee_commitment` - The Pedersen commitment of the value being proved
+    /// * `percentage_commitment` - The Pedersen commitment of the value being proved
     /// * `delta_commitment` - The Pedersen commitment of the "real" delta value
     /// * `claimed_commitment` - The Pedersen commitment of the "claimed" delta value
     /// * `max_value` - The maximum cap bound
     /// * `transcript` - The transcript that does the bookkeeping for the Fiat-Shamir heuristic
     pub fn verify(
         self,
-        fee_commitment: &PedersenCommitment,
+        percentage_commitment: &PedersenCommitment,
         delta_commitment: &PedersenCommitment,
         claimed_commitment: &PedersenCommitment,
         max_value: u64,
@@ -400,7 +401,7 @@ impl PercentageWithCapProof {
         // extract the relevant scalar and Ristretto points from the input
         let m = Scalar::from(max_value);
 
-        let C_max = fee_commitment.get_point();
+        let C_max = percentage_commitment.get_point();
         let C_delta = delta_commitment.get_point();
         let C_claimed = claimed_commitment.get_point();
 
