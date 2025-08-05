@@ -143,7 +143,7 @@ impl PercentageWithCapProof {
 
         let below_max = u64::ct_gt(&max_value, &fee_amount);
 
-        // choose one of `proof_above_max` or `proof_below_max` dependeing on whether the computed
+        // choose one of `proof_above_max` or `proof_below_max` depending on whether the computed
         // fee is less than the max value
         let percentage_max_proof = PercentageMaxProof::conditional_select(
             &proof_above_max.percentage_max_proof,

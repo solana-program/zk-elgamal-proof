@@ -11,7 +11,7 @@
 //!
 //! The verifier provides a random challenge scalar `t` sampled from the transcript. The prover and
 //! verifier then use this scalar to compute a linear combination of their respective inputs. A
-//! single `GroupedCiphertext3HandlesValidityProof` is then generated and verified for this new
+//! single `GroupedCiphertext2HandlesValidityProof` is then generated and verified for this new
 //! batched statement and witness.
 //!
 //! The protocol guarantees computational soundness (by the hardness of discrete log) and perfect
