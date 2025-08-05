@@ -275,14 +275,20 @@ impl PercentageWithCapProof {
     /// Creates a percentage-with-cap proof assuming that the committed amount is less than the
     /// maximum cap bound.
     ///
-    /// * `percentage_commitment` - The Pedersen commitment to a percentage amount
+    /// The equality proof component is correctly computed while the max proof component is
+    /// simulated.
+    ///
+    /// For the function to produce a valid proof, the inputs to the function must satisfy a proper
+    /// delta relation. However, the function can still be executed on any input.
+    ///
+    /// * `fee_commitment` - The Pedersen commitment to a fee
     /// * `delta_opening` - The Pedersen opening of a delta amount
     /// * `delta_amount` - The delta amount
     /// * `claimed_opening` - The Pedersen opening of a claimed amount
     /// * `max_value` - The maximum cap bound
     /// * `transcript` - The transcript that does the bookkeeping for the Fiat-Shamir heuristic
     fn create_proof_percentage_below_max(
-        percentage_commitment: &PedersenCommitment,
+        fee_commitment: &PedersenCommitment,
         delta_opening: &PedersenOpening,
         delta_amount: u64,
         claimed_opening: &PedersenOpening,
@@ -290,8 +296,10 @@ impl PercentageWithCapProof {
         transcript: &mut Transcript,
     ) -> Self {
         // simulate max proof
+        // 1. sample random values for the scalar components
+        // 2. solave for `Y_max_proof` value that will satisfy the algebraic verification relation
         let m = Scalar::from(max_value);
-        let C_percentage = percentage_commitment.get_point();
+        let C_percentage = fee_commitment.get_point();
 
         let z_max_proof = Scalar::random(&mut OsRng);
         let c_max_proof = Scalar::random(&mut OsRng); // random challenge
@@ -309,28 +317,37 @@ impl PercentageWithCapProof {
             c_max_proof,
         };
 
-        // generate equality proof
+        // generate equality proof properly
         let mut x = Scalar::from(delta_amount);
 
         let r_delta = delta_opening.get_scalar();
         let r_claimed = claimed_opening.get_scalar();
 
-        let mut y_x = Scalar::random(&mut OsRng);
+        let mut y_x = Scalar::random(&mut OsRng); // generate blinding factors
         let mut y_delta = Scalar::random(&mut OsRng);
         let mut y_claimed = Scalar::random(&mut OsRng);
 
+        // commitment to blinding factors
         let Y_delta =
             RistrettoPoint::multiscalar_mul(vec![y_x, y_delta], vec![&G, &(*H)]).compress();
         let Y_claimed =
             RistrettoPoint::multiscalar_mul(vec![y_x, y_claimed], vec![&G, &(*H)]).compress();
 
+        // provide the properly generated `Y_max_proof`, `Y_delta`, and the simulated `Y_claimed`
+        // commitments to the verifier; the verifier does not know which of these values are
+        // simulated and which are generated properly
         transcript.append_point(b"Y_max_proof", &Y_max_proof);
         transcript.append_point(b"Y_delta", &Y_delta);
         transcript.append_point(b"Y_claimed", &Y_claimed);
 
+        // receive challenge
         let c = transcript.challenge_scalar(b"c");
+
+        // compute `c_max_proof` so that `c_equality` + `c_max_proof` = `c`
         let mut c_equality = c - c_max_proof;
 
+        // TODO: this should be either removed or produced after the scalar components
+        // are hashed into the transcript
         transcript.challenge_scalar(b"w");
 
         let z_x = c_equality * x + y_x;
@@ -600,7 +617,7 @@ mod test {
     };
 
     #[test]
-    fn test_create_proof_percentage_above_max_logic() {
+    fn test_create_proof_above_max_logic() {
         let transfer_amount: u64 = 55;
         let max_value: u64 = 3;
         let percentage_rate: u16 = 555; // 5.55%. Calculated fee is 3.0525
@@ -629,6 +646,50 @@ mod test {
         assert!(proof
             .verify(
                 &fee_commitment,
+                &delta_commitment,
+                &claimed_commitment,
+                max_value,
+                &mut verifier_transcript,
+            )
+            .is_ok());
+    }
+
+    #[test]
+    fn test_verify_proof_below_max_logic() {
+        let transfer_amount: u64 = 1;
+        let max_value: u64 = 3;
+        let percentage_rate: u16 = 400; // 4.00%
+        let percentage_amount: u64 = 1; // Actual percentage amount is less than max_value.
+
+        let delta_amount: u64 = 9600;
+
+        let (transfer_commitment, transfer_opening) = Pedersen::new(transfer_amount);
+        let (percentage_commitment, percentage_opening) = Pedersen::new(percentage_amount);
+        let scalar_rate = Scalar::from(percentage_rate);
+
+        let delta_commitment =
+            &percentage_commitment * &Scalar::from(10000_u64) - &transfer_commitment * &scalar_rate;
+        let delta_opening =
+            &percentage_opening * &Scalar::from(10000_u64) - &transfer_opening * &scalar_rate;
+
+        let (claimed_commitment, claimed_opening) = Pedersen::new(delta_amount);
+
+        let mut prover_transcript = Transcript::new(b"test");
+        let mut verifier_transcript = Transcript::new(b"test");
+
+        prover_transcript.percentage_with_cap_proof_domain_separator();
+        let proof = PercentageWithCapProof::create_proof_percentage_below_max(
+            &percentage_commitment,
+            &delta_opening,
+            delta_amount,
+            &claimed_opening,
+            max_value,
+            &mut prover_transcript,
+        );
+
+        assert!(proof
+            .verify(
+                &percentage_commitment,
                 &delta_commitment,
                 &claimed_commitment,
                 max_value,
