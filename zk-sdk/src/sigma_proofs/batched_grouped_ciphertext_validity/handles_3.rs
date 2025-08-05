@@ -60,6 +60,10 @@ pub struct BatchedGroupedCiphertext3HandlesValidityProof(GroupedCiphertext3Handl
 impl BatchedGroupedCiphertext3HandlesValidityProof {
     /// Creates a batched grouped ciphertext validity proof.
     ///
+    /// The function does *not* hash the public keys, commitment, or decryption handles into the
+    /// transcript. For security, the caller (the main protocol) should hash these public
+    /// components prior to invoking this constructor.
+    ///
     /// The function simply batches the input openings and invokes the standard grouped ciphertext
     /// validity proof constructor.
     #[allow(clippy::too_many_arguments)]

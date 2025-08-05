@@ -61,6 +61,10 @@ impl BatchedGroupedCiphertext2HandlesValidityProof {
     /// The function simply batches the input openings and invokes the standard grouped ciphertext
     /// validity proof constructor.
     ///
+    /// The function does *not* hash the public keys, commitment, or decryption handles into the
+    /// transcript. For security, the caller (the main protocol) should hash these public
+    /// components prior to invoking this constructor.
+    ///
     /// This function is randomized. It uses `OsRng` internally to generate random scalars.
     pub fn new<T: Into<Scalar>>(
         first_pubkey: &ElGamalPubkey,
