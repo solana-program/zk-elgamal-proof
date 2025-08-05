@@ -62,7 +62,7 @@
         "start-server-and-test": "^2.0.12",
         "ts-node": "^10.9.2",
         "typescript": "^5.7.2",
-        "typescript-eslint": "^8.22.0"
+        "typescript-eslint": "^8.39.0"
     },
     "prettier": "@solana/prettier-config-solana",
     "packageManager": "pnpm@9.1.0"
