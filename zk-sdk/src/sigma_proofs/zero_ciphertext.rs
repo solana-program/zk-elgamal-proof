@@ -86,10 +86,12 @@ impl ZeroCiphertextProof {
         transcript.append_point(b"Y_D", &Y_D);
 
         let c = transcript.challenge_scalar(b"c");
-        transcript.challenge_scalar(b"w");
 
         // compute the masked secret key
         let z = &(&c * s) + &y;
+
+        transcript.append_scalar(b"z", &z);
+        let _w = transcript.challenge_scalar(b"w");
 
         // zeroize random scalar
         y.zeroize();
@@ -224,6 +226,11 @@ mod test {
                 &mut verifier_transcript
             )
             .is_err());
+
+        assert_eq!(
+            prover_transcript.challenge_scalar(b"test"),
+            verifier_transcript.challenge_scalar(b"test"),
+        )
     }
 
     #[test]

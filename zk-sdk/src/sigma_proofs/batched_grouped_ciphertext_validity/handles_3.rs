@@ -226,6 +226,11 @@ mod test {
                 &mut verifier_transcript,
             )
             .unwrap();
+
+        assert_eq!(
+            prover_transcript.challenge_scalar(b"test"),
+            verifier_transcript.challenge_scalar(b"test"),
+        )
     }
 
     #[test]

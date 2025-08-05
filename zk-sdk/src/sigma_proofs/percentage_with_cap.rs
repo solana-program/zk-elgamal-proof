@@ -161,8 +161,13 @@ impl PercentageWithCapProof {
         transcript.append_point(b"Y_max_proof", &percentage_max_proof.Y_max_proof);
         transcript.append_point(b"Y_delta", &percentage_equality_proof.Y_delta);
         transcript.append_point(b"Y_claimed", &percentage_equality_proof.Y_claimed);
-        transcript.challenge_scalar(b"c");
-        transcript.challenge_scalar(b"w");
+        let _c = transcript.challenge_scalar(b"c");
+        transcript.append_scalar(b"z_max", &percentage_max_proof.z_max_proof);
+        transcript.append_scalar(b"c_max_proof", &percentage_max_proof.c_max_proof);
+        transcript.append_scalar(b"z_x", &percentage_equality_proof.z_x);
+        transcript.append_scalar(b"z_delta_real", &percentage_equality_proof.z_delta);
+        transcript.append_scalar(b"z_claimed", &percentage_equality_proof.z_claimed);
+        let _w = transcript.challenge_scalar(b"w");
 
         Self {
             percentage_max_proof,
@@ -241,10 +246,6 @@ impl PercentageWithCapProof {
         // compute `c_max_proof` so that `c_equality` + `c_max_proof` = `c`
         let c_max_proof = c - c_equality;
 
-        // TODO: this should be either removed or produced after the scalar components
-        // are hashed into the transcript
-        transcript.challenge_scalar(b"w");
-
         // properly generate the final max proof component with `c_max_proof` challenge
         let z_max_proof = c_max_proof * r_percentage + y_max_proof;
 
@@ -253,6 +254,14 @@ impl PercentageWithCapProof {
             z_max_proof,
             c_max_proof,
         };
+
+        // update transcript for consistency
+        transcript.append_scalar(b"z_max", &z_max_proof);
+        transcript.append_scalar(b"c_max_proof", &c_max_proof);
+        transcript.append_scalar(b"z_x", &z_x);
+        transcript.append_scalar(b"z_delta_real", &z_delta);
+        transcript.append_scalar(b"z_claimed", &z_claimed);
+        let _w = transcript.challenge_scalar(b"w");
 
         // zeroize all sensitive owned variables
         c_equality.zeroize();
@@ -338,10 +347,6 @@ impl PercentageWithCapProof {
         // compute `c_max_proof` so that `c_equality` + `c_max_proof` = `c`
         let mut c_equality = c - c_max_proof;
 
-        // TODO: this should be either removed or produced after the scalar components
-        // are hashed into the transcript
-        transcript.challenge_scalar(b"w");
-
         let z_x = c_equality * x + y_x;
         let z_delta = c_equality * r_delta + y_delta;
         let z_claimed = c_equality * r_claimed + y_claimed;
@@ -353,6 +358,14 @@ impl PercentageWithCapProof {
             z_delta,
             z_claimed,
         };
+
+        // update transcript for consistency
+        transcript.append_scalar(b"z_max", &z_max_proof);
+        transcript.append_scalar(b"c_max_proof", &c_max_proof);
+        transcript.append_scalar(b"z_x", &z_x);
+        transcript.append_scalar(b"z_delta_real", &z_delta);
+        transcript.append_scalar(b"z_claimed", &z_claimed);
+        let _w = transcript.challenge_scalar(b"w");
 
         // zeroize all sensitive owned variables
         c_equality.zeroize();
@@ -688,6 +701,11 @@ mod test {
                 &mut verifier_transcript,
             )
             .is_ok());
+
+        assert_eq!(
+            prover_transcript.challenge_scalar(b"test"),
+            verifier_transcript.challenge_scalar(b"test"),
+        )
     }
 
     #[test]
@@ -735,6 +753,11 @@ mod test {
                 &mut verifier_transcript,
             )
             .unwrap();
+
+        assert_eq!(
+            prover_transcript.challenge_scalar(b"test"),
+            verifier_transcript.challenge_scalar(b"test"),
+        )
     }
 
     #[test]

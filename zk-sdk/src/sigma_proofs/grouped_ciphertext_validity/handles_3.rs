@@ -109,11 +109,15 @@ impl GroupedCiphertext3HandlesValidityProof {
         transcript.append_point(b"Y_3", &Y_3);
 
         let c = transcript.challenge_scalar(b"c");
-        transcript.challenge_scalar(b"w");
 
         // compute masked message and opening
         let z_r = &(&c * r) + &y_r;
         let z_x = &(&c * &x) + &y_x;
+
+        // compute challenge `w` for consistency with verification
+        transcript.append_scalar(b"z_r", &z_r);
+        transcript.append_scalar(b"z_x", &z_x);
+        let _w = transcript.challenge_scalar(b"w");
 
         // zeroize all sensitive owned variables
         x.zeroize();
@@ -462,6 +466,11 @@ mod test {
                 &mut verifier_transcript,
             )
             .unwrap();
+
+        assert_eq!(
+            prover_transcript.challenge_scalar(b"test"),
+            verifier_transcript.challenge_scalar(b"test"),
+        )
     }
 
     #[test]
