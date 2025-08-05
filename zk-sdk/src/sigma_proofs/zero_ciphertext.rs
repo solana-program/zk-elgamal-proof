@@ -58,9 +58,6 @@ impl ZeroCiphertextProof {
     ///
     /// This function is randomized. It uses `OsRng` internally to generate random scalars.
     ///
-    /// Note that the proof constructor does not take the actual ElGamal ciphertext as input; it
-    /// uses the ElGamal private key instead to generate the proof.
-    ///
     /// * `elgamal_keypair` - The ElGamal keypair associated with the ciphertext to be proved
     /// * `ciphertext` - The main ElGamal ciphertext to be proved
     /// * `transcript` - The transcript that does the bookkeeping for the Fiat-Shamir heuristic

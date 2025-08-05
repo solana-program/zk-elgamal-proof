@@ -1,9 +1,9 @@
 //! The ciphertext-commitment equality sigma proof system.
 //!
 //! A ciphertext-commitment equality proof is defined with respect to a twisted ElGamal ciphertext
-//! and a Pedersen commitment. The proof certifies that a given ciphertext and a commitment pair
-//! encrypts/encodes the same message. To generate the proof, a prover must provide the decryption
-//! key for the first ciphertext and the Pedersen opening for the commitment.
+//! and a Pedersen commitment. The proof certifies that a given ElGamal ciphertext and Pedersen
+//! commitment pair encrypt and encode the same message. To generate the proof, a prover must provide
+//! the decryption key for the first ciphertext and the Pedersen opening for the commitment.
 //!
 //! The protocol guarantees computational soundness (by the hardness of discrete log) and perfect
 //! zero-knowledge in the random oracle model.

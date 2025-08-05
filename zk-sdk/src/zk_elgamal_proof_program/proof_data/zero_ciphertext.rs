@@ -29,7 +29,7 @@ use {
     bytemuck_derive::{Pod, Zeroable},
 };
 
-/// The instruction data that is needed for the `ProofInstruction::ZeroCiphertext` instruction.
+/// The instruction data that is needed for the `ProofInstruction::VerifyZeroCiphertext` instruction.
 ///
 /// It includes the cryptographic proof as well as the context data information needed to verify
 /// the proof.

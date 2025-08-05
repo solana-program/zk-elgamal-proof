@@ -10,12 +10,19 @@
 //!      dedicated [`context-state`] account.
 //!
 //! In step 1, the zero-knowledge proof can either be included directly as the instruction data or
-//! pre-written to an account. The program determines whether the proof is provided as instruction
-//! data or pre-written to an account by inspecting the length of the data. If the instruction data
-//! is exactly 5 bytes (instruction discriminator + unsigned 32-bit integer), then the program
-//! assumes that the first account provided with the instruction contains the zero-knowledge proof
-//! and verifies the account data at the offset specified in the instruction data. Otherwise, the
-//! program assumes that the zero-knowledge proof is provided as part of the instruction data.
+//! pre-written to an account. The program determines the mode by inspecting the length of the
+//! instruction data.
+//!
+//! **Case A: Proof in a separate account**
+//! If the instruction data is exactly 5 bytes (1-byte instruction discriminator + 4-byte unsigned
+//! integer for offset), the program assumes that the first account provided with the instruction
+//! contains the zero-knowledge proof. It then verifies the account data at the offset specified in
+//! the instruction.
+//!
+//! **Case B: Proof in instruction data**
+//! If two additional accounts are provided (for the context state and its owner), the program
+//! interprets this as a request to store the proof's context data and writes it to the specified
+//! context-state account.
 //!
 //! In step 2, the program determines whether to create a context-state account by inspecting the
 //! number of accounts provided with the instruction. If two additional accounts are provided with
@@ -62,9 +69,24 @@ pub enum ProofInstruction {
     ///
     /// Accounts expected by this instruction:
     ///
-    ///   0. `[]` (Optional) Account to read the proof from
-    ///   1. `[writable]` (Optional) The proof context account
-    ///   2. `[]` (Optional) The proof context account owner
+    ///   There are four ways to structure the accounts, depending on whether the
+    ///   proof is provided as instruction data or in a separate account, and whether
+    ///   a proof context is created.
+    ///
+    ///   1. **Proof in instruction data, no context state:**
+    ///      - No accounts are required.
+    ///
+    ///   2. **Proof in instruction data, with context state:**
+    ///      - `[writable]` The proof context account to create.
+    ///      - `[]` The proof context account owner.
+    ///
+    ///   3. **Proof in account, no context state:**
+    ///      - `[]` Account to read the proof from.
+    ///
+    ///   4. **Proof in account, with context state:**
+    ///      - `[]` Account to read the proof from.
+    ///      - `[writable]` The proof context account to create.
+    ///      - `[]` The proof context account owner.
     ///
     /// The instruction expects either:
     ///   i. `ZeroCiphertextProofData` if proof is provided as instruction data
@@ -79,9 +101,24 @@ pub enum ProofInstruction {
     ///
     /// Accounts expected by this instruction:
     ///
-    ///   0. `[]` (Optional) Account to read the proof from
-    ///   1. `[writable]` (Optional) The proof context account
-    ///   2. `[]` (Optional) The proof context account owner
+    ///   There are four ways to structure the accounts, depending on whether the
+    ///   proof is provided as instruction data or in a separate account, and whether
+    ///   a proof context is created.
+    ///
+    ///   1. **Proof in instruction data, no context state:**
+    ///      - No accounts are required.
+    ///
+    ///   2. **Proof in instruction data, with context state:**
+    ///      - `[writable]` The proof context account to create.
+    ///      - `[]` The proof context account owner.
+    ///
+    ///   3. **Proof in account, no context state:**
+    ///      - `[]` Account to read the proof from.
+    ///
+    ///   4. **Proof in account, with context state:**
+    ///      - `[]` Account to read the proof from.
+    ///      - `[writable]` The proof context account to create.
+    ///      - `[]` The proof context account owner.
     ///
     /// The instruction expects either:
     ///   i. `CiphertextCiphertextEqualityProofData` if proof is provided as instruction data
@@ -96,9 +133,24 @@ pub enum ProofInstruction {
     ///
     /// Accounts expected by this instruction:
     ///
-    ///   0. `[]` (Optional) Account to read the proof from
-    ///   1. `[writable]` (Optional) The proof context account
-    ///   2. `[]` (Optional) The proof context account owner
+    ///   There are four ways to structure the accounts, depending on whether the
+    ///   proof is provided as instruction data or in a separate account, and whether
+    ///   a proof context is created.
+    ///
+    ///   1. **Proof in instruction data, no context state:**
+    ///      - No accounts are required.
+    ///
+    ///   2. **Proof in instruction data, with context state:**
+    ///      - `[writable]` The proof context account to create.
+    ///      - `[]` The proof context account owner.
+    ///
+    ///   3. **Proof in account, no context state:**
+    ///      - `[]` Account to read the proof from.
+    ///
+    ///   4. **Proof in account, with context state:**
+    ///      - `[]` Account to read the proof from.
+    ///      - `[writable]` The proof context account to create.
+    ///      - `[]` The proof context account owner.
     ///
     /// The instruction expects either:
     ///   i. `CiphertextCommitmentEqualityProofData` if proof is provided as instruction data
@@ -113,9 +165,24 @@ pub enum ProofInstruction {
     ///
     /// Accounts expected by this instruction:
     ///
-    ///   0. `[]` (Optional) Account to read the proof from
-    ///   1. `[writable]` (Optional) The proof context account
-    ///   2. `[]` (Optional) The proof context account owner
+    ///   There are four ways to structure the accounts, depending on whether the
+    ///   proof is provided as instruction data or in a separate account, and whether
+    ///   a proof context is created.
+    ///
+    ///   1. **Proof in instruction data, no context state:**
+    ///      - No accounts are required.
+    ///
+    ///   2. **Proof in instruction data, with context state:**
+    ///      - `[writable]` The proof context account to create.
+    ///      - `[]` The proof context account owner.
+    ///
+    ///   3. **Proof in account, no context state:**
+    ///      - `[]` Account to read the proof from.
+    ///
+    ///   4. **Proof in account, with context state:**
+    ///      - `[]` Account to read the proof from.
+    ///      - `[writable]` The proof context account to create.
+    ///      - `[]` The proof context account owner.
     ///
     /// The instruction expects either:
     ///   i. `PubkeyValidityData` if proof is provided as instruction data
@@ -130,9 +197,24 @@ pub enum ProofInstruction {
     ///
     /// Accounts expected by this instruction:
     ///
-    ///   0. `[]` (Optional) Account to read the proof from
-    ///   1. `[writable]` (Optional) The proof context account
-    ///   2. `[]` (Optional) The proof context account owner
+    ///   There are four ways to structure the accounts, depending on whether the
+    ///   proof is provided as instruction data or in a separate account, and whether
+    ///   a proof context is created.
+    ///
+    ///   1. **Proof in instruction data, no context state:**
+    ///      - No accounts are required.
+    ///
+    ///   2. **Proof in instruction data, with context state:**
+    ///      - `[writable]` The proof context account to create.
+    ///      - `[]` The proof context account owner.
+    ///
+    ///   3. **Proof in account, no context state:**
+    ///      - `[]` Account to read the proof from.
+    ///
+    ///   4. **Proof in account, with context state:**
+    ///      - `[]` Account to read the proof from.
+    ///      - `[writable]` The proof context account to create.
+    ///      - `[]` The proof context account owner.
     ///
     /// The instruction expects either:
     ///   i. `PercentageWithCapProofData` if proof is provided as instruction data
@@ -154,9 +236,24 @@ pub enum ProofInstruction {
     ///
     /// Accounts expected by this instruction:
     ///
-    ///   0. `[]` (Optional) Account to read the proof from
-    ///   1. `[writable]` (Optional) The proof context account
-    ///   2. `[]` (Optional) The proof context account owner
+    ///   There are four ways to structure the accounts, depending on whether the
+    ///   proof is provided as instruction data or in a separate account, and whether
+    ///   a proof context is created.
+    ///
+    ///   1. **Proof in instruction data, no context state:**
+    ///      - No accounts are required.
+    ///
+    ///   2. **Proof in instruction data, with context state:**
+    ///      - `[writable]` The proof context account to create.
+    ///      - `[]` The proof context account owner.
+    ///
+    ///   3. **Proof in account, no context state:**
+    ///      - `[]` Account to read the proof from.
+    ///
+    ///   4. **Proof in account, with context state:**
+    ///      - `[]` Account to read the proof from.
+    ///      - `[writable]` The proof context account to create.
+    ///      - `[]` The proof context account owner.
     ///
     /// The instruction expects either:
     ///   i. `BatchedRangeProofU64Data` if proof is provided as instruction data
@@ -172,9 +269,24 @@ pub enum ProofInstruction {
     ///
     /// Accounts expected by this instruction:
     ///
-    ///   0. `[]` (Optional) Account to read the proof from
-    ///   1. `[writable]` (Optional) The proof context account
-    ///   2. `[]` (Optional) The proof context account owner
+    ///   There are four ways to structure the accounts, depending on whether the
+    ///   proof is provided as instruction data or in a separate account, and whether
+    ///   a proof context is created.
+    ///
+    ///   1. **Proof in instruction data, no context state:**
+    ///      - No accounts are required.
+    ///
+    ///   2. **Proof in instruction data, with context state:**
+    ///      - `[writable]` The proof context account to create.
+    ///      - `[]` The proof context account owner.
+    ///
+    ///   3. **Proof in account, no context state:**
+    ///      - `[]` Account to read the proof from.
+    ///
+    ///   4. **Proof in account, with context state:**
+    ///      - `[]` Account to read the proof from.
+    ///      - `[writable]` The proof context account to create.
+    ///      - `[]` The proof context account owner.
     ///
     /// The instruction expects either:
     ///   i. `BatchedRangeProofU128Data` if proof is provided as instruction data
@@ -190,9 +302,24 @@ pub enum ProofInstruction {
     ///
     /// Accounts expected by this instruction:
     ///
-    ///   0. `[]` (Optional) Account to read the proof from
-    ///   1. `[writable]` (Optional) The proof context account
-    ///   2. `[]` (Optional) The proof context account owner
+    ///   There are four ways to structure the accounts, depending on whether the
+    ///   proof is provided as instruction data or in a separate account, and whether
+    ///   a proof context is created.
+    ///
+    ///   1. **Proof in instruction data, no context state:**
+    ///      - No accounts are required.
+    ///
+    ///   2. **Proof in instruction data, with context state:**
+    ///      - `[writable]` The proof context account to create.
+    ///      - `[]` The proof context account owner.
+    ///
+    ///   3. **Proof in account, no context state:**
+    ///      - `[]` Account to read the proof from.
+    ///
+    ///   4. **Proof in account, with context state:**
+    ///      - `[]` Account to read the proof from.
+    ///      - `[writable]` The proof context account to create.
+    ///      - `[]` The proof context account owner.
     ///
     /// The instruction expects either:
     ///   i. `BatchedRangeProofU256Data` if proof is provided as instruction data
@@ -208,9 +335,24 @@ pub enum ProofInstruction {
     ///
     /// Accounts expected by this instruction:
     ///
-    ///   0. `[]` (Optional) Account to read the proof from
-    ///   1. `[writable]` (Optional) The proof context account
-    ///   2. `[]` (Optional) The proof context account owner
+    ///   There are four ways to structure the accounts, depending on whether the
+    ///   proof is provided as instruction data or in a separate account, and whether
+    ///   a proof context is created.
+    ///
+    ///   1. **Proof in instruction data, no context state:**
+    ///      - No accounts are required.
+    ///
+    ///   2. **Proof in instruction data, with context state:**
+    ///      - `[writable]` The proof context account to create.
+    ///      - `[]` The proof context account owner.
+    ///
+    ///   3. **Proof in account, no context state:**
+    ///      - `[]` Account to read the proof from.
+    ///
+    ///   4. **Proof in account, with context state:**
+    ///      - `[]` Account to read the proof from.
+    ///      - `[writable]` The proof context account to create.
+    ///      - `[]` The proof context account owner.
     ///
     /// The instruction expects either:
     ///   i. `GroupedCiphertext2HandlesValidityProofData` if proof is provided as instruction data
@@ -227,9 +369,24 @@ pub enum ProofInstruction {
     ///
     /// Accounts expected by this instruction:
     ///
-    ///   0. `[]` (Optional) Account to read the proof from
-    ///   1. `[writable]` (Optional) The proof context account
-    ///   2. `[]` (Optional) The proof context account owner
+    ///   There are four ways to structure the accounts, depending on whether the
+    ///   proof is provided as instruction data or in a separate account, and whether
+    ///   a proof context is created.
+    ///
+    ///   1. **Proof in instruction data, no context state:**
+    ///      - No accounts are required.
+    ///
+    ///   2. **Proof in instruction data, with context state:**
+    ///      - `[writable]` The proof context account to create.
+    ///      - `[]` The proof context account owner.
+    ///
+    ///   3. **Proof in account, no context state:**
+    ///      - `[]` Account to read the proof from.
+    ///
+    ///   4. **Proof in account, with context state:**
+    ///      - `[]` Account to read the proof from.
+    ///      - `[writable]` The proof context account to create.
+    ///      - `[]` The proof context account owner.
     ///
     /// The instruction expects either:
     ///   i. `BatchedGroupedCiphertext2HandlesValidityProofData` if proof is provided as instruction data
@@ -245,13 +402,24 @@ pub enum ProofInstruction {
     ///
     /// Accounts expected by this instruction:
     ///
-    ///   * Creating a proof context account
-    ///   0. `[]` (Optional) Account to read the proof from
-    ///   1. `[writable]` The proof context account
-    ///   2. `[]` The proof context account owner
+    ///   There are four ways to structure the accounts, depending on whether the
+    ///   proof is provided as instruction data or in a separate account, and whether
+    ///   a proof context is created.
     ///
-    ///   * Otherwise
-    ///     None
+    ///   1. **Proof in instruction data, no context state:**
+    ///      - No accounts are required.
+    ///
+    ///   2. **Proof in instruction data, with context state:**
+    ///      - `[writable]` The proof context account to create.
+    ///      - `[]` The proof context account owner.
+    ///
+    ///   3. **Proof in account, no context state:**
+    ///      - `[]` Account to read the proof from.
+    ///
+    ///   4. **Proof in account, with context state:**
+    ///      - `[]` Account to read the proof from.
+    ///      - `[writable]` The proof context account to create.
+    ///      - `[]` The proof context account owner.
     ///
     /// The instruction expects either:
     ///   i. `GroupedCiphertext3HandlesValidityProofData` if proof is provided as instruction data
@@ -268,13 +436,24 @@ pub enum ProofInstruction {
     ///
     /// Accounts expected by this instruction:
     ///
-    ///   * Creating a proof context account
-    ///   0. `[]` (Optional) Account to read the proof from
-    ///   1. `[writable]` The proof context account
-    ///   2. `[]` The proof context account owner
+    ///   There are four ways to structure the accounts, depending on whether the
+    ///   proof is provided as instruction data or in a separate account, and whether
+    ///   a proof context is created.
     ///
-    ///   * Otherwise
-    ///     None
+    ///   1. **Proof in instruction data, no context state:**
+    ///      - No accounts are required.
+    ///
+    ///   2. **Proof in instruction data, with context state:**
+    ///      - `[writable]` The proof context account to create.
+    ///      - `[]` The proof context account owner.
+    ///
+    ///   3. **Proof in account, no context state:**
+    ///      - `[]` Account to read the proof from.
+    ///
+    ///   4. **Proof in account, with context state:**
+    ///      - `[]` Account to read the proof from.
+    ///      - `[writable]` The proof context account to create.
+    ///      - `[]` The proof context account owner.
     ///
     /// The instruction expects either:
     ///   i. `BatchedGroupedCiphertext3HandlesValidityProofData` if proof is provided as instruction data

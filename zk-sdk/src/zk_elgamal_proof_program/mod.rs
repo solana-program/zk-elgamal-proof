@@ -5,7 +5,12 @@
 //! the program as well as the technical details of some of the proof instructions can be found in
 //! the [`ZK ElGamal proof`] documentation.
 //!
+//! This module contains the instruction types, the proof context state, and the proof instruction
+//! data types. For the precise processor logic, see the ZK ElGamal Proof [`program`].
+//! implementation.
+//!
 //! [`ZK ElGamal proof`]: https://docs.solanalabs.com/runtime/zk-token-proof
+//! [`program`]: https://github.com/anza-xyz/agave/blob/master/programs/zk-elgamal-proof/src/lib.rs
 
 pub mod errors;
 pub mod instruction;
