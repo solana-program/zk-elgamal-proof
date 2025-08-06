@@ -1,3 +1,13 @@
+//! The inner-product proof protocol.
+//!
+//! This module implements the inner-product proof protocol described in Section 3 of the
+//! Bulletproofs [`paper`] (also described in [`notes`]). . The protocol is a recursive
+//! argument that allows a prover to convince a verifier that the inner product of two
+//! secret vectors `a` and `b` is a certain public value `c`.
+//!
+//! [`paper`]: https://eprint.iacr.org/2017/1066
+//! [`notes`]: https://doc-internal.dalek.rs/bulletproofs/notes/inner_product_proof/index.html
+
 use {
     crate::{
         range_proof::{
@@ -16,6 +26,11 @@ use {
     std::borrow::Borrow,
 };
 
+/// An inner-product proof.
+///
+/// The proof consists of `log(n)` pairs of compressed Ristretto points, and two scalars.
+/// This corresponds to the `L_i`, `R_i` values and the final `a`, `b` scalars in Protocol 2
+/// of the Bulletproofs paper.
 #[allow(non_snake_case)]
 #[derive(Clone)]
 pub struct InnerProductProof {
@@ -27,17 +42,11 @@ pub struct InnerProductProof {
 
 #[allow(non_snake_case)]
 impl InnerProductProof {
-    /// Create an inner-product proof.
+    /// Creates an inner-product proof.
     ///
-    /// The proof is created with respect to the bases \\(G\\), \\(H'\\),
-    /// where \\(H'\_i = H\_i \cdot \texttt{Hprime\\_factors}\_i\\).
-    ///
-    /// The `verifier` is passed in as a parameter so that the
-    /// challenges depend on the *entire* transcript (including parent
-    /// protocols).
-    ///
-    /// The lengths of the vectors must all be the same, and must all be
-    /// a power of 2.
+    /// This function implements Protocol 2 from the Bulletproofs paper, a recursive
+    /// argument to prove knowledge of two vectors `a` and `b` such that `<a,b> = c`.
+    /// The length of the vectors must be a power of two.
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         Q: &RistrettoPoint,
@@ -81,8 +90,9 @@ impl InnerProductProof {
         let mut L_vec = Vec::with_capacity(lg_n);
         let mut R_vec = Vec::with_capacity(lg_n);
 
-        // If it's the first iteration, unroll the Hprime = H*y_inv scalar mults
-        // into multiscalar muls, for performance.
+        // This is an optimization: the first round of the protocol is unrolled from the
+        // main loop to handle the `G_factors` and `H_factors` more efficiently using
+        // a single multiscalar multiplication. Subsequent rounds use a simplified loop.
         if n != 1 {
             n = n.checked_div(2).unwrap();
             let (a_L, a_R) = a.split_at_mut(n);
@@ -90,11 +100,14 @@ impl InnerProductProof {
             let (G_L, G_R) = G.split_at_mut(n);
             let (H_L, H_R) = H.split_at_mut(n);
 
+            // Compute the cross terms c_L and c_R
             let c_L = util::inner_product(a_L, b_R)
                 .ok_or(RangeProofGenerationError::InnerProductLengthMismatch)?;
             let c_R = util::inner_product(a_R, b_L)
                 .ok_or(RangeProofGenerationError::InnerProductLengthMismatch)?;
 
+            // Compute L and R points for this round
+            // L = <a_L, G_R> + <b_R, H_L> + c_L * Q
             let L = RistrettoPoint::multiscalar_mul(
                 a_L.iter()
                     // `n` was previously divided in half and therefore, it cannot overflow.
@@ -110,6 +123,7 @@ impl InnerProductProof {
             )
             .compress();
 
+            // R = <a_R, G_L> + <b_L, H_R> + c_R * Q
             let R = RistrettoPoint::multiscalar_mul(
                 a_R.iter()
                     .zip(G_factors[0..n].iter())
@@ -158,6 +172,7 @@ impl InnerProductProof {
             H = H_L;
         }
 
+        // Main recursive loop
         while n != 1 {
             n = n.checked_div(2).unwrap();
             let (a_L, a_R) = a.split_at_mut(n);
@@ -165,17 +180,21 @@ impl InnerProductProof {
             let (G_L, G_R) = G.split_at_mut(n);
             let (H_L, H_R) = H.split_at_mut(n);
 
+            // Compute the cross terms c_L and c_R
             let c_L = util::inner_product(a_L, b_R)
                 .ok_or(RangeProofGenerationError::InnerProductLengthMismatch)?;
             let c_R = util::inner_product(a_R, b_L)
                 .ok_or(RangeProofGenerationError::InnerProductLengthMismatch)?;
 
+            // Compute L and R points for this round
+            // L = <a_L, G_R> + <b_R, H_L> + c_L * Q
             let L = RistrettoPoint::multiscalar_mul(
                 a_L.iter().chain(b_R.iter()).chain(iter::once(&c_L)),
                 G_R.iter().chain(H_L.iter()).chain(iter::once(Q)),
             )
             .compress();
 
+            // R = <a_R, G_L> + <b_L, H_R> + c_R * Q
             let R = RistrettoPoint::multiscalar_mul(
                 a_R.iter().chain(b_L.iter()).chain(iter::once(&c_R)),
                 G_L.iter().chain(H_R.iter()).chain(iter::once(Q)),
@@ -212,11 +231,11 @@ impl InnerProductProof {
         })
     }
 
-    /// Computes three vectors of verification scalars \\([u\_{i}^{2}]\\), \\([u\_{i}^{-2}]\\) and
-    /// \\([s\_{i}]\\) for combined multiscalar multiplication in a parent protocol. See [inner
-    /// product protocol notes](index.html#verification-equation) for details. The verifier must
-    /// provide the input length \\(n\\) explicitly to avoid unbounded allocation within the inner
-    /// product proof.
+    /// Computes the verification scalars for a single inner product proof.
+    ///
+    /// This is a helper function for the verifier, implementing the logic from
+    /// Section 3.1 of the paper. It computes the scalars `u_i^2`, `u_i^-2`, and `s_i`
+    /// which are needed for the final, single multiscalar multiplication check.
     #[allow(clippy::type_complexity)]
     pub(crate) fn verification_scalars(
         &self,
@@ -235,8 +254,7 @@ impl InnerProductProof {
 
         transcript.inner_product_proof_domain_separator(n as u64);
 
-        // 1. Recompute x_k,...,x_1 based on the proof transcript
-
+        // 1. Recompute challenges `u_i` from the proof transcript (`x_i` in the paper).
         let mut challenges = Vec::with_capacity(lg_n);
         for (L, R) in self.L_vec.iter().zip(self.R_vec.iter()) {
             transcript.validate_and_append_point(b"L", L)?;
@@ -244,13 +262,12 @@ impl InnerProductProof {
             challenges.push(transcript.challenge_scalar(b"u"));
         }
 
-        // 2. Compute 1/(u_k...u_1) and 1/u_k, ..., 1/u_1
-
+        // 2. Compute `u_i^-1` for all `i`.
         let mut challenges_inv = challenges.clone();
+        // This computes `(u_k * ... * u_1)^-1` and stores `u_i^-1` in `challenges_inv`.
         let allinv = Scalar::batch_invert(&mut challenges_inv);
 
-        // 3. Compute u_i^2 and (1/u_i)^2
-
+        // 3. Compute `u_i^2` and `u_i^-2` for all `i`.
         for i in 0..lg_n {
             challenges[i] = challenges[i] * challenges[i];
             challenges_inv[i] = challenges_inv[i] * challenges_inv[i];
@@ -258,15 +275,14 @@ impl InnerProductProof {
         let challenges_sq = challenges;
         let challenges_inv_sq = challenges_inv;
 
-        // 4. Compute s values inductively.
-
+        // 4. Compute `s_i` values inductively, as described in Section 6.2 of the paper.
         let mut s = Vec::with_capacity(n);
         s.push(allinv);
         for i in 1..n {
             let lg_i = 31_u32.checked_sub((i as u32).leading_zeros()).unwrap() as usize;
             let k = 1_usize.checked_shl(lg_i as u32).unwrap();
-            // The challenges are stored in "creation order" as [u_k,...,u_1],
-            // so u_{lg(i)+1} = is indexed by (lg_n-1) - lg_i
+            // The challenges are stored in "creation order" as [u_lg_n, ..., u_1],
+            // so u_{lg_i+1} is indexed by (lg_n - 1) - lg_i
             let u_lg_i_sq = challenges_sq[lg_n
                 .checked_sub(1)
                 .and_then(|x| x.checked_sub(lg_i))
@@ -277,9 +293,11 @@ impl InnerProductProof {
         Ok((challenges_sq, challenges_inv_sq, s))
     }
 
-    /// This method is for testing that proof generation work, but for efficiency the actual
-    /// protocols would use `verification_scalars` method to combine inner product verification
-    /// with other checks in a single multiscalar multiplication.
+    /// Verifies an inner product proof.
+    ///
+    /// This is a standalone verification function for testing. In a real protocol,
+    /// the `verification_scalars` method would be used to integrate the check into
+    /// a larger, single multiscalar multiplication.
     #[allow(clippy::too_many_arguments)]
     pub fn verify<IG, IH>(
         &self,
@@ -335,6 +353,9 @@ impl InnerProductProof {
             })
             .collect::<Result<Vec<_>, _>>()?;
 
+        // This check implements the verification equation from Section 3.1 of the paper.
+        // P' = P + <L, u^2> + <R, u^-2>
+        // We check that P' = g^(a*s) * h^(b*s^-1) * Q^(a*b)
         let expect_P = RistrettoPoint::vartime_multiscalar_mul(
             iter::once(self.a * self.b)
                 .chain(g_times_a_times_s)
@@ -355,19 +376,19 @@ impl InnerProductProof {
         }
     }
 
-    /// Returns the size in bytes required to serialize the inner
-    /// product proof.
+    /// Returns the size in bytes required to serialize the inner product proof.
     ///
-    /// For vectors of length `n` the proof size is
-    /// \\(32 \cdot (2\lg n+2)\\) bytes.
+    /// For vectors of length `n`, the proof size is `(2*log2(n) + 2) * 32` bytes.
     pub fn serialized_size(&self) -> usize {
         (self.L_vec.len() * 2 + 2) * 32
     }
 
-    /// Serializes the proof into a byte array of \\(2n+2\\) 32-byte elements.
+    /// Serializes the proof into a byte array.
     /// The layout of the inner product proof is:
-    /// * \\(n\\) pairs of compressed Ristretto points \\(L_0, R_0 \dots, L_{n-1}, R_{n-1}\\),
-    /// * two scalars \\(a, b\\).
+    /// - `log(n)` compressed Ristretto points for L_vec
+    /// - `log(n)` compressed Ristretto points for R_vec
+    /// - a scalar `a`
+    /// - a scalar `b`
     pub fn to_bytes(&self) -> Vec<u8> {
         let mut buf = Vec::with_capacity(self.serialized_size());
         for (l, r) in self.L_vec.iter().zip(self.R_vec.iter()) {
@@ -380,11 +401,22 @@ impl InnerProductProof {
     }
 
     /// Deserializes the proof from a byte slice.
-    /// Returns an error in the following cases:
-    /// * the slice does not have \\(2n+2\\) 32-byte elements,
-    /// * \\(n\\) is larger or equal to 32 (proof is too big),
-    /// * any of \\(2n\\) points are not valid compressed Ristretto points,
-    /// * any of 2 scalars are not canonical scalars modulo Ristretto group order.
+    ///
+    /// Returns an error if the slice is malformed or does not represent a
+    /// canonical inner product proof. The function checks for the following
+    /// failure conditions:
+    ///
+    /// * The slice's length is not a multiple of 32.
+    /// * The proof contains an invalid number of elements (e.g., no `a` and `b`
+    ///   scalars, or an odd number of point commitments).
+    /// * The number of L/R pairs (`log(n)`) is 32 or greater, which is
+    ///   considered an invalid proof size that could cause overflows.
+    /// * The bytes for the final `a` or `b` scalars are not canonical representations
+    ///   modulo the Ristretto group order.
+    ///
+    /// Note: This function does not check if the `L` and `R` points are valid
+    /// Ristretto points on the curve. The verifier should handle this by attempting
+    /// to decompress them, which will fail for invalid points.
     pub fn from_bytes(slice: &[u8]) -> Result<InnerProductProof, RangeProofVerificationError> {
         let b = slice.len();
         if b % 32 != 0 {

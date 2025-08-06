@@ -1,3 +1,13 @@
+//! Manages the generation of orthogonal public generators for Bulletproofs.
+//!
+//! The `RangeProofGens` struct is the main entry point for creating and managing
+//! the generator points **G** and **H**. These are the public parameters required
+//! by the Bulletproofs protocol.
+//!
+//! A key security feature of Bulletproofs is that these generators are created
+//! deterministically from a seed using a hash function (in this case, SHAKE256).
+//! This avoids the need for a trusted setup ceremony.
+
 use {
     crate::range_proof::errors::RangeProofGeneratorError,
     curve25519_dalek::{
@@ -7,15 +17,23 @@ use {
     sha3::{Shake256, Shake256Reader},
 };
 
+/// The maximum number of generators that can be created.
 const MAX_GENERATOR_LENGTH: usize = u32::MAX as usize;
 
-/// Generators for Pedersen vector commitments that are used for inner-product proofs.
+/// A factory for creating an effectively infinite stream of generator points.
+///
+/// `GeneratorsChain` is an iterator that produces `RistrettoPoint`s by hashing
+/// a domain-separated label. It uses SHAKE256 to produce a stream of bytes
+/// which are then mapped to points.
 struct GeneratorsChain {
     reader: Shake256Reader,
 }
 
 impl GeneratorsChain {
-    /// Creates a chain of generators, determined by the hash of `label`.
+    /// Creates a new chain of generators, uniquely determined by the `label`.
+    ///
+    /// The protocol uses different labels (e.g., `b"G"`, `b"H"`) to ensure
+    /// the generated sets of points are independent.
     fn new(label: &[u8]) -> Self {
         let mut shake = Shake256::default();
         shake.update(b"GeneratorsChain");
@@ -26,8 +44,10 @@ impl GeneratorsChain {
         }
     }
 
-    /// Advances the reader n times, squeezing and discarding
-    /// the result.
+    /// Advances the reader `n` positions by squeezing and discarding the bytes.
+    ///
+    /// This is used to efficiently skip generators that have already been created
+    /// when extending the capacity of `RangeProofGens`.
     fn fast_forward(mut self, n: usize) -> Self {
         for _ in 0..n {
             let mut buf = [0u8; 64];
@@ -58,18 +78,20 @@ impl Iterator for GeneratorsChain {
     }
 }
 
+/// A container for the precomputed generator points used in a range proof.
 #[allow(non_snake_case)]
 #[derive(Clone)]
 pub struct RangeProofGens {
-    /// The maximum number of usable generators.
+    /// The number of **G** and **H** generators available.
     pub gens_capacity: usize,
-    /// Precomputed \\(\mathbf G\\) generators.
+    /// Precomputed **G** generators for the vector Pedersen commitment.
     G_vec: Vec<RistrettoPoint>,
-    /// Precomputed \\(\mathbf H\\) generators.
+    /// Precomputed **H** generators for the vector Pedersen commitment.
     H_vec: Vec<RistrettoPoint>,
 }
 
 impl RangeProofGens {
+    /// Creates a new set of generators with the specified capacity.
     pub fn new(gens_capacity: usize) -> Result<Self, RangeProofGeneratorError> {
         let mut gens = RangeProofGens {
             gens_capacity: 0,
@@ -80,8 +102,8 @@ impl RangeProofGens {
         Ok(gens)
     }
 
-    /// Increases the generators' capacity to the amount specified.
-    /// If less than or equal to the current capacity, does nothing.
+    /// Increases the generators' capacity to `new_capacity`.
+    /// If `new_capacity` is less than or equal to the current capacity, this does nothing.
     pub fn increase_capacity(
         &mut self,
         new_capacity: usize,
@@ -94,6 +116,8 @@ impl RangeProofGens {
             return Err(RangeProofGeneratorError::MaximumGeneratorLengthExceeded);
         }
 
+        // To extend the generators, we fast-forward the chain to the current capacity
+        // and then take the next `new_capacity - self.gens_capacity` points.
         self.G_vec.extend(
             &mut GeneratorsChain::new(b"G")
                 .fast_forward(self.gens_capacity)
@@ -110,6 +134,7 @@ impl RangeProofGens {
         Ok(())
     }
 
+    /// Returns an iterator over the first `n` **G** generators.
     #[allow(non_snake_case)]
     pub(crate) fn G(&self, n: usize) -> impl Iterator<Item = &RistrettoPoint> {
         GensIter {
@@ -119,6 +144,7 @@ impl RangeProofGens {
         }
     }
 
+    /// Returns an iterator over the first `n` **H** generators.
     #[allow(non_snake_case)]
     pub(crate) fn H(&self, n: usize) -> impl Iterator<Item = &RistrettoPoint> {
         GensIter {
@@ -129,6 +155,7 @@ impl RangeProofGens {
     }
 }
 
+/// An iterator that provides a view into the first `n` elements of a generator vector.
 struct GensIter<'a> {
     array: &'a Vec<RistrettoPoint>,
     n: usize,

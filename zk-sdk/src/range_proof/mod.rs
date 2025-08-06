@@ -1,3 +1,6 @@
+// Copyright (c) 2018 Chain, Inc.
+// This code is licensed under the MIT license.
+
 //! The Bulletproofs range-proof implementation over Curve25519 Ristretto points.
 //!
 //! The implementation is based on the dalek-cryptography bulletproofs
@@ -8,7 +11,6 @@
 //!   represented by arithmetic circuits as well as MPC.
 //! - This implementation implements a non-interactive range proof aggregation that is specified in
 //!   the original Bulletproofs [paper](https://eprint.iacr.org/2017/1066) (Section 4.3).
-//!
 
 #![allow(dead_code)]
 
@@ -71,32 +73,43 @@ pub const INNER_PRODUCT_PROOF_U256_LEN: usize = 576;
 pub const RANGE_PROOF_U256_LEN: usize =
     INNER_PRODUCT_PROOF_U256_LEN + RANGE_PROOF_MODULO_INNER_PRODUCT_PROOF_LEN; // 800 bytes
 
+/// A Bulletproofs range proof.
 #[allow(non_snake_case)]
 #[cfg(not(target_os = "solana"))]
 #[derive(Clone)]
 pub struct RangeProof {
-    pub(crate) A: CompressedRistretto,       // 32 bytes
-    pub(crate) S: CompressedRistretto,       // 32 bytes
-    pub(crate) T_1: CompressedRistretto,     // 32 bytes
-    pub(crate) T_2: CompressedRistretto,     // 32 bytes
-    pub(crate) t_x: Scalar,                  // 32 bytes
-    pub(crate) t_x_blinding: Scalar,         // 32 bytes
-    pub(crate) e_blinding: Scalar,           // 32 bytes
+    /// A commitment to the bit-vectors `a_L` and `a_R`.
+    pub(crate) A: CompressedRistretto, // 32 bytes
+    /// A commitment to the blinding vectors `s_L` and `s_R`.
+    pub(crate) S: CompressedRistretto, // 32 bytes
+    /// A commitment to the `t_1` coefficient of the polynomial `t(x)`.
+    pub(crate) T_1: CompressedRistretto, // 32 bytes
+    /// A commitment to the `t_2` coefficient of the polynomial `t(x)`.
+    pub(crate) T_2: CompressedRistretto, // 32 bytes
+    /// The evaluation of the polynomial `t(x)` at the challenge point `x`.
+    pub(crate) t_x: Scalar, // 32 bytes
+    /// The blinding factor for the `t_x` value.
+    pub(crate) t_x_blinding: Scalar, // 32 bytes
+    /// The blinding factor for the synthetic commitment to `l(x)` and `r(x)`.
+    pub(crate) e_blinding: Scalar, // 32 bytes
+    /// The inner product proof.
     pub(crate) ipp_proof: InnerProductProof, // 448 bytes for withdraw; 512 for transfer
 }
 
 #[allow(non_snake_case)]
 #[cfg(not(target_os = "solana"))]
 impl RangeProof {
-    /// Create an aggregated range proof.
+    /// Creates an aggregated range proof for a set of values that are committed to a set of
+    /// Pedersen commitments.
     ///
-    /// The proof is created with respect to a vector of Pedersen commitments C_1, ..., C_m. The
-    /// method itself does not take in these commitments, but the values associated with the commitments:
-    /// - vector of committed amounts v_1, ..., v_m represented as u64
-    /// - bit-lengths of the committed amounts
-    /// - Pedersen openings for each commitments
+    /// This function implements the aggregated proof generation logic from Section 4.3
+    /// of the Bulletproofs paper. It allows proving that multiple values are in their
+    /// respective ranges, creating one proof that is much smaller than the sum of
+    /// individual proofs.
     ///
-    /// The sum of the bit-lengths of the commitments amounts must be a power-of-two
+    /// # Panics
+    /// This function will panic if the `openings` vector does not contain the same number
+    /// of elements as the `amounts` and `bit_lengths` vectors.
     #[allow(clippy::many_single_char_names)]
     #[cfg(not(target_os = "solana"))]
     pub fn new(
@@ -105,7 +118,7 @@ impl RangeProof {
         openings: Vec<&PedersenOpening>,
         transcript: &mut Transcript,
     ) -> Result<Self, RangeProofGenerationError> {
-        // amounts, bit-lengths, openings must be same length vectors
+        // 1. Validate inputs
         let m = amounts.len();
         if bit_lengths.len() != m || openings.len() != m {
             return Err(RangeProofGenerationError::VectorLengthMismatch);
@@ -130,7 +143,8 @@ impl RangeProof {
 
         transcript.range_proof_domain_separator(nm as u64);
 
-        // bit-decompose values and generate their Pedersen vector commitment
+        // 2. Create commitments A and S.
+        // A is a commitment to the bit-vectors a_L and a_R
         let a_blinding = Scalar::random(&mut OsRng);
         let mut A = a_blinding * &(*H);
 
@@ -143,6 +157,7 @@ impl RangeProof {
                 // casting is lossless and right shift can be safely unwrapped
                 let v_ij = Choice::from((amount_i.checked_shr(j as u32).unwrap() & 1) as u8);
                 let mut point = -H_ij;
+                // Add G_ij if bit is 1, else do nothing (since a_R = a_L - 1)
                 point.conditional_assign(G_ij, v_ij);
                 A += point;
             }
@@ -163,18 +178,17 @@ impl RangeProof {
         )
         .compress();
 
-        // add the Pedersen vector commitments to the transcript (send the commitments to the verifier)
+        // 3. Derive challenges y and z.
         transcript.append_point(b"A", &A);
         transcript.append_point(b"S", &S);
 
-        // derive challenge scalars from the transcript (receive challenge from the verifier): `y`
-        // and `z` used for merge multiple inner product relations into one single inner product
         let y = transcript.challenge_scalar(b"y");
         let z = transcript.challenge_scalar(b"z");
 
-        // define blinded vectors:
-        // - l(x) = (a_L - z*1) + s_L*x
-        // - r(x) = (y^n * (a_R + z*1) + [z^2*2^n | z^3*2^n | ... | z^m*2^n]) + y^n * s_R*x
+        // 4. Construct the blinded vector polynomials l(x) and r(x).
+        //    l(x) = (a_L - z*1) + s_L*x
+        //    r(x) = y^nm o (a_R + z*1 + s_R*x) + (z^2*2^n_1 || ... || z^{m+1}*2^n_m)
+        //    where `o` is the Hadamard product and `||` is vector concatenation.
         let mut l_poly = util::VecPoly1::zero(nm);
         let mut r_poly = util::VecPoly1::zero(nm);
 
@@ -205,12 +219,12 @@ impl RangeProof {
             exp_z *= z;
         }
 
-        // define t(x) = <l(x), r(x)> = t_0 + t_1*x + t_2*x
+        // 5. Compute the inner product polynomial t(x) = <l(x), r(x)>.
         let t_poly = l_poly
             .inner_product(&r_poly)
             .ok_or(RangeProofGenerationError::InnerProductLengthMismatch)?;
 
-        // generate Pedersen commitment for the coefficients t_1 and t_2
+        // 6. Commit to the t_1 and t_2 coefficients of t(x).
         let (T_1, t_1_blinding) = Pedersen::new(t_poly.1);
         let (T_2, t_2_blinding) = Pedersen::new(t_poly.2);
 
@@ -220,10 +234,10 @@ impl RangeProof {
         transcript.append_point(b"T_1", &T_1);
         transcript.append_point(b"T_2", &T_2);
 
-        // evaluate t(x) on challenge x and homomorphically compute the openings for
-        // z^2 * V_1 + z^3 * V_2 + ... + z^{m+1} * V_m + delta(y, z)*G + x*T_1 + x^2*T_2
+        // 7. Derive challenge x and compute openings.
         let x = transcript.challenge_scalar(b"x");
 
+        // Compute the aggregated blinding factor for all value commitments.
         let mut agg_opening = Scalar::ZERO;
         let mut exp_z = z;
         for opening in openings {
@@ -245,6 +259,8 @@ impl RangeProof {
 
         // homomorphically compuate the openings for A + x*S
         let e_blinding = a_blinding + s_blinding * x;
+
+        // 8. Finally, create the inner product proof.
         let l_vec = l_poly.eval(x);
         let r_vec = r_poly.eval(x);
 
@@ -258,8 +274,8 @@ impl RangeProof {
         let G_factors: Vec<Scalar> = iter::repeat_n(Scalar::ONE, nm).collect();
         let H_factors: Vec<Scalar> = util::exp_iter(y.invert()).take(nm).collect();
 
-        // generate challenge `c` for consistency with the verifier's transcript
-        transcript.challenge_scalar(b"c");
+        // this variable exists for backwards compatibility
+        let _c = transcript.challenge_scalar(b"c");
 
         let ipp_proof = InnerProductProof::new(
             &Q,
@@ -271,6 +287,11 @@ impl RangeProof {
             r_vec,
             transcript,
         )?;
+
+        // compute challenge `d` for consistency with the verifier
+        transcript.append_scalar(b"ipp_a", &ipp_proof.a);
+        transcript.append_scalar(b"ipp_b", &ipp_proof.b);
+        let _d = transcript.challenge_scalar(b"d");
 
         Ok(RangeProof {
             A,
@@ -284,6 +305,11 @@ impl RangeProof {
         })
     }
 
+    /// Verifies an aggregated range proof for a set of commitments.
+    ///
+    /// This function implements the verifier's logic, which is optimized into a
+    /// single large multiscalar multiplication (`mega_check`) for efficiency. This
+    /// check simultaneously verifies all aspects of the proof.
     #[allow(clippy::many_single_char_names)]
     pub fn verify(
         &self,
@@ -291,7 +317,7 @@ impl RangeProof {
         bit_lengths: Vec<usize>,
         transcript: &mut Transcript,
     ) -> Result<(), RangeProofVerificationError> {
-        // commitments and bit-lengths must be same length vectors
+        // 1. Validate inputs and reconstruct challenges from the transcript.
         if comms.len() != bit_lengths.len() {
             return Err(RangeProofVerificationError::VectorLengthMismatch);
         }
@@ -331,7 +357,7 @@ impl RangeProof {
         // this variable exists for backwards compatibility
         let _c = transcript.challenge_scalar(b"c");
 
-        // verify inner product proof
+        // 2. Compute the scalars for the verification equation.
         let (x_sq, x_inv_sq, s) = self.ipp_proof.verification_scalars(nm, transcript)?;
         let s_inv = s.iter().rev();
 
@@ -341,10 +367,14 @@ impl RangeProof {
         transcript.append_scalar(b"ipp_a", &a);
         transcript.append_scalar(b"ipp_b", &b);
 
-        let d = transcript.challenge_scalar(b"d"); // challenge value for batching multiscalar mul
+        // Challenge for batching the main algebraic relation checks
+        let d = transcript.challenge_scalar(b"d");
 
-        // construct concat_z_and_2, an iterator of the values of
-        // z^0 * \vec(2)^n || z^1 * \vec(2)^n || ... || z^(m-1) * \vec(2)^n
+        // 3. Construct the scalars for the single large multiscalar multiplication.
+
+        // This vector is used in the `h` terms of the final check.
+        // It's a concatenation of powers-of-2 vectors, each scaled by a power of z.
+        // Formula: z^0*2^n_0 || z^1*2^n_1 || ... || z^{m-1}*2^n_{m-1}
         let concat_z_and_2: Vec<Scalar> = util::exp_iter(z)
             .zip(bit_lengths.iter())
             .flat_map(|(exp_z, n_i)| {
@@ -364,6 +394,8 @@ impl RangeProof {
             w * (self.t_x - a * b) + d * (delta(&bit_lengths, &y, &z) - self.t_x);
         let value_commitment_scalars = util::exp_iter(z).take(m).map(|z_exp| d * zz * z_exp);
 
+        // 4. Perform the final "mega-check"
+        // This single multiscalar multiplication verifies all relations simultaneously.
         let mega_check = RistrettoPoint::optional_multiscalar_mul(
             iter::once(Scalar::ONE)
                 .chain(iter::once(x))
@@ -452,10 +484,11 @@ impl RangeProof {
     }
 }
 
-/// Compute
-/// \\[
-/// \delta(y,z) = (z - z^{2}) \langle \mathbf{1}, {\mathbf{y}}^{n \cdot m} \rangle - \sum_{j=0}^{m-1} z^{j+3} \cdot \langle \mathbf{1}, {\mathbf{2}}^{n \cdot m} \rangle
-/// \\]
+/// Computes the `delta(y,z)` term for the verification equation.
+///
+/// This term is a function of the challenges `y` and `z` and the proof dimensions.
+/// It is needed to correctly aggregate the polynomial checks.
+/// The formula is: `delta(y,z) = (z - z^2) * <1, y^nm> - sum_{j=0}^{m-1} z^(j+3) * <1, 2^n_j>`
 #[cfg(not(target_os = "solana"))]
 fn delta(bit_lengths: &[usize], y: &Scalar, z: &Scalar) -> Scalar {
     let nm: usize = bit_lengths.iter().sum();
@@ -494,6 +527,11 @@ mod tests {
         proof
             .verify(vec![&comm], vec![32], &mut transcript_verify)
             .unwrap();
+
+        assert_eq!(
+            transcript_create.challenge_scalar(b"test"),
+            transcript_verify.challenge_scalar(b"test"),
+        )
     }
 
     #[test]
@@ -520,6 +558,11 @@ mod tests {
                 &mut transcript_verify,
             )
             .unwrap();
+
+        assert_eq!(
+            transcript_create.challenge_scalar(b"test"),
+            transcript_verify.challenge_scalar(b"test"),
+        )
     }
 
     #[test]

@@ -1,17 +1,31 @@
-/// Utility functions for Bulletproofs.
-///
-/// The code is adapted from the `utility` module in the dalek bulletproof implementation
-/// https://github.com/dalek-cryptography/bulletproofs.
+//! Utility functions and structures for the Bulletproofs protocol.
+//! This module provides common mathematical operations over scalars and vectors needed to
+//! construct and verify Bulletproofs.
+
 use curve25519_dalek::scalar::Scalar;
 
-/// Represents a degree-1 vector polynomial \\(\mathbf{a} + \mathbf{b} \cdot x\\).
+/// Represents a degree-1 vector polynomial, such as `a + b*x`.
+///
+/// A vector polynomial is a vector of polynomials. For example:
+/// `[a_1 + b_1*x, a_2 + b_2*x, ..., a_n + b_n*x]`
+///
+/// This struct stores the constant terms (the `a_i`'s) and the linear terms (the `b_i`'s) as two
+/// separate vectors of scalars. In the Bulletproofs protocol, this is used to represent the `l(x)`
+/// and `r(x)` vector polynomials.
 pub struct VecPoly1(pub Vec<Scalar>, pub Vec<Scalar>);
 
 impl VecPoly1 {
+    /// Creates a new zero-filled `VecPoly1` of the given size.
     pub fn zero(n: usize) -> Self {
         VecPoly1(vec![Scalar::ZERO; n], vec![Scalar::ZERO; n])
     }
 
+    /// Computes the inner product of two vector polynomials.
+    ///
+    /// The result is a scalar polynomial of degree 2, `t(x) = t_0 + t_1*x + t_2*x^2`,
+    /// which is the inner product `t(x) = <l(x), r(x)>` in the Bulletproofs protocol.
+    ///
+    /// This function uses Karatsuba's method for efficient polynomial multiplication.
     pub fn inner_product(&self, rhs: &VecPoly1) -> Option<Poly2> {
         // Uses Karatsuba's method
         let l = self;
@@ -28,6 +42,10 @@ impl VecPoly1 {
         Some(Poly2(t0, t1, t2))
     }
 
+    /// Evaluates the vector polynomial at a given scalar point `x`.
+    ///
+    /// The result is a vector of scalars, where each element is the evaluation
+    /// of the corresponding polynomial at `x`.
     pub fn eval(&self, x: Scalar) -> Vec<Scalar> {
         let n = self.0.len();
         let mut out = vec![Scalar::ZERO; n];
@@ -39,16 +57,20 @@ impl VecPoly1 {
     }
 }
 
-/// Represents a degree-2 scalar polynomial \\(a + b \cdot x + c \cdot x^2\\)
+/// Represents a degree-2 scalar polynomial `a + b*x + c*x^2`.
+///
+/// In the Bulletproofs protocol, this represents the `t(x)` polynomial
+/// that results from the inner product of `l(x)` and `r(x)`.
 pub struct Poly2(pub Scalar, pub Scalar, pub Scalar);
 
 impl Poly2 {
+    /// Evaluates the polynomial at a scalar point `x` using Horner's method.
     pub fn eval(&self, x: Scalar) -> Scalar {
         self.0 + x * (self.1 + x * self.2)
     }
 }
 
-/// Provides an iterator over the powers of a `Scalar`.
+/// Provides an iterator over the powers of a `Scalar` (e.g., `1, x, x^2, x^3, ...`).
 ///
 /// This struct is created by the `exp_iter` function.
 pub struct ScalarExp {
@@ -70,16 +92,17 @@ impl Iterator for ScalarExp {
     }
 }
 
-/// Return an iterator of the powers of `x`.
+/// Returns an iterator of the powers of `x`, starting with `x^0 = 1`.
 pub fn exp_iter(x: Scalar) -> ScalarExp {
     let next_exp_x = Scalar::ONE;
     ScalarExp { x, next_exp_x }
 }
 
+/// Computes the component-wise sum of two vectors of scalars.
+/// Panics if the lengths of the vectors two do not match.
 pub fn add_vec(a: &[Scalar], b: &[Scalar]) -> Vec<Scalar> {
     if a.len() != b.len() {
-        // throw some error
-        //println!("lengths of vectors don't match for vector addition");
+        panic!("lengths of vectors don't match for vector addition");
     }
     let mut out = vec![Scalar::ZERO; b.len()];
     for i in 0..a.len() {
@@ -88,18 +111,20 @@ pub fn add_vec(a: &[Scalar], b: &[Scalar]) -> Vec<Scalar> {
     out
 }
 
-/// Given `data` with `len >= 32`, return the first 32 bytes.
+/// Returns the first 32 bytes of a slice as a fixed-size array.
+/// Panics if the slice is less than 32 bytes long.
 pub fn read32(data: &[u8]) -> [u8; 32] {
     let mut buf32 = [0u8; 32];
     buf32[..].copy_from_slice(&data[..32]);
     buf32
 }
 
-/// Computes an inner product of two vectors
-/// \\[
-///    {\langle {\mathbf{a}}, {\mathbf{b}} \rangle} = \sum\_{i=0}^{n-1} a\_i \cdot b\_i.
-/// \\]
-/// Errors if the lengths of \\(\mathbf{a}\\) and \\(\mathbf{b}\\) are not equal.
+/// Computes the inner product of two vectors of scalars.
+///
+/// The inner product is defined as:
+/// `<a, b> = a_1*b_1 + a_2*b_2 + ... + a_n*b_n`
+///
+/// Returns `None` if the vectors have different lengths.
 pub fn inner_product(a: &[Scalar], b: &[Scalar]) -> Option<Scalar> {
     let mut out = Scalar::ZERO;
     if a.len() != b.len() {
@@ -111,10 +136,13 @@ pub fn inner_product(a: &[Scalar], b: &[Scalar]) -> Option<Scalar> {
     Some(out)
 }
 
-/// Takes the sum of all the powers of `x`, up to `n`
-/// If `n` is a power of 2, it uses the efficient algorithm with `2*lg n` multiplications and additions.
-/// If `n` is not a power of 2, it uses the slow algorithm with `n` multiplications and additions.
-/// In the Bulletproofs case, all calls to `sum_of_powers` should have `n` as a power of 2.
+/// Computes the sum of powers of a scalar `x`.
+///
+/// Calculates `1 + x + x^2 + ... + x^(n-1)`.
+///
+/// In the Bulletproofs protocol, vector spaces are padded to a power of two `n`,
+/// so this function uses an efficient algorithm for that case. If `n` is not a
+/// power of two, it falls back to a slower method.
 pub fn sum_of_powers(x: &Scalar, n: usize) -> Scalar {
     if !n.is_power_of_two() {
         return sum_of_powers_slow(x, n);
@@ -133,7 +161,7 @@ pub fn sum_of_powers(x: &Scalar, n: usize) -> Scalar {
     result
 }
 
-// takes the sum of all of the powers of x, up to n
+/// A straightforward method to compute the sum of powers of `x`.
 fn sum_of_powers_slow(x: &Scalar, n: usize) -> Scalar {
     exp_iter(*x).take(n).sum()
 }
