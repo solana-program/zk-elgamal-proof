@@ -1,9 +1,9 @@
 //! The inner-product proof protocol.
 //!
 //! This module implements the inner-product proof protocol described in Section 3 of the
-//! Bulletproofs [`paper`]. The protocol is a recursive argument that allows a prover to
-//! convince a verifier that the inner product of two secret vectors `a` and `b` is a
-//! certain public value `c`.
+//! Bulletproofs [`paper`] (also described in [`notes`]). . The protocol is a recursive
+//! argument that allows a prover to convince a verifier that the inner product of two
+//! secret vectors `a` and `b` is a certain public value `c`.
 //!
 //! [`paper`]: https://eprint.iacr.org/2017/1066
 //! [`notes`]: https://doc-internal.dalek.rs/bulletproofs/notes/inner_product_proof/index.html
