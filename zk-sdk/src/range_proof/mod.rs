@@ -286,6 +286,11 @@ impl RangeProof {
             transcript,
         )?;
 
+        // compute challenge `d` for consistency with the verifier
+        transcript.append_scalar(b"ipp_a", &ipp_proof.a);
+        transcript.append_scalar(b"ipp_b", &ipp_proof.b);
+        let _d = transcript.challenge_scalar(b"d");
+
         Ok(RangeProof {
             A,
             S,
@@ -520,6 +525,11 @@ mod tests {
         proof
             .verify(vec![&comm], vec![32], &mut transcript_verify)
             .unwrap();
+
+        assert_eq!(
+            transcript_create.challenge_scalar(b"test"),
+            transcript_verify.challenge_scalar(b"test"),
+        )
     }
 
     #[test]
@@ -546,6 +556,11 @@ mod tests {
                 &mut transcript_verify,
             )
             .unwrap();
+
+        assert_eq!(
+            transcript_create.challenge_scalar(b"test"),
+            transcript_verify.challenge_scalar(b"test"),
+        )
     }
 
     #[test]
