@@ -1,3 +1,6 @@
+// Copyright (c) 2018 Chain, Inc.
+// This code is licensed under the MIT license.
+
 //! The Bulletproofs range-proof implementation over Curve25519 Ristretto points.
 //!
 //! The implementation is based on the dalek-cryptography bulletproofs
@@ -8,7 +11,6 @@
 //!   represented by arithmetic circuits as well as MPC.
 //! - This implementation implements a non-interactive range proof aggregation that is specified in
 //!   the original Bulletproofs [paper](https://eprint.iacr.org/2017/1066) (Section 4.3).
-//!
 
 #![allow(dead_code)]
 
