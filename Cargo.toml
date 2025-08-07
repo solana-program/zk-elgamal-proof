@@ -32,6 +32,7 @@ bincode = "1.3.3"
 bytemuck = "1.23.1"
 bytemuck_derive = "1.9.3"
 curve25519-dalek = { version = "4.1.3", features = ["digest", "rand_core"] }
+getrandom = "0.2"
 itertools = "0.12.1"
 js-sys = "0.3.77"
 merlin = { version = "3", default-features = false }
