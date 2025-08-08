@@ -1,20 +1,21 @@
 //! The batched range proof instructions.
 //!
-//! A batched range proof is defined with respect to a sequence of commitments `[C_1, ..., C_N]`
-//! and bit-lengths `[n_1, ..., n_N]`. It certifies that each `C_i` is a commitment to a number of
-//! bit-length `n_i`.
+//! A batched range proof is a cryptographic method that proves a set of committed values
+//! fall within specified bit-ranges, without revealing the values themselves. It is more
+//! efficient than verifying individual range proofs for each commitment.
 //!
-//! There are three batched range proof instructions: `VerifyBatchedRangeProof64`,
-//! `VerifyBatchedRangeProof128`, and `VerifyBatchedRangeProof256`. The value `N` in
-//! `VerifyBatchedRangeProof{N}` specifies the sum of the bit-lengths that the proof is certifying
-//! for a sequence of commitments.
+//! This module provides three instructions for batched range proofs, each corresponding to a
+//! different total bit length:
+//! - `VerifyBatchedRangeProof64`: For proofs where the sum of bit lengths is 64.
+//! - `VerifyBatchedRangeProof128`: For proofs where the sum of bit lengths is 128.
+//! - `VerifyBatchedRangeProof256`: For proofs where the sum of bit lengths is 256.
 //!
-//! For example to generate a batched range proof on a sequence of commitments `[C_1, C_2, C_3]` on
-//! a sequence of bit-lengths `[32, 32, 64]`, one must use `VerifyBatchedRangeProof128` as 128 is
-//! the sum of all bit-lengths.
+//! For example, to generate a batched range proof for a sequence of commitments `[C_1, C_2, C_3]`
+//! with corresponding bit-lengths `[32, 32, 64]`, one must use `VerifyBatchedRangeProof128`,
+//! since the sum of bit-lengths is `32 + 32 + 64 = 128`.
 //!
-//! The maximum number of commitments is fixed at 8. Each bit-length in `[n_1, ..., n_N]` must be a
-//! power-of-two positive integer less than or equal to 128.
+//! The maximum number of commitments that can be batched together is fixed at 8. Each individual
+//! bit length `n_i` must be at most 128.
 
 pub mod batched_range_proof_u128;
 pub mod batched_range_proof_u256;
@@ -33,6 +34,7 @@ use {
     std::convert::TryInto,
 };
 
+/// The maximum number of Pedersen commitments that can be processed in a single batched range proof.
 const MAX_COMMITMENTS: usize = 8;
 
 /// A bit length in a batched range proof must be at most 128.
@@ -44,7 +46,9 @@ const MAX_SINGLE_BIT_LENGTH: usize = 128;
 
 /// The context data needed to verify a range-proof for a Pedersen committed value.
 ///
-/// The context data is shared by all `VerifyBatchedRangeProof{N}` instructions.
+/// This struct holds the public information that a batched range proof certifies. It includes the
+/// Pedersen commitments and their corresponding bit lengths. This context is shared by all
+/// `VerifyBatchedRangeProof{N}` instructions.
 #[derive(Clone, Copy, bytemuck_derive::Pod, bytemuck_derive::Zeroable)]
 #[repr(C)]
 pub struct BatchedRangeProofContext {
@@ -81,6 +85,9 @@ impl BatchedRangeProofContext {
         let mut pod_commitments = [PodPedersenCommitment::zeroed(); MAX_COMMITMENTS];
         for (i, commitment) in commitments.iter().enumerate() {
             // all-zero commitment is invalid
+            //
+            // this check only exists in the prover logic to enforce safe practice
+            // identity commitments are not rejected by range proof verification logic itself
             if commitment.get_point().is_identity() {
                 return Err(ProofGenerationError::InvalidCommitment);
             }
