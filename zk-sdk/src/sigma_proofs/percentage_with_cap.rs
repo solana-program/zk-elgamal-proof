@@ -15,7 +15,7 @@
 //! The protocol guarantees computational soundness (by the hardness of discrete log) and perfect
 //! zero-knowledge in the random oracle model.
 //!
-//! [`ZK ElGamal proof program`]: https://edge.docs.solanalabs.com/runtime/zk-token-proof
+//! [`ZK ElGamal proof program`]: https://docs.anza.xyz/runtime/zk-elgamal-proof
 //! [`specification`](https://github.com/anza-xyz/agave/blob/master/docs/src/runtime/zk-docs/percentage_with_cap.pdf).
 
 #[cfg(target_arch = "wasm32")]
