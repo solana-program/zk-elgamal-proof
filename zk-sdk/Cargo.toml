@@ -43,6 +43,7 @@ subtle = { workspace = true }
 zeroize = { workspace = true, features = ["zeroize_derive"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { workspace = true, features = ["js"] }
 js-sys = { workspace = true }
 wasm-bindgen = { workspace = true }
 
