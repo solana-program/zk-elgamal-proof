@@ -566,6 +566,31 @@ mod tests {
     }
 
     #[test]
+    fn range_proof_bytes_roundtrip() {
+        let (comm, open) = Pedersen::new(42_u64);
+
+        let mut transcript_create = Transcript::new(b"Test");
+        let mut transcript_verify = Transcript::new(b"Test");
+
+        let bits: usize = 8;
+
+        let proof = RangeProof::new(vec![42], vec![bits], vec![&open], &mut transcript_create)
+            .expect("proof create");
+
+        let enc = proof.to_bytes();
+        assert!(!enc.is_empty());
+
+        let dec = RangeProof::from_bytes(&enc).expect("from_bytes");
+
+        assert_eq!(enc, dec.to_bytes());
+
+        assert!(
+            dec.verify(vec![&comm], vec![bits], &mut transcript_verify)
+                .is_ok()
+        );
+    }
+
+    #[test]
     fn test_range_proof_string() {
         let commitment_1_str = "dDaa/MTEDlyI0Nxx+iu1tOteZsTWmPXAfn9QI0W9mSc=";
         let pod_commitment_1 = PodPedersenCommitment::from_str(commitment_1_str).unwrap();
