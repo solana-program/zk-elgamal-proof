@@ -584,10 +584,9 @@ mod tests {
 
         assert_eq!(enc, dec.to_bytes());
 
-        assert!(
-            dec.verify(vec![&comm], vec![bits], &mut transcript_verify)
-                .is_ok()
-        );
+        assert!(dec
+            .verify(vec![&comm], vec![bits], &mut transcript_verify)
+            .is_ok());
     }
 
     #[test]
