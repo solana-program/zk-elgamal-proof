@@ -1,0 +1,14 @@
+{
+    "name": "web-test-project",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "start": "serve"
+    },
+    "devDependencies": {
+        "serve": "^14.0.0"
+    },
+    "dependencies": {
+        "hello-wasm-universal": "file:../hello-wasm"
+    }
+}

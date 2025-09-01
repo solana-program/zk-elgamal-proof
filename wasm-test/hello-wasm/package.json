@@ -1,0 +1,31 @@
+    {
+        "name": "hello-wasm-universal",
+        "version": "0.1.0",
+        "description": "A universal WASM test package for Node and Web",
+        "type": "module",
+        "files": [
+            "dist"
+        ],
+        "types": "./dist/node/index.d.ts",
+        "browser": "./dist/bundler/index.js",
+        "exports": {
+            "./node": {
+                "import": "./dist/node/index.cjs",
+                "require": "./dist/node/index.cjs",
+                "types": "./dist/node/index.d.ts"
+            },
+            "./web": {
+                "import": "./dist/web/index.js",
+                "default": "./dist/web/index.js",
+                "types": "./dist/web/index.d.ts"
+            },
+          "./bundler": {
+            "import": "./dist/bundler/index.js",
+            "default": "./dist/bundler/index.js",
+            "types": "./dist/bundler/index.d.ts"
+          }
+        },
+        "scripts": {
+            "build": "./build.sh"
+        }
+    }

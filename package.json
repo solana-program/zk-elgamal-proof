@@ -1,0 +1,32 @@
+{
+  "private": true,
+  "scripts": {
+    "zk-sdk:build-sbf": "zx ./scripts/rust/build-sbf.mjs zk-sdk",
+    "zk-sdk:build-wasm": "zx ./scripts/rust/build-wasm.mjs zk-sdk",
+    "zk-sdk:test": "zx ./scripts/rust/test.mjs zk-sdk",
+    "zk-sdk:format": "zx ./scripts/rust/format.mjs zk-sdk",
+    "zk-sdk:lint": "zx ./scripts/rust/lint.mjs zk-sdk",
+    "solana:check": "zx ./scripts/check-solana-version.mjs",
+    "solana:link": "zx ./scripts/link-solana-version.mjs",
+    "validator:start": "zx ./scripts/start-validator.mjs",
+    "validator:restart": "pnpm validator:start --restart",
+    "validator:stop": "zx ./scripts/stop-validator.mjs",
+    "template:upgrade": "zx ./scripts/upgrade-template.mjs",
+    "rust:spellcheck": "cargo spellcheck --code 1",
+    "rust:audit": "zx ./scripts/rust/audit.mjs",
+    "rust:semver": "cargo semver-checks",
+    "rust:publish": "zx ./scripts/rust/publish.mjs",
+    "clients:js-legacy:format": "zx ./scripts/js/format.mjs clients/js-legacy",
+    "clients:js-legacy:lint": "zx ./scripts/js/lint.mjs clients/js-legacy",
+    "clients:js-legacy:test": "zx ./scripts/js/test.mjs clients/js-legacy"
+  },
+  "devDependencies": {
+    "@iarna/toml": "^2.2.5",
+    "typescript": "^5.8.3",
+    "zx": "^8.7.2"
+  },
+  "engines": {
+    "node": ">=v20.0.0"
+  },
+  "packageManager": "pnpm@9.1.0"
+}

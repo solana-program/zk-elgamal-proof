@@ -1,0 +1,12 @@
+{
+    "name": "node-test",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "start": "node test.mjs"
+    },
+    "dependencies": {
+        "hello-wasm-universal": "file:../hello-wasm"
+    }
+}
