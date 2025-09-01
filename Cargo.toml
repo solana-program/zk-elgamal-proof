@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["zk-sdk", "wasm-test/hello-wasm"]
+members = ["zk-sdk", "zk-sdk-wasm"]
 
 [workspace.package]
 authors = ["Anza Maintainers <maintainers@anza.xyz>"]

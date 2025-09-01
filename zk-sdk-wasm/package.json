@@ -1,6 +1,6 @@
     {
-        "name": "hello-wasm-universal",
-        "version": "0.1.0",
+        "name": "@solana/zk-sdk",
+        "version": "0.2.0",
         "description": "A universal WASM test package for Node and Web",
         "type": "module",
         "files": [

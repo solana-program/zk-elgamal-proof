@@ -35,4 +35,8 @@ cp pkg-bundler/hello_wasm_bg.wasm dist/bundler/hello_wasm_bg.wasm
 cp pkg-bundler/hello_wasm.d.ts dist/bundler/index.d.ts
 cp pkg-bundler/hello_wasm_bg.js dist/bundler/hello_wasm_bg.js
 
+# 7. Cleanup
+echo "--- Cleanup artifacts ---"
+rm -rf pkg-node pkg-web pkg-bundler
+
 echo "--- Build complete! ---"
