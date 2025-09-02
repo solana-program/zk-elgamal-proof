@@ -4,6 +4,7 @@ use {
     num_traits::{FromPrimitive, ToPrimitive},
 };
 
+
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Pod, Zeroable)]
 #[repr(transparent)]
 pub struct PodProofType(u8);
@@ -19,7 +20,7 @@ impl TryFrom<PodProofType> for ProofType {
         FromPrimitive::from_u8(pod.0).ok_or(Self::Error::InvalidProofType)
     }
 }
-
+#[allow(unused_macros)]
 macro_rules! impl_wasm_to_bytes {
     (TYPE = $type:ident) => {
         #[cfg(not(target_os = "solana"))]
@@ -39,4 +40,5 @@ macro_rules! impl_wasm_to_bytes {
         }
     };
 }
+#[allow(unused_imports)]
 pub(crate) use impl_wasm_to_bytes;

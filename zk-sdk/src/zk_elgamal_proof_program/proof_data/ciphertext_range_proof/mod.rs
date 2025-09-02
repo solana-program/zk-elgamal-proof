@@ -17,9 +17,12 @@
 //! The maximum number of commitments that can be batched together is fixed at 8. Each individual
 //! bit length `n_i` must be at most 128.
 
-pub mod batched_range_proof_u128;
-pub mod batched_range_proof_u256;
-pub mod batched_range_proof_u64;
+// pub mod batched_range_proof_u128;
+// pub mod batched_range_proof_u256;
+// pub mod batched_range_proof_u64;
+use sha3::{Sha3_256, Digest};
+pub mod range_proof;
+#[allow(dead_code)]
 
 use crate::encryption::pod::pedersen::PodPedersenCommitment;
 #[cfg(not(target_os = "solana"))]
@@ -41,8 +44,8 @@ const MAX_COMMITMENTS: usize = 8;
 ///
 /// A 256-bit range proof on a single Pedersen commitment is meaningless and hence enforce an upper
 /// bound as the largest power-of-two number less than 256.
-#[cfg(not(target_os = "solana"))]
-const MAX_SINGLE_BIT_LENGTH: usize = 128;
+// #[cfg(not(target_os = "solana"))]
+// const MAX_SINGLE_BIT_LENGTH: usize = 128;
 
 /// The context data needed to verify a range-proof for a Pedersen committed value.
 ///
@@ -51,18 +54,19 @@ const MAX_SINGLE_BIT_LENGTH: usize = 128;
 /// `VerifyBatchedRangeProof{N}` instructions.
 #[derive(Clone, Copy, bytemuck_derive::Pod, bytemuck_derive::Zeroable)]
 #[repr(C)]
-pub struct BatchedRangeProofContext {
+pub struct CiphertextRangeProofContext {
     pub commitments: [PodPedersenCommitment; MAX_COMMITMENTS],
     pub bit_lengths: [u8; MAX_COMMITMENTS],
-
+    pub ciphertext_hash: [u8;32]
 
 }
 
 #[allow(non_snake_case)]
 #[cfg(not(target_os = "solana"))]
-impl BatchedRangeProofContext {
+impl CiphertextRangeProofContext {
     fn new_transcript(&self) -> Transcript {
         let mut transcript = Transcript::new(b"batched-range-proof-instruction");
+        transcript.append_message(b"ciphertext_hash", bytes_of(&self.ciphertext_hash));
         transcript.append_message(b"commitments", bytes_of(&self.commitments));
         transcript.append_message(b"bit-lengths", bytes_of(&self.bit_lengths));
         transcript
@@ -73,6 +77,7 @@ impl BatchedRangeProofContext {
         amounts: &[u64],
         bit_lengths: &[usize],
         openings: &[&PedersenOpening],
+        ciphertext: &[u8;32]
     ) -> Result<Self, ProofGenerationError> {
         // the number of commitments is capped at 8
         let num_commitments = commitments.len();
@@ -102,20 +107,23 @@ impl BatchedRangeProofContext {
                 .try_into()
                 .map_err(|_| ProofGenerationError::IllegalAmountBitLength)?;
         }
+        let mut hasher = Sha3_256::new();
+        hasher.update(ciphertext);
+        let ciphertext_hash: [u8; 32] = hasher.finalize().into();
 
-        Ok(BatchedRangeProofContext {
+        Ok(CiphertextRangeProofContext {
             commitments: pod_commitments,
             bit_lengths: pod_bit_lengths,
-            
+            ciphertext_hash
         })
     }
 }
 
 #[cfg(not(target_os = "solana"))]
-impl TryInto<(Vec<PedersenCommitment>, Vec<usize>)> for BatchedRangeProofContext {
+impl TryInto<(Vec<PedersenCommitment>, Vec<usize>, [u8;32])> for CiphertextRangeProofContext {
     type Error = ProofVerificationError;
 
-    fn try_into(self) -> Result<(Vec<PedersenCommitment>, Vec<usize>), Self::Error> {
+    fn try_into(self) -> Result<(Vec<PedersenCommitment>, Vec<usize>, [u8;32]), Self::Error> {
         let commitments = self
             .commitments
             .into_iter()
@@ -132,6 +140,6 @@ impl TryInto<(Vec<PedersenCommitment>, Vec<usize>)> for BatchedRangeProofContext
             .collect();
 
 
-        Ok((commitments, bit_lengths))
+        Ok((commitments, bit_lengths, self.ciphertext_hash))
     }
 }

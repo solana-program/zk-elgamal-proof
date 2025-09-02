@@ -39,6 +39,8 @@ pub enum ProofVerificationError {
     IllegalCommitmentLength,
     #[error("illegal amount bit length")]
     IllegalAmountBitLength,
+    #[error("ciphertext mismatch")]
+    CiphertextMismatch,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]

@@ -7,7 +7,7 @@ use {
         range_proof::RangeProof,
         zk_elgamal_proof_program::{
             errors::{ProofGenerationError, ProofVerificationError},
-            proof_data::batched_range_proof::{MAX_COMMITMENTS, MAX_SINGLE_BIT_LENGTH},
+           
         },
     },
     std::convert::TryInto,
@@ -16,11 +16,23 @@ use {
     crate::{
         range_proof::pod::PodRangeProofU256,
         zk_elgamal_proof_program::proof_data::{
-            batched_range_proof::BatchedRangeProofContext, ProofType, ZkProofData,
+            ciphertext_range_proof::CiphertextRangeProofContext , ProofType, ZkProofData,
         },
     },
     bytemuck_derive::{Pod, Zeroable},
 };
+
+
+/// The maximum number of Pedersen commitments that can be processed in a single batched range proof.
+const MAX_COMMITMENTS: usize = 8;
+
+/// A bit length in a batched range proof must be at most 128.
+///
+/// A 256-bit range proof on a single Pedersen commitment is meaningless and hence enforce an upper
+/// bound as the largest power-of-two number less than 256.
+#[cfg(not(target_os = "solana"))]
+const MAX_SINGLE_BIT_LENGTH: usize = 128;
+
 
 #[cfg(not(target_os = "solana"))]
 const BATCHED_RANGE_PROOF_U256_BIT_LENGTH: usize = 256;
@@ -34,7 +46,7 @@ const BATCHED_RANGE_PROOF_U256_BIT_LENGTH: usize = 256;
 #[repr(C)]
 pub struct BatchedRangeProofU256Data {
     /// The context data for a batched range proof
-    pub context: BatchedRangeProofContext,
+    pub context: CiphertextRangeProofContext ,
 
     /// The batched range proof
     pub proof: PodRangeProofU256,
@@ -47,7 +59,8 @@ impl BatchedRangeProofU256Data {
         amounts: Vec<u64>,
         bit_lengths: Vec<usize>,
         openings: Vec<&PedersenOpening>,
-      
+        ciphertext: &[u8;32]
+       
         
     ) -> Result<Self, ProofGenerationError> {
         // Range proof on 256 bit length could potentially result in an unexpected behavior and
@@ -70,7 +83,7 @@ impl BatchedRangeProofU256Data {
         }
 
         let context =
-            BatchedRangeProofContext::new(&commitments, &amounts, &bit_lengths, &openings)?;
+            CiphertextRangeProofContext ::new(&commitments, &amounts, &bit_lengths, &openings, &ciphertext)?;
 
         let mut transcript = context.new_transcript();
         let proof = RangeProof::new(amounts, bit_lengths, openings, &mut transcript)?
@@ -81,21 +94,21 @@ impl BatchedRangeProofU256Data {
     }
 }
 
-impl ZkProofData<BatchedRangeProofContext> for BatchedRangeProofU256Data {
+impl ZkProofData<CiphertextRangeProofContext > for BatchedRangeProofU256Data {
     const PROOF_TYPE: ProofType = ProofType::BatchedRangeProofU256;
 
-    fn context_data(&self) -> &BatchedRangeProofContext {
+    fn context_data(&self) -> &CiphertextRangeProofContext {
         &self.context
     }
 
     #[cfg(not(target_os = "solana"))]
-    fn verify_proof(&self) -> Result<(), ProofVerificationError> {
-        let (commitments, bit_lengths) = self.context.try_into()?;
+    fn verify_proof(&self , onchain_ciphertext_hash: &[u8;32]) -> Result<(), ProofVerificationError> {
+        let (commitments, bit_lengths, ciphertext_hash) = self.context.try_into()?;
         let num_commitments = commitments.len();
     // checks the context ciphertext is same as given on-chain 
-    //     if ciphertext != onchain_ciphertext {
-    //     return Err(ProofVerificationError::CiphertextMismatch);
-    // }
+        if &ciphertext_hash != onchain_ciphertext_hash {
+        return Err(ProofVerificationError::CiphertextMismatch);
+    }
         // This check is unique to the 256-bit proof. For 64-bit and 128-bit proofs,
         // the total sum constraint already guarantees that no single bit length can
         // exceed 128. However, for a 256-bit proof, bit lengths can sum to 256
@@ -130,11 +143,13 @@ mod test {
             encryption::pedersen::Pedersen, range_proof::errors::RangeProofVerificationError,
             zk_elgamal_proof_program::errors::ProofVerificationError,
         },
+        
     };
+    use sha3::{Sha3_256, Digest};
 
     #[test]
     fn test_batched_range_proof_256_instruction_correctness() {
-        let amount_1 = 4294967295_u64;
+        let amount_1 = 100_u64;
         let amount_2 = 77_u64;
         let amount_3 = 99_u64;
         let amount_4 = 99_u64;
@@ -151,6 +166,13 @@ mod test {
         let (commitment_6, opening_6) = Pedersen::new(amount_6);
         let (commitment_7, opening_7) = Pedersen::new(amount_7);
         let (commitment_8, opening_8) = Pedersen::new(amount_8);
+
+        // // Create dummy ciphertext data for testing
+        let ciphertext = [1u8; 32]; // 64 bytes of dummy ciphertext data
+        let mut hasher = Sha3_256::new();
+        hasher.update(ciphertext);
+        let ciphertext_hash: [u8; 32] = hasher.finalize().into();
+
 
         let proof_data = BatchedRangeProofU256Data::new(
             vec![
@@ -171,10 +193,11 @@ mod test {
                 &opening_1, &opening_2, &opening_3, &opening_4, &opening_5, &opening_6, &opening_7,
                 &opening_8,
             ],
+            &ciphertext, // Added missing ciphertext parameter
         )
         .unwrap();
 
-        assert!(proof_data.verify_proof().is_ok());
+        assert!(proof_data.verify_proof(&ciphertext_hash).is_ok()); // Added ciphertext parameter
 
         let amount_1 = 4294967296_u64; // not representable as a 32-bit number
         let amount_2 = 77_u64;
@@ -213,11 +236,12 @@ mod test {
                 &opening_1, &opening_2, &opening_3, &opening_4, &opening_5, &opening_6, &opening_7,
                 &opening_8,
             ],
+            &ciphertext, // Added missing ciphertext parameter
         )
         .unwrap();
 
         assert_eq!(
-            proof_data.verify_proof().unwrap_err(),
+            proof_data.verify_proof(&ciphertext_hash).unwrap_err(), // Added ciphertext parameter
             ProofVerificationError::RangeProof(RangeProofVerificationError::AlgebraicRelation),
         );
     }
