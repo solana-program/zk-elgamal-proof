@@ -50,7 +50,7 @@ solana-pubkey = { version = "3.0.0", default-features = false }
 solana-sdk-ids = "3.0.0"
 solana-seed-derivable = "3.0.0"
 solana-seed-phrase = "3.0.0"
-solana-signature = { version = "3.0.0", default-features = false }
+solana-signature = { version = "3.1.0", default-features = false }
 solana-signer = "3.0.0"
 subtle = "2.6.1"
 thiserror = "2.0.14"
