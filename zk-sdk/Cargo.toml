@@ -2,7 +2,7 @@
 name = "solana-zk-sdk"
 description = "Solana ZK SDK"
 documentation = "https://docs.rs/solana-zk-sdk"
-version = "4.0.1"
+version = "4.0.2"
 authors = { workspace = true }
 repository = { workspace = true }
 homepage = { workspace = true }
