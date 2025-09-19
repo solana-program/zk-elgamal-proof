@@ -28,6 +28,27 @@ jobs:
       - name: Lint ZK SDK
         run: pnpm zk-sdk:lint
 
+  format_and_lint_zk_sdk_wasm_js:
+    name: Format & Lint ZK SDK WASM JS
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup
+        with:
+          clippy: true
+          rustfmt: true
+          cargo-cache-key: cargo-zk-sdk-wasm-js-lint
+          cargo-cache-fallback-key: cargo-zk-sdk-wasm-js
+
+      - name: Format ZK SDK WASM JS
+        run: pnpm zk-sdk-wasm-js:format
+
+      - name: Lint ZK SDK WASM JS
+        run: pnpm zk-sdk-wasm-js:lint
+
   format_and_lint_client_js_legacy:
     name: Format & Lint Client JS Legacy
     runs-on: ubuntu-latest
@@ -110,7 +131,7 @@ jobs:
           wasm: true
 
       - name: Build ZK SDK Wasm
-        run: pnpm zk-sdk:build-wasm
+        run: pnpm zk-sdk-wasm-js:build-wasm
 
   build_programs:
     name: Check ZK SDK SBF build

@@ -1,0 +1,8 @@
+#!/usr/bin/env zx
+import "zx/globals";
+import { cliArguments, workingDirectory } from "../utils.mjs";
+
+const [folder, ...args] = cliArguments();
+const cratePath = path.join(workingDirectory, folder);
+
+await $`wasm-pack test --node ${cratePath} ${args}`;
