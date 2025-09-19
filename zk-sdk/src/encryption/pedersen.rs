@@ -1,7 +1,5 @@
 //! Pedersen commitment implementation using the Ristretto prime-order group.
 
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude::*;
 use {
     crate::encryption::{PEDERSEN_COMMITMENT_LEN, PEDERSEN_OPENING_LEN},
     core::ops::{Add, Mul, Sub},
@@ -27,7 +25,6 @@ pub static H: std::sync::LazyLock<RistrettoPoint> = std::sync::LazyLock::new(|| 
 });
 
 /// Algorithm handle for the Pedersen commitment scheme.
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 pub struct Pedersen;
 impl Pedersen {
     /// On input a message (numeric amount), the function returns a Pedersen commitment of the
@@ -62,25 +59,14 @@ impl Pedersen {
     }
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-impl Pedersen {
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(js_name = withU64))]
-    pub fn with_u64(amount: u64, opening: &PedersenOpening) -> PedersenCommitment {
-        Pedersen::with(amount, opening)
-    }
-}
-
 /// Pedersen opening type.
 ///
 /// Instances of Pedersen openings are zeroized on drop.
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[derive(Clone, Debug, Default, Serialize, Deserialize, Zeroize)]
 #[zeroize(drop)]
 pub struct PedersenOpening(Scalar);
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 impl PedersenOpening {
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(js_name = newRand))]
     pub fn new_rand() -> Self {
         PedersenOpening(Scalar::random(&mut OsRng))
     }
@@ -181,7 +167,6 @@ define_mul_variants!(
 );
 
 /// Pedersen commitment type.
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct PedersenCommitment(RistrettoPoint);
 impl PedersenCommitment {

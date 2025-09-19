@@ -5,13 +5,11 @@
 //! the proof, a prover must provide the decryption key for the first ciphertext and the randomness
 //! used to generate the second ciphertext.
 
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude::*;
 use {
     crate::{
         encryption::pod::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
         sigma_proofs::pod::PodCiphertextCiphertextEqualityProof,
-        zk_elgamal_proof_program::proof_data::{pod::impl_wasm_to_bytes, ProofType, ZkProofData},
+        zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
     },
     bytemuck_derive::{Pod, Zeroable},
 };
@@ -23,10 +21,7 @@ use {
             pedersen::PedersenOpening,
         },
         sigma_proofs::ciphertext_ciphertext_equality::CiphertextCiphertextEqualityProof,
-        zk_elgamal_proof_program::{
-            errors::{ProofGenerationError, ProofVerificationError},
-            proof_data::errors::ProofDataError,
-        },
+        zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
     },
     bytemuck::bytes_of,
     merlin::Transcript,
@@ -38,7 +33,6 @@ use {
 ///
 /// It includes the cryptographic proof as well as the context data information needed to verify
 /// the proof.
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[derive(Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
 pub struct CiphertextCiphertextEqualityProofData {
@@ -48,7 +42,6 @@ pub struct CiphertextCiphertextEqualityProofData {
 }
 
 /// The context data needed to verify a ciphertext-ciphertext equality proof.
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[derive(Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
 pub struct CiphertextCiphertextEqualityProofContext {
@@ -62,7 +55,6 @@ pub struct CiphertextCiphertextEqualityProofContext {
 }
 
 #[cfg(not(target_os = "solana"))]
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 impl CiphertextCiphertextEqualityProofData {
     pub fn new(
         first_keypair: &ElGamalKeypair,
@@ -99,8 +91,6 @@ impl CiphertextCiphertextEqualityProofData {
         Ok(Self { context, proof })
     }
 }
-
-impl_wasm_to_bytes!(TYPE = CiphertextCiphertextEqualityProofData);
 
 impl ZkProofData<CiphertextCiphertextEqualityProofContext>
     for CiphertextCiphertextEqualityProofData
@@ -147,8 +137,6 @@ impl CiphertextCiphertextEqualityProofContext {
         transcript
     }
 }
-
-impl_wasm_to_bytes!(TYPE = CiphertextCiphertextEqualityProofContext);
 
 #[cfg(test)]
 mod test {

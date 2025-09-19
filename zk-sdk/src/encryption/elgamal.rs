@@ -14,12 +14,6 @@
 //! As the messages are encrypted as scalar elements (a.k.a. in the "exponent"), one must solve the
 //! discrete log to recover the originally encrypted value.
 
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude::*;
-// Currently, `wasm_bindgen` exports types and functions included in the current crate, but all
-// types and functions exported for wasm targets in all of its dependencies
-// (https://github.com/rustwasm/wasm-bindgen/issues/3759). We specifically exclude some of the
-// dependencies that will cause unnecessary bloat to the wasm binary.
 use {
     crate::{
         encryption::{
@@ -39,24 +33,20 @@ use {
     },
     rand::rngs::OsRng,
     serde::{Deserialize, Serialize},
-    sha3::Sha3_512,
-    std::{convert::TryInto, fmt},
-    subtle::{Choice, ConstantTimeEq},
-    zeroize::Zeroize,
-};
-#[cfg(not(target_arch = "wasm32"))]
-use {
-    sha3::Digest,
+    sha3::{Digest, Sha3_512},
     solana_derivation_path::DerivationPath,
     solana_seed_derivable::SeedDerivable,
     solana_seed_phrase::generate_seed_from_seed_phrase_and_passphrase,
     solana_signature::Signature,
     solana_signer::{EncodableKey, EncodableKeypair, Signer, SignerError},
     std::{
-        error,
+        convert::TryInto,
+        error, fmt,
         io::{Read, Write},
         path::Path,
     },
+    subtle::{Choice, ConstantTimeEq},
+    zeroize::Zeroize,
 };
 
 /// Algorithm handle for the twisted ElGamal encryption scheme
@@ -146,7 +136,6 @@ impl ElGamal {
 /// A (twisted) ElGamal encryption keypair.
 ///
 /// The instances of the secret key are zeroized on drop.
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize, Zeroize)]
 pub struct ElGamalKeypair {
     /// The public half of this keypair.
@@ -155,25 +144,20 @@ pub struct ElGamalKeypair {
     secret: ElGamalSecretKey,
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 impl ElGamalKeypair {
     /// Generates the public and secret keys for ElGamal encryption.
     ///
     /// This function is randomized. It internally samples a scalar element using `OsRng`.
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(js_name = newRand))]
     pub fn new_rand() -> Self {
         ElGamal::keygen()
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(js_name = pubkeyOwned))]
-    pub fn pubkey_owned(&self) -> ElGamalPubkey {
-        self.public
-    }
-}
-
-impl ElGamalKeypair {
     pub fn pubkey(&self) -> &ElGamalPubkey {
         &self.public
+    }
+
+    pub fn pubkey_owned(&self) -> ElGamalPubkey {
+        self.public
     }
 
     pub fn secret(&self) -> &ElGamalSecretKey {
@@ -181,7 +165,6 @@ impl ElGamalKeypair {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 impl ElGamalKeypair {
     /// Create an ElGamal keypair from an ElGamal public key and an ElGamal secret key.
     ///
@@ -254,7 +237,6 @@ impl ElGamalKeypair {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 impl EncodableKey for ElGamalKeypair {
     fn read<R: Read>(reader: &mut R) -> Result<Self, Box<dyn error::Error>> {
         Self::read_json(reader)
@@ -299,7 +281,6 @@ impl From<&ElGamalKeypair> for [u8; ELGAMAL_KEYPAIR_LEN] {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 impl SeedDerivable for ElGamalKeypair {
     fn from_seed(seed: &[u8]) -> Result<Self, Box<dyn error::Error>> {
         let secret = ElGamalSecretKey::from_seed(seed)?;
@@ -325,7 +306,6 @@ impl SeedDerivable for ElGamalKeypair {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 impl EncodableKeypair for ElGamalKeypair {
     type Pubkey = ElGamalPubkey;
 
@@ -335,7 +315,6 @@ impl EncodableKeypair for ElGamalKeypair {
 }
 
 /// Public key for the ElGamal encryption scheme.
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize, Zeroize)]
 pub struct ElGamalPubkey(RistrettoPoint);
 impl ElGamalPubkey {
@@ -374,20 +353,16 @@ impl ElGamalPubkey {
     }
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 impl ElGamalPubkey {
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(js_name = encryptU64))]
     pub fn encrypt_u64(&self, amount: u64) -> ElGamalCiphertext {
         ElGamal::encrypt(self, amount)
     }
 
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(js_name = encryptWithU64))]
     pub fn encrypt_with_u64(&self, amount: u64, opening: &PedersenOpening) -> ElGamalCiphertext {
         ElGamal::encrypt_with(amount, self, opening)
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 impl EncodableKey for ElGamalPubkey {
     fn read<R: Read>(reader: &mut R) -> Result<Self, Box<dyn error::Error>> {
         let bytes: Vec<u8> = serde_json::from_reader(reader)?;
@@ -496,7 +471,6 @@ impl ElGamalSecretKey {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 impl ElGamalSecretKey {
     /// Deterministically derives an ElGamal secret key from a Solana signer and a public seed.
     ///
@@ -549,7 +523,6 @@ impl ElGamalSecretKey {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 impl EncodableKey for ElGamalSecretKey {
     fn read<R: Read>(reader: &mut R) -> Result<Self, Box<dyn error::Error>> {
         let bytes: Vec<u8> = serde_json::from_reader(reader)?;
@@ -566,7 +539,6 @@ impl EncodableKey for ElGamalSecretKey {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 impl SeedDerivable for ElGamalSecretKey {
     fn from_seed(seed: &[u8]) -> Result<Self, Box<dyn error::Error>> {
         let key = Self::from_seed(seed)?;
@@ -637,7 +609,6 @@ impl ConstantTimeEq for ElGamalSecretKey {
 }
 
 /// Ciphertext for the ElGamal encryption scheme.
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ElGamalCiphertext {
     pub commitment: PedersenCommitment,
@@ -775,7 +746,6 @@ define_mul_variants!(
 );
 
 /// Decryption handle for Pedersen commitment.
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct DecryptHandle(RistrettoPoint);
 impl DecryptHandle {
@@ -875,7 +845,6 @@ mod tests {
         assert_eq!(57_u64, secret.decrypt_u32(&ciphertext).unwrap());
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn test_encrypt_decrypt_correctness_multithreaded() {
         let ElGamalKeypair { public, secret } = ElGamalKeypair::new_rand();

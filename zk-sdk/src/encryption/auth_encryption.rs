@@ -3,8 +3,6 @@
 //! This module is a simple wrapper of the `Aes128GcmSiv` implementation
 //! specialized for SPL Token2022 program where the plaintext is always a `u64`
 //! number.
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude::*;
 use {
     crate::{
         encryption::{AE_CIPHERTEXT_LEN, AE_KEY_LEN},
@@ -16,27 +14,19 @@ use {
     },
     base64::{prelude::BASE64_STANDARD, Engine},
     rand::{rngs::OsRng, Rng},
-    std::{convert::TryInto, fmt},
-    zeroize::Zeroize,
-};
-// Currently, `wasm_bindgen` exports types and functions included in the current crate, but all
-// types and functions exported for wasm targets in all of its dependencies
-// (https://github.com/rustwasm/wasm-bindgen/issues/3759). We specifically exclude some of the
-// dependencies that will cause unnecessary bloat to the wasm binary.
-#[cfg(not(target_arch = "wasm32"))]
-use {
-    sha3::Digest,
-    sha3::Sha3_512,
+    sha3::{Digest, Sha3_512},
     solana_derivation_path::DerivationPath,
     solana_seed_derivable::SeedDerivable,
     solana_seed_phrase::generate_seed_from_seed_phrase_and_passphrase,
     solana_signature::Signature,
     solana_signer::{EncodableKey, Signer, SignerError},
     std::{
-        error,
+        convert::TryInto,
+        error, fmt,
         io::{Read, Write},
     },
     subtle::ConstantTimeEq,
+    zeroize::Zeroize,
 };
 
 /// Byte length of an authenticated encryption nonce component
@@ -88,30 +78,9 @@ impl AuthenticatedEncryption {
     }
 }
 
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[derive(Clone, Debug, Zeroize, Eq, PartialEq)]
 pub struct AeKey([u8; AE_KEY_LEN]);
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
-impl AeKey {
-    /// Generates a random authenticated encryption key.
-    ///
-    /// This function is randomized. It internally samples a 128-bit key using `OsRng`.
-    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(js_name = newRand))]
-    pub fn new_rand() -> Self {
-        AuthenticatedEncryption::keygen()
-    }
 
-    /// Encrypts an amount under the authenticated encryption key.
-    pub fn encrypt(&self, amount: u64) -> AeCiphertext {
-        AuthenticatedEncryption::encrypt(self, amount)
-    }
-
-    pub fn decrypt(&self, ciphertext: &AeCiphertext) -> Option<u64> {
-        AuthenticatedEncryption::decrypt(self, ciphertext)
-    }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
 impl AeKey {
     /// Deterministically derives an authenticated encryption key from a Solana signer and a public
     /// seed.
@@ -162,9 +131,24 @@ impl AeKey {
 
         result.to_vec()
     }
+
+    /// Generates a random authenticated encryption key.
+    ///
+    /// This function is randomized. It internally samples a 128-bit key using `OsRng`.
+    pub fn new_rand() -> Self {
+        AuthenticatedEncryption::keygen()
+    }
+
+    /// Encrypts an amount under the authenticated encryption key.
+    pub fn encrypt(&self, amount: u64) -> AeCiphertext {
+        AuthenticatedEncryption::encrypt(self, amount)
+    }
+
+    pub fn decrypt(&self, ciphertext: &AeCiphertext) -> Option<u64> {
+        AuthenticatedEncryption::decrypt(self, ciphertext)
+    }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 impl EncodableKey for AeKey {
     fn read<R: Read>(reader: &mut R) -> Result<Self, Box<dyn error::Error>> {
         let bytes: [u8; AE_KEY_LEN] = serde_json::from_reader(reader)?;
@@ -179,7 +163,6 @@ impl EncodableKey for AeKey {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
 impl SeedDerivable for AeKey {
     fn from_seed(seed: &[u8]) -> Result<Self, Box<dyn error::Error>> {
         const MINIMUM_SEED_LEN: usize = AE_KEY_LEN;
@@ -248,7 +231,6 @@ type Nonce = [u8; NONCE_LEN];
 type Ciphertext = [u8; CIPHERTEXT_LEN];
 
 /// Authenticated encryption nonce and ciphertext
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[derive(Clone, Copy, Debug, Default)]
 pub struct AeCiphertext {
     nonce: Nonce,

@@ -5,8 +5,6 @@
 //! encrypts/encodes the same message. To generate the proof, a prover must provide the decryption
 //! key for the first ciphertext and the Pedersen opening for the commitment.
 
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude::*;
 use {
     crate::{
         encryption::pod::{
@@ -14,7 +12,7 @@ use {
             pedersen::PodPedersenCommitment,
         },
         sigma_proofs::pod::PodCiphertextCommitmentEqualityProof,
-        zk_elgamal_proof_program::proof_data::{pod::impl_wasm_to_bytes, ProofType, ZkProofData},
+        zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
     },
     bytemuck_derive::{Pod, Zeroable},
 };
@@ -26,10 +24,7 @@ use {
             pedersen::{PedersenCommitment, PedersenOpening},
         },
         sigma_proofs::ciphertext_commitment_equality::CiphertextCommitmentEqualityProof,
-        zk_elgamal_proof_program::{
-            errors::{ProofGenerationError, ProofVerificationError},
-            proof_data::errors::ProofDataError,
-        },
+        zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
     },
     bytemuck::bytes_of,
     merlin::Transcript,
@@ -40,7 +35,6 @@ use {
 ///
 /// It includes the cryptographic proof as well as the context data information needed to verify
 /// the proof.
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[derive(Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
 pub struct CiphertextCommitmentEqualityProofData {
@@ -49,7 +43,6 @@ pub struct CiphertextCommitmentEqualityProofData {
 }
 
 /// The context data needed to verify a ciphertext-commitment equality proof.
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[derive(Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
 pub struct CiphertextCommitmentEqualityProofContext {
@@ -64,7 +57,6 @@ pub struct CiphertextCommitmentEqualityProofContext {
 }
 
 #[cfg(not(target_os = "solana"))]
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 impl CiphertextCommitmentEqualityProofData {
     pub fn new(
         keypair: &ElGamalKeypair,
@@ -92,8 +84,6 @@ impl CiphertextCommitmentEqualityProofData {
         })
     }
 }
-
-impl_wasm_to_bytes!(TYPE = CiphertextCommitmentEqualityProofData);
 
 impl ZkProofData<CiphertextCommitmentEqualityProofContext>
     for CiphertextCommitmentEqualityProofData
@@ -130,8 +120,6 @@ impl CiphertextCommitmentEqualityProofContext {
         transcript
     }
 }
-
-impl_wasm_to_bytes!(TYPE = CiphertextCommitmentEqualityProofContext);
 
 #[cfg(test)]
 mod test {

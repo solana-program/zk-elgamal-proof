@@ -8,8 +8,6 @@
 //! The protocol guarantees computational soundness (by the hardness of discrete log) and perfect
 //! zero-knowledge in the random oracle model.
 
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude::*;
 #[cfg(not(target_os = "solana"))]
 use {
     crate::{
@@ -43,7 +41,6 @@ const CIPHERTEXT_COMMITMENT_EQUALITY_PROOF_LEN: usize = UNIT_LEN * 6;
 /// Equality proof.
 ///
 /// Contains all the elliptic curve and scalar components that make up the sigma protocol.
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[allow(non_snake_case)]
 #[derive(Clone)]
 pub struct CiphertextCommitmentEqualityProof {

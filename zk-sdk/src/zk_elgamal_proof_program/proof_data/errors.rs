@@ -1,6 +1,4 @@
 use thiserror::Error;
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude::*;
 
 #[derive(Error, Clone, Debug, Eq, PartialEq)]
 pub enum ProofDataError {
@@ -16,11 +14,4 @@ pub enum ProofDataError {
     InvalidProofType,
     #[error("deserialization failed")]
     Deserialization,
-}
-
-#[cfg(target_arch = "wasm32")]
-impl From<ProofDataError> for JsValue {
-    fn from(err: ProofDataError) -> Self {
-        js_sys::Error::new(&err.to_string()).into()
-    }
 }
