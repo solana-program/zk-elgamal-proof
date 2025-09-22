@@ -190,8 +190,6 @@ impl WasmDecryptHandle {
 mod tests {
     use {super::*, wasm_bindgen_test::*};
 
-    wasm_bindgen_test_configure!(run_in_browser);
-
     #[wasm_bindgen_test]
     fn test_elgamal_keypair_creation_and_accessors() {
         let secret = WasmElGamalSecretKey::new_rand();
@@ -292,7 +290,7 @@ mod tests {
         assert!(WasmElGamalPubkey::from_bytes(&short_pubkey).is_err());
         let long_pubkey = vec![0; 33];
         assert!(WasmElGamalPubkey::from_bytes(&long_pubkey).is_err());
-        let invalid_pubkey = vec![0; 32];
+        let invalid_pubkey = vec![0xFF; 32];
         assert!(WasmElGamalPubkey::from_bytes(&invalid_pubkey).is_err());
 
         let short_secret = vec![0; 31];
@@ -304,14 +302,14 @@ mod tests {
         assert!(WasmElGamalCiphertext::from_bytes(&short_ciphertext).is_none());
         let long_ciphertext = vec![0; 65];
         assert!(WasmElGamalCiphertext::from_bytes(&long_ciphertext).is_none());
-        let invalid_ciphertext = vec![0; 64];
+        let invalid_ciphertext = vec![0xFF; 64];
         assert!(WasmElGamalCiphertext::from_bytes(&invalid_ciphertext).is_none());
 
         let short_handle = vec![0; 31];
         assert!(WasmDecryptHandle::from_bytes(&short_handle).is_none());
         let long_handle = vec![0; 33];
         assert!(WasmDecryptHandle::from_bytes(&long_handle).is_none());
-        let invalid_handle = vec![0; 32];
+        let invalid_handle = vec![0xFF; 32];
         assert!(WasmDecryptHandle::from_bytes(&invalid_handle).is_none());
     }
 }

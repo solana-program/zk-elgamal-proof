@@ -58,8 +58,6 @@ impl WasmPedersenOpening {
 mod tests {
     use {super::*, wasm_bindgen_test::*};
 
-    wasm_bindgen_test_configure!(run_in_browser);
-
     #[wasm_bindgen_test]
     fn test_opening_creation() {
         let opening1 = WasmPedersenOpening::new_rand();
@@ -97,7 +95,7 @@ mod tests {
         assert!(WasmPedersenCommitment::from_bytes(&long_bytes).is_err());
 
         // Invalid input
-        let invalid_point_bytes = vec![0; 32];
+        let invalid_point_bytes = vec![0xFF; 32];
         assert!(WasmPedersenCommitment::from_bytes(&invalid_point_bytes).is_err());
     }
 }
