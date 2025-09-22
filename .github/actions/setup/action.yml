@@ -11,7 +11,7 @@ inputs:
     description: Install Solana if `true`. Defaults to `false`.
     required: false
   wasm:
-    description: Install wasm target for Rust if `true`. Defaults to `false`.
+    description: Install wasm target and wasm-pack for Rust if `true`. Defaults to `false`.
     required: false
 
 runs:
@@ -59,3 +59,9 @@ runs:
       if: ${{ inputs.wasm == 'true' }}
       shell: bash
       run: rustup target add wasm32-unknown-unknown
+
+    - name: Install wasm-pack
+      if: ${{ inputs.wasm == 'true' }}
+      uses: taiki-e/install-action@v2
+      with:
+        tool: wasm-pack
