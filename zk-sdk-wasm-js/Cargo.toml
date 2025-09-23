@@ -1,0 +1,29 @@
+[package]
+name = "solana-zk-sdk-wasm-js"
+description = "Solana ZK SDK Wasm JS"
+version = "0.1.0"
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
+
+[package.metadata.docs.rs]
+targets = ["wasm32-unknown-unknown"]
+all-features = true
+rustdoc-args = ["--cfg=docsrs"]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+solana-zk-sdk = { workspace = true }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+js-sys = { workspace = true }
+wasm-bindgen = { workspace = true }
+wasm-bindgen-test = { workspace = true }
+getrandom = { workspace = true, features = ["js"] }
+
+[lints]
+workspace = true

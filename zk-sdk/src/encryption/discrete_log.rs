@@ -14,8 +14,6 @@
 //! information on a discrete log solution depending on the execution time of the implementation.
 //!
 
-#[cfg(not(target_arch = "wasm32"))]
-use std::thread;
 use {
     crate::RISTRETTO_POINT_LEN,
     curve25519_dalek::{
@@ -26,7 +24,7 @@ use {
     },
     itertools::Itertools,
     serde::{Deserialize, Serialize},
-    std::{collections::HashMap, num::NonZeroUsize},
+    std::{collections::HashMap, num::NonZeroUsize, thread},
     thiserror::Error,
 };
 
@@ -34,7 +32,6 @@ const TWO16: u64 = 65536; // 2^16
 const TWO17: u64 = 131072; // 2^17
 
 /// Maximum number of threads permitted for discrete log computation
-#[cfg(not(target_arch = "wasm32"))]
 const MAX_THREAD: usize = 65536;
 
 #[derive(Error, Clone, Debug, Eq, PartialEq)]
@@ -112,7 +109,6 @@ impl DiscreteLog {
     }
 
     /// Adjusts number of threads in a discrete log instance.
-    #[cfg(not(target_arch = "wasm32"))]
     pub fn num_threads(&mut self, num_threads: NonZeroUsize) -> Result<(), DiscreteLogError> {
         // number of threads must be a positive power-of-two integer
         if !num_threads.is_power_of_two() || num_threads.get() > MAX_THREAD {
@@ -147,7 +143,6 @@ impl DiscreteLog {
     pub fn decode_u32(self) -> Option<u64> {
         #[allow(unused_variables)]
         if let Some(num_threads) = self.num_threads {
-            #[cfg(not(target_arch = "wasm32"))]
             {
                 let mut starting_point = self.target;
                 let handles = (0..num_threads.get())
@@ -176,8 +171,6 @@ impl DiscreteLog {
                     .find(|x| x.is_some())
                     .flatten()
             }
-            #[cfg(target_arch = "wasm32")]
-            unreachable!() // `self.num_threads` always `None` on wasm target
         } else {
             let ristretto_iterator =
                 RistrettoIterator::new((self.target, 0_u64), (-(&self.step_point), 1u64));
@@ -292,7 +285,6 @@ mod tests {
         println!("single thread discrete log computation secs: {computation_secs:?} sec");
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn test_decode_correctness_threaded() {
         // general case

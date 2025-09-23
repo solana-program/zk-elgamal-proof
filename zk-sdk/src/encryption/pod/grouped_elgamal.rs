@@ -2,8 +2,6 @@
 
 #[cfg(not(target_os = "solana"))]
 use crate::encryption::grouped_elgamal::GroupedElGamalCiphertext;
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude::*;
 use {
     crate::{
         encryption::{
@@ -71,7 +69,6 @@ const GROUPED_ELGAMAL_CIPHERTEXT_3_HANDLES: usize =
     PEDERSEN_COMMITMENT_LEN + DECRYPT_HANDLE_LEN + DECRYPT_HANDLE_LEN + DECRYPT_HANDLE_LEN;
 
 /// The `GroupedElGamalCiphertext` type with two decryption handles as a `Pod`
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[derive(Clone, Copy, bytemuck_derive::Pod, bytemuck_derive::Zeroable, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct PodGroupedElGamalCiphertext2Handles(
@@ -126,7 +123,6 @@ impl TryFrom<PodGroupedElGamalCiphertext2Handles> for GroupedElGamalCiphertext<2
 impl_extract!(TYPE = PodGroupedElGamalCiphertext2Handles);
 
 /// The `GroupedElGamalCiphertext` type with three decryption handles as a `Pod`
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[derive(Clone, Copy, bytemuck_derive::Pod, bytemuck_derive::Zeroable, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct PodGroupedElGamalCiphertext3Handles(

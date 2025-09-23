@@ -17,8 +17,6 @@
 //! The protocol guarantees computational soundness (by the hardness of discrete log) and perfect
 //! zero-knowledge in the random oracle model.
 
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude::*;
 #[cfg(not(target_os = "solana"))]
 use {
     crate::encryption::{
@@ -48,7 +46,6 @@ use {
 /// first_handle_0, second_handle_0)` and `(commitment_1, first_handle_1,
 /// second_handle_1)`. The proof certifies the analogous decryptable properties for each one of
 /// these pairs of commitment and decryption handles.
-#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 #[allow(non_snake_case)]
 #[derive(Clone)]
 pub struct BatchedGroupedCiphertext2HandlesValidityProof(GroupedCiphertext2HandlesValidityProof);
