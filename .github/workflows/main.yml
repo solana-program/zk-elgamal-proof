@@ -152,10 +152,3 @@ jobs:
 
       - name: Build ZK SDK
         run: pnpm zk-sdk:build-sbf
-
-      - name: Upload Program Builds
-        uses: actions/upload-artifact@v4
-        with:
-          name: program-builds
-          path: ./target/deploy/*.so
-          if-no-files-found: error
