@@ -10,7 +10,7 @@ license = { workspace = true }
 edition = { workspace = true }
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+crate-type = ["rlib"]
 
 [dependencies]
 base64 = { workspace = true }
