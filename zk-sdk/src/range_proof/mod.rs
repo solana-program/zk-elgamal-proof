@@ -274,7 +274,7 @@ impl RangeProof {
         let G_factors: Vec<Scalar> = iter::repeat_n(Scalar::ONE, nm).collect();
         let H_factors: Vec<Scalar> = util::exp_iter(y.invert()).take(nm).collect();
 
-        // this variable exists for backwards compatibility
+        // compute challenge `c` for consistency with the verifier
         let _c = transcript.challenge_scalar(b"c");
 
         let ipp_proof = InnerProductProof::new(
@@ -354,7 +354,8 @@ impl RangeProof {
 
         let w = transcript.challenge_scalar(b"w");
 
-        // this variable exists for backwards compatibility
+        // The challenge `c` is a legacy component from an older implementation.
+        // It is now unused, but is kept here for backward compatibility.
         let _c = transcript.challenge_scalar(b"c");
 
         // 2. Compute the scalars for the verification equation.
