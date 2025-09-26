@@ -253,11 +253,14 @@ impl TryFrom<&[u8]> for ElGamalKeypair {
         if bytes.len() != ELGAMAL_KEYPAIR_LEN {
             return Err(ElGamalError::KeypairDeserialization);
         }
+        let public = ElGamalPubkey::try_from(&bytes[..ELGAMAL_PUBKEY_LEN])?;
+        let secret = ElGamalSecretKey::try_from(&bytes[ELGAMAL_PUBKEY_LEN..])?;
 
-        Ok(Self {
-            public: ElGamalPubkey::try_from(&bytes[..ELGAMAL_PUBKEY_LEN])?,
-            secret: ElGamalSecretKey::try_from(&bytes[ELGAMAL_PUBKEY_LEN..])?,
-        })
+        if public != ElGamalPubkey::new(&secret) {
+            return Err(ElGamalError::KeypairDeserialization);
+        }
+
+        Ok(Self { public, secret })
     }
 }
 
@@ -1155,5 +1158,43 @@ mod tests {
             encoded_ciphertext.decrypt_u32(keypair2.secret()).unwrap(),
             amount
         );
+    }
+
+    #[test]
+    fn test_keypair_try_from_bytes() {
+        let keypair = ElGamalKeypair::new_rand();
+        let keypair_bytes: [u8; ELGAMAL_KEYPAIR_LEN] = (&keypair).into();
+        let deserialized_keypair = ElGamalKeypair::try_from(keypair_bytes.as_slice()).unwrap();
+        assert_eq!(keypair, deserialized_keypair);
+
+        let short_bytes = &keypair_bytes[..ELGAMAL_KEYPAIR_LEN - 1];
+        let result = ElGamalKeypair::try_from(short_bytes);
+        assert!(matches!(result, Err(ElGamalError::KeypairDeserialization)));
+
+        let mut long_bytes_vec = keypair_bytes.to_vec();
+        long_bytes_vec.push(0);
+        let result = ElGamalKeypair::try_from(long_bytes_vec.as_slice());
+        assert!(matches!(result, Err(ElGamalError::KeypairDeserialization)));
+
+        let keypair2 = ElGamalKeypair::new_rand(); // A different keypair.
+        let mut inconsistent_bytes = [0u8; ELGAMAL_KEYPAIR_LEN];
+        let public_bytes: [u8; ELGAMAL_PUBKEY_LEN] = keypair.public.into();
+        inconsistent_bytes[..ELGAMAL_PUBKEY_LEN].copy_from_slice(&public_bytes);
+        inconsistent_bytes[ELGAMAL_PUBKEY_LEN..].copy_from_slice(keypair2.secret.as_bytes());
+        let result = ElGamalKeypair::try_from(&inconsistent_bytes[..]);
+        assert!(matches!(result, Err(ElGamalError::KeypairDeserialization)));
+
+        let mut malformed_pk_bytes = keypair_bytes;
+        malformed_pk_bytes[..ELGAMAL_PUBKEY_LEN].fill(0xFF);
+        let result = ElGamalKeypair::try_from(&malformed_pk_bytes[..]);
+        assert!(matches!(result, Err(ElGamalError::PubkeyDeserialization)));
+
+        let mut malformed_sk_bytes = keypair_bytes;
+        malformed_sk_bytes[ELGAMAL_PUBKEY_LEN..].fill(0xFF);
+        let result = ElGamalKeypair::try_from(&malformed_sk_bytes[..]);
+        assert!(matches!(
+            result,
+            Err(ElGamalError::SecretKeyDeserialization)
+        ));
     }
 }
