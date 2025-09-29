@@ -55,7 +55,7 @@ solana-signer = "3.0.0"
 solana-zk-sdk = { path = "zk-sdk", version = "4.0.0" }
 solana-zk-sdk-wasm-js = { path = "zk-sdk-wasm-js", version = "0.1.0" }
 subtle = "2.6.1"
-thiserror = "2.0.16"
+thiserror = "2.0.17"
 tiny-bip39 = "0.8.2"
 wasm-bindgen = "0.2"
 wasm-bindgen-test = "0.3"
