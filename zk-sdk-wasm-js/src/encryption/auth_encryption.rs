@@ -1,7 +1,8 @@
 use {
+    js_sys::Uint8Array,
     solana_zk_sdk::encryption::{
         auth_encryption::{AeCiphertext, AeKey},
-        AE_KEY_LEN,
+        AE_CIPHERTEXT_LEN, AE_KEY_LEN,
     },
     wasm_bindgen::prelude::{wasm_bindgen, JsValue},
 };
@@ -25,8 +26,19 @@ impl WasmAeKey {
 
     /// Deserializes an AeKey from a byte slice.
     #[wasm_bindgen(js_name = "fromBytes")]
-    pub fn from_bytes(bytes: &[u8]) -> Result<WasmAeKey, JsValue> {
-        AeKey::try_from(bytes)
+    pub fn from_bytes(uint8_array: Uint8Array) -> Result<WasmAeKey, JsValue> {
+        if uint8_array.length() as usize != AE_KEY_LEN {
+            return Err(JsValue::from_str(&format!(
+                "Invalid byte length for AeKey: expected {}, got {}",
+                AE_KEY_LEN,
+                uint8_array.length()
+            )));
+        }
+
+        let mut bytes = [0u8; AE_KEY_LEN];
+        uint8_array.copy_to(&mut bytes);
+
+        AeKey::try_from(bytes.as_ref())
             .map(|inner| Self { inner })
             .map_err(|e| JsValue::from_str(&e.to_string()))
     }
@@ -65,8 +77,15 @@ crate::conversion::impl_inner_conversion!(WasmAeCiphertext, AeCiphertext);
 impl WasmAeCiphertext {
     /// Deserializes an AeCiphertext from a byte slice.
     #[wasm_bindgen(js_name = "fromBytes")]
-    pub fn from_bytes(bytes: &[u8]) -> Option<WasmAeCiphertext> {
-        AeCiphertext::from_bytes(bytes).map(|inner| Self { inner })
+    pub fn from_bytes(uint8_array: Uint8Array) -> Option<WasmAeCiphertext> {
+        if uint8_array.length() as usize != AE_CIPHERTEXT_LEN {
+            return None;
+        }
+
+        let mut bytes = [0u8; AE_CIPHERTEXT_LEN];
+        uint8_array.copy_to(&mut bytes);
+
+        AeCiphertext::from_bytes(&bytes).map(|inner| Self { inner })
     }
 
     /// Serializes the AeCiphertext to a byte array.
@@ -89,23 +108,18 @@ mod tests {
     #[wasm_bindgen_test]
     fn test_ae_key_roundtrip() {
         let key = WasmAeKey::new_rand();
-
         let key_bytes = key.to_bytes();
         assert_eq!(key_bytes.len(), 16);
-
-        let recovered_key = WasmAeKey::from_bytes(&key_bytes).unwrap();
+        let recovered_key = WasmAeKey::from_bytes(Uint8Array::from(key_bytes.as_slice())).unwrap();
         assert_eq!(key.inner, recovered_key.inner);
     }
 
     #[wasm_bindgen_test]
     fn test_from_bytes_with_invalid_key() {
-        // Too short
         let short_bytes = vec![0; 15];
-        assert!(WasmAeKey::from_bytes(&short_bytes).is_err());
-
-        // Too long
+        assert!(WasmAeKey::from_bytes(Uint8Array::from(short_bytes.as_slice())).is_err());
         let long_bytes = vec![0; 17];
-        assert!(WasmAeKey::from_bytes(&long_bytes).is_err());
+        assert!(WasmAeKey::from_bytes(Uint8Array::from(long_bytes.as_slice())).is_err());
     }
 
     #[wasm_bindgen_test]

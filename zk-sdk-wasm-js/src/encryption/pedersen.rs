@@ -1,5 +1,9 @@
 use {
-    solana_zk_sdk::encryption::pedersen::{Pedersen, PedersenCommitment, PedersenOpening},
+    js_sys::Uint8Array,
+    solana_zk_sdk::encryption::{
+        pedersen::{Pedersen, PedersenCommitment, PedersenOpening},
+        PEDERSEN_COMMITMENT_LEN,
+    },
     wasm_bindgen::prelude::{wasm_bindgen, JsValue},
 };
 
@@ -23,8 +27,19 @@ impl WasmPedersenCommitment {
     /// Deserializes a Pedersen commitment from a byte slice.
     /// Throws an error if the bytes are invalid.
     #[wasm_bindgen(js_name = "fromBytes")]
-    pub fn from_bytes(bytes: &[u8]) -> Result<WasmPedersenCommitment, JsValue> {
-        PedersenCommitment::from_bytes(bytes)
+    pub fn from_bytes(uint8_array: Uint8Array) -> Result<WasmPedersenCommitment, JsValue> {
+        if uint8_array.length() as usize != PEDERSEN_COMMITMENT_LEN {
+            return Err(JsValue::from_str(&format!(
+                "Invalid byte length for PedersenCommitment: expected {}, got {}",
+                PEDERSEN_COMMITMENT_LEN,
+                uint8_array.length()
+            )));
+        }
+
+        let mut bytes = [0u8; PEDERSEN_COMMITMENT_LEN];
+        uint8_array.copy_to(&mut bytes);
+
+        PedersenCommitment::from_bytes(&bytes)
             .map(|inner| Self { inner })
             .ok_or_else(|| JsValue::from_str("Invalid bytes for PedersenCommitment"))
     }
@@ -80,22 +95,27 @@ mod tests {
         // Serialization
         let bytes = commitment.to_bytes();
         assert_eq!(bytes.len(), 32); // Ristretto points are 32 bytes.
-        let new_commitment = WasmPedersenCommitment::from_bytes(&bytes).unwrap();
+        let new_commitment =
+            WasmPedersenCommitment::from_bytes(Uint8Array::from(bytes.as_slice())).unwrap();
         assert_eq!(commitment.inner, new_commitment.inner);
     }
 
     #[wasm_bindgen_test]
     fn test_from_bytes_with_invalid_input() {
-        // Too short
         let short_bytes = vec![0; 31];
-        assert!(WasmPedersenCommitment::from_bytes(&short_bytes).is_err());
+        assert!(
+            WasmPedersenCommitment::from_bytes(Uint8Array::from(short_bytes.as_slice())).is_err()
+        );
 
-        // Too long
         let long_bytes = vec![0; 33];
-        assert!(WasmPedersenCommitment::from_bytes(&long_bytes).is_err());
+        assert!(
+            WasmPedersenCommitment::from_bytes(Uint8Array::from(long_bytes.as_slice())).is_err()
+        );
 
-        // Invalid input
         let invalid_point_bytes = vec![0xFF; 32];
-        assert!(WasmPedersenCommitment::from_bytes(&invalid_point_bytes).is_err());
+        assert!(WasmPedersenCommitment::from_bytes(Uint8Array::from(
+            invalid_point_bytes.as_slice()
+        ))
+        .is_err());
     }
 }
