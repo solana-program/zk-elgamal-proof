@@ -1,7 +1,11 @@
 use {
     crate::encryption::pedersen::{WasmPedersenCommitment, WasmPedersenOpening},
-    solana_zk_sdk::encryption::elgamal::{
-        DecryptHandle, ElGamalCiphertext, ElGamalKeypair, ElGamalPubkey, ElGamalSecretKey,
+    js_sys::Uint8Array,
+    solana_zk_sdk::encryption::{
+        elgamal::{
+            DecryptHandle, ElGamalCiphertext, ElGamalKeypair, ElGamalPubkey, ElGamalSecretKey,
+        },
+        DECRYPT_HANDLE_LEN, ELGAMAL_CIPHERTEXT_LEN, ELGAMAL_PUBKEY_LEN, ELGAMAL_SECRET_KEY_LEN,
     },
     wasm_bindgen::prelude::{wasm_bindgen, JsValue},
 };
@@ -26,8 +30,19 @@ impl WasmElGamalPubkey {
     /// Deserializes an ElGamal public key from a byte slice.
     /// Throws an error if the bytes are invalid.
     #[wasm_bindgen(js_name = "fromBytes")]
-    pub fn from_bytes(bytes: &[u8]) -> Result<WasmElGamalPubkey, JsValue> {
-        ElGamalPubkey::try_from(bytes)
+    pub fn from_bytes(uint8_array: Uint8Array) -> Result<WasmElGamalPubkey, JsValue> {
+        if uint8_array.length() as usize != ELGAMAL_PUBKEY_LEN {
+            return Err(JsValue::from_str(&format!(
+                "Invalid byte length for ElGamalPubkey: expected {}, got {}",
+                ELGAMAL_PUBKEY_LEN,
+                uint8_array.length()
+            )));
+        }
+
+        let mut bytes = [0u8; ELGAMAL_PUBKEY_LEN];
+        uint8_array.copy_to(&mut bytes);
+
+        ElGamalPubkey::try_from(bytes.as_ref())
             .map(|inner| Self { inner })
             .map_err(|e| JsValue::from_str(&e.to_string()))
     }
@@ -66,8 +81,19 @@ impl WasmElGamalSecretKey {
     /// Deserializes an ElGamal secret key from a byte slice.
     /// Throws an error if the bytes are invalid.
     #[wasm_bindgen(js_name = "fromBytes")]
-    pub fn from_bytes(bytes: &[u8]) -> Result<WasmElGamalSecretKey, JsValue> {
-        ElGamalSecretKey::try_from(bytes)
+    pub fn from_bytes(uint8_array: Uint8Array) -> Result<WasmElGamalSecretKey, JsValue> {
+        if uint8_array.length() as usize != ELGAMAL_SECRET_KEY_LEN {
+            return Err(JsValue::from_str(&format!(
+                "Invalid byte length for ElGamalSecretKey: expected {}, got {}",
+                ELGAMAL_SECRET_KEY_LEN,
+                uint8_array.length()
+            )));
+        }
+
+        let mut bytes = [0u8; ELGAMAL_SECRET_KEY_LEN];
+        uint8_array.copy_to(&mut bytes);
+
+        ElGamalSecretKey::try_from(bytes.as_ref())
             .map(|inner| Self { inner })
             .map_err(|e| JsValue::from_str(&e.to_string()))
     }
@@ -138,8 +164,15 @@ impl WasmElGamalCiphertext {
     /// Deserializes an ElGamal ciphertext from a byte slice.
     /// Returns `undefined` if the bytes are invalid.
     #[wasm_bindgen(js_name = "fromBytes")]
-    pub fn from_bytes(bytes: &[u8]) -> Option<WasmElGamalCiphertext> {
-        ElGamalCiphertext::from_bytes(bytes).map(|inner| Self { inner })
+    pub fn from_bytes(uint8_array: Uint8Array) -> Option<WasmElGamalCiphertext> {
+        if uint8_array.length() as usize != ELGAMAL_CIPHERTEXT_LEN {
+            return None;
+        }
+
+        let mut bytes = [0u8; ELGAMAL_CIPHERTEXT_LEN];
+        uint8_array.copy_to(&mut bytes);
+
+        ElGamalCiphertext::from_bytes(&bytes).map(|inner| Self { inner })
     }
 
     /// Serializes the ElGamal ciphertext to a byte array.
@@ -175,8 +208,15 @@ impl WasmDecryptHandle {
     /// Deserializes a decryption handle from a byte slice.
     /// Returns `undefined` if the bytes are invalid.
     #[wasm_bindgen(js_name = "fromBytes")]
-    pub fn from_bytes(bytes: &[u8]) -> Option<WasmDecryptHandle> {
-        DecryptHandle::from_bytes(bytes).map(|inner| Self { inner })
+    pub fn from_bytes(uint8_array: Uint8Array) -> Option<WasmDecryptHandle> {
+        if uint8_array.length() as usize != DECRYPT_HANDLE_LEN {
+            return None;
+        }
+
+        let mut bytes = [0u8; DECRYPT_HANDLE_LEN];
+        uint8_array.copy_to(&mut bytes);
+
+        DecryptHandle::from_bytes(&bytes).map(|inner| Self { inner })
     }
 
     /// Serializes the decryption handle to a byte array.
@@ -213,12 +253,14 @@ mod tests {
 
         // Secret Key roundtrip
         let secret_bytes = secret.to_bytes();
-        let recovered_secret = WasmElGamalSecretKey::from_bytes(&secret_bytes).unwrap();
+        let recovered_secret =
+            WasmElGamalSecretKey::from_bytes(Uint8Array::from(secret_bytes.as_slice())).unwrap();
         assert_eq!(secret.inner, recovered_secret.inner);
 
         // Public Key roundtrip
         let pubkey_bytes = pubkey.to_bytes();
-        let recovered_pubkey = WasmElGamalPubkey::from_bytes(&pubkey_bytes).unwrap();
+        let recovered_pubkey =
+            WasmElGamalPubkey::from_bytes(Uint8Array::from(pubkey_bytes.as_slice())).unwrap();
         assert_eq!(pubkey.inner, recovered_pubkey.inner);
     }
 
@@ -241,21 +283,25 @@ mod tests {
 
         // Ciphertext roundtrip
         let ciphertext_bytes = ciphertext.to_bytes();
-        let recovered_ciphertext = WasmElGamalCiphertext::from_bytes(&ciphertext_bytes).unwrap();
+        let recovered_ciphertext =
+            WasmElGamalCiphertext::from_bytes(Uint8Array::from(ciphertext_bytes.as_slice()))
+                .unwrap();
         assert_eq!(ciphertext.inner, recovered_ciphertext.inner);
 
         // Handle roundtrip
         let handle = ciphertext.handle();
         let handle_bytes = handle.to_bytes();
-        let recovered_handle = WasmDecryptHandle::from_bytes(&handle_bytes).unwrap();
+        let recovered_handle =
+            WasmDecryptHandle::from_bytes(Uint8Array::from(handle_bytes.as_slice())).unwrap();
         assert_eq!(handle.inner, recovered_handle.inner);
 
         // Commitment roundtrip
         let commitment = ciphertext.commitment();
         let commitment_bytes = commitment.to_bytes();
-        let recovered_commitment =
-            crate::encryption::pedersen::WasmPedersenCommitment::from_bytes(&commitment_bytes)
-                .unwrap();
+        let recovered_commitment = crate::encryption::pedersen::WasmPedersenCommitment::from_bytes(
+            Uint8Array::from(commitment_bytes.as_slice()),
+        )
+        .unwrap();
         assert_eq!(commitment.inner, recovered_commitment.inner);
     }
 
@@ -287,29 +333,46 @@ mod tests {
     #[wasm_bindgen_test]
     fn test_from_bytes_with_invalid_input() {
         let short_pubkey = vec![0; 31];
-        assert!(WasmElGamalPubkey::from_bytes(&short_pubkey).is_err());
+        assert!(WasmElGamalPubkey::from_bytes(Uint8Array::from(short_pubkey.as_slice())).is_err());
         let long_pubkey = vec![0; 33];
-        assert!(WasmElGamalPubkey::from_bytes(&long_pubkey).is_err());
+        assert!(WasmElGamalPubkey::from_bytes(Uint8Array::from(long_pubkey.as_slice())).is_err());
         let invalid_pubkey = vec![0xFF; 32];
-        assert!(WasmElGamalPubkey::from_bytes(&invalid_pubkey).is_err());
+        assert!(
+            WasmElGamalPubkey::from_bytes(Uint8Array::from(invalid_pubkey.as_slice())).is_err()
+        );
 
         let short_secret = vec![0; 31];
-        assert!(WasmElGamalSecretKey::from_bytes(&short_secret).is_err());
+        assert!(
+            WasmElGamalSecretKey::from_bytes(Uint8Array::from(short_secret.as_slice())).is_err()
+        );
         let long_secret = vec![0; 33];
-        assert!(WasmElGamalSecretKey::from_bytes(&long_secret).is_err());
+        assert!(
+            WasmElGamalSecretKey::from_bytes(Uint8Array::from(long_secret.as_slice())).is_err()
+        );
 
         let short_ciphertext = vec![0; 63];
-        assert!(WasmElGamalCiphertext::from_bytes(&short_ciphertext).is_none());
+        assert!(
+            WasmElGamalCiphertext::from_bytes(Uint8Array::from(short_ciphertext.as_slice()))
+                .is_none()
+        );
         let long_ciphertext = vec![0; 65];
-        assert!(WasmElGamalCiphertext::from_bytes(&long_ciphertext).is_none());
+        assert!(
+            WasmElGamalCiphertext::from_bytes(Uint8Array::from(long_ciphertext.as_slice()))
+                .is_none()
+        );
         let invalid_ciphertext = vec![0xFF; 64];
-        assert!(WasmElGamalCiphertext::from_bytes(&invalid_ciphertext).is_none());
+        assert!(
+            WasmElGamalCiphertext::from_bytes(Uint8Array::from(invalid_ciphertext.as_slice()))
+                .is_none()
+        );
 
         let short_handle = vec![0; 31];
-        assert!(WasmDecryptHandle::from_bytes(&short_handle).is_none());
+        assert!(WasmDecryptHandle::from_bytes(Uint8Array::from(short_handle.as_slice())).is_none());
         let long_handle = vec![0; 33];
-        assert!(WasmDecryptHandle::from_bytes(&long_handle).is_none());
+        assert!(WasmDecryptHandle::from_bytes(Uint8Array::from(long_handle.as_slice())).is_none());
         let invalid_handle = vec![0xFF; 32];
-        assert!(WasmDecryptHandle::from_bytes(&invalid_handle).is_none());
+        assert!(
+            WasmDecryptHandle::from_bytes(Uint8Array::from(invalid_handle.as_slice())).is_none()
+        );
     }
 }
