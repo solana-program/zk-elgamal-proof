@@ -61,7 +61,7 @@
         "shx": "^0.3.4",
         "start-server-and-test": "^2.0.12",
         "ts-node": "^10.9.2",
-        "typescript": "^5.7.2",
+        "typescript": "^5.9.3",
         "typescript-eslint": "^8.45.0"
     },
     "prettier": "@solana/prettier-config-solana",
