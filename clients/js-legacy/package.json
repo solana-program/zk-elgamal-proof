@@ -59,7 +59,7 @@
         "mocha": "^11.7.3",
         "prettier": "^3.6.2",
         "shx": "^0.3.4",
-        "start-server-and-test": "^2.0.12",
+        "start-server-and-test": "^2.1.2",
         "ts-node": "^10.9.2",
         "typescript": "^5.9.3",
         "typescript-eslint": "^8.45.0"
