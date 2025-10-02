@@ -52,7 +52,7 @@
         "chai": "^5.3.3",
         "chai-as-promised": "^8.0.2",
         "eslint": "^8.57.1",
-        "eslint-config-prettier": "^10.0.1",
+        "eslint-config-prettier": "^10.1.8",
         "eslint-plugin-prettier": "^5.2.3",
         "eslint-plugin-require-extensions": "^0.1.1",
         "globals": "^16.4.0",
