@@ -381,6 +381,7 @@ mod tests {
         let commitment_with_zero = Pedersen::with(amount, &zero_opening);
 
         // Compare with the encode function
+        #[allow(deprecated)]
         let encoded_commitment = Pedersen::encode(amount);
 
         assert_eq!(encoded_commitment, commitment_with_zero);
