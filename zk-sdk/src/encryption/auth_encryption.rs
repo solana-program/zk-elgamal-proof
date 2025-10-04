@@ -66,12 +66,23 @@ impl AuthenticatedEncryption {
     /// On input of an authenticated encryption key and a ciphertext, the function returns the
     /// originally encrypted amount.
     fn decrypt(key: &AeKey, ciphertext: &AeCiphertext) -> Option<u64> {
-        let plaintext = Aes128GcmSiv::new(&key.0.into())
+        let plaintext_result = Aes128GcmSiv::new(&key.0.into())
             .decrypt(&ciphertext.nonce.into(), ciphertext.ciphertext.as_ref());
 
-        if let Ok(plaintext) = plaintext {
-            let amount_bytes: [u8; 8] = plaintext.try_into().unwrap();
-            Some(u64::from_le_bytes(amount_bytes))
+        if let Ok(mut plaintext) = plaintext_result {
+            let result = if plaintext.len() == 8 {
+                let mut amount_bytes = [0u8; 8];
+                amount_bytes.copy_from_slice(&plaintext);
+                let amount = u64::from_le_bytes(amount_bytes);
+
+                amount_bytes.zeroize();
+                Some(amount)
+            } else {
+                None
+            };
+
+            plaintext.zeroize();
+            result
         } else {
             None
         }
