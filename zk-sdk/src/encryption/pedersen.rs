@@ -63,6 +63,10 @@ impl Pedersen {
     ///
     /// This method should only be used in contexts where the committed value does not need to
     /// be confidential. For a standard hiding commitment, use `Pedersen::new()`.
+    #[deprecated(
+        since = "4.1.0",
+        note = "This function is intended for internal use and will be removed from the public API in a future version."
+    )]
     pub fn encode<T: Into<Scalar>>(amount: T) -> PedersenCommitment {
         PedersenCommitment(amount.into() * &G)
     }
