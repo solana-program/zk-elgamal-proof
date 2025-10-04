@@ -62,7 +62,7 @@ impl Pedersen {
 /// Pedersen opening type.
 ///
 /// Instances of Pedersen openings are zeroized on drop.
-#[derive(Clone, Default, Serialize, Deserialize, Zeroize)]
+#[derive(Clone, Default, Zeroize)]
 #[zeroize(drop)]
 pub struct PedersenOpening(Scalar);
 
@@ -344,16 +344,6 @@ mod tests {
         let decoded: PedersenCommitment = bincode::deserialize(&encoded).unwrap();
 
         assert_eq!(commitment, decoded);
-    }
-
-    #[test]
-    fn test_serde_pedersen_opening() {
-        let opening = PedersenOpening(Scalar::random(&mut OsRng));
-
-        let encoded = bincode::serialize(&opening).unwrap();
-        let decoded: PedersenOpening = bincode::deserialize(&encoded).unwrap();
-
-        assert_eq!(opening, decoded);
     }
 
     #[test]
