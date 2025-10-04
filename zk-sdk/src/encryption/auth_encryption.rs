@@ -79,6 +79,7 @@ impl AuthenticatedEncryption {
 }
 
 #[derive(Clone, Debug, Zeroize, Eq, PartialEq)]
+#[zeroize(drop)]
 pub struct AeKey([u8; AE_KEY_LEN]);
 
 impl AeKey {
