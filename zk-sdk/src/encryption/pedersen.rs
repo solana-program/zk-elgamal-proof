@@ -12,7 +12,7 @@ use {
     rand::rngs::OsRng,
     serde::{Deserialize, Serialize},
     sha3::Sha3_512,
-    std::convert::TryInto,
+    std::{convert::TryInto, fmt},
     subtle::{Choice, ConstantTimeEq},
     zeroize::Zeroize,
 };
@@ -62,7 +62,7 @@ impl Pedersen {
 /// Pedersen opening type.
 ///
 /// Instances of Pedersen openings are zeroized on drop.
-#[derive(Clone, Debug, Default, Serialize, Deserialize, Zeroize)]
+#[derive(Clone, Default, Zeroize)]
 #[zeroize(drop)]
 pub struct PedersenOpening(Scalar);
 
@@ -107,6 +107,14 @@ impl PartialEq for PedersenOpening {
 impl ConstantTimeEq for PedersenOpening {
     fn ct_eq(&self, other: &Self) -> Choice {
         self.0.ct_eq(&other.0)
+    }
+}
+
+impl fmt::Debug for PedersenOpening {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("PedersenOpening")
+            .field(&"[REDACTED]")
+            .finish()
     }
 }
 
@@ -336,16 +344,6 @@ mod tests {
         let decoded: PedersenCommitment = bincode::deserialize(&encoded).unwrap();
 
         assert_eq!(commitment, decoded);
-    }
-
-    #[test]
-    fn test_serde_pedersen_opening() {
-        let opening = PedersenOpening(Scalar::random(&mut OsRng));
-
-        let encoded = bincode::serialize(&opening).unwrap();
-        let decoded: PedersenOpening = bincode::deserialize(&encoded).unwrap();
-
-        assert_eq!(opening, decoded);
     }
 
     #[test]
