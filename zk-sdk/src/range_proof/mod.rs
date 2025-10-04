@@ -36,6 +36,7 @@ use {
     merlin::Transcript,
     rand::rngs::OsRng,
     subtle::{Choice, ConditionallySelectable},
+    zeroize::Zeroize,
 };
 
 pub mod errors;
@@ -145,7 +146,7 @@ impl RangeProof {
 
         // 2. Create commitments A and S.
         // A is a commitment to the bit-vectors a_L and a_R
-        let a_blinding = Scalar::random(&mut OsRng);
+        let mut a_blinding = Scalar::random(&mut OsRng);
         let mut A = a_blinding * &(*H);
 
         let mut gens_iter = bp_gens.G(nm).zip(bp_gens.H(nm));
@@ -165,12 +166,12 @@ impl RangeProof {
         let A = A.compress();
 
         // generate blinding factors and generate their Pedersen vector commitment
-        let s_L: Vec<Scalar> = (0..nm).map(|_| Scalar::random(&mut OsRng)).collect();
-        let s_R: Vec<Scalar> = (0..nm).map(|_| Scalar::random(&mut OsRng)).collect();
+        let mut s_L: Vec<Scalar> = (0..nm).map(|_| Scalar::random(&mut OsRng)).collect();
+        let mut s_R: Vec<Scalar> = (0..nm).map(|_| Scalar::random(&mut OsRng)).collect();
 
         // generate blinding factor for Pedersen commitment; `s_blinding` should not to be confused
         // with blinding factors for the actual inner product vector
-        let s_blinding = Scalar::random(&mut OsRng);
+        let mut s_blinding = Scalar::random(&mut OsRng);
 
         let S = RistrettoPoint::multiscalar_mul(
             iter::once(&s_blinding).chain(s_L.iter()).chain(s_R.iter()),
@@ -292,6 +293,11 @@ impl RangeProof {
         transcript.append_scalar(b"ipp_a", &ipp_proof.a);
         transcript.append_scalar(b"ipp_b", &ipp_proof.b);
         let _d = transcript.challenge_scalar(b"d");
+
+        a_blinding.zeroize();
+        s_blinding.zeroize();
+        s_L.zeroize();
+        s_R.zeroize();
 
         Ok(RangeProof {
             A,
