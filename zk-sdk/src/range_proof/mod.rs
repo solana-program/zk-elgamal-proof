@@ -324,12 +324,12 @@ impl RangeProof {
 
         let m = bit_lengths.len();
         let nm: usize = bit_lengths.iter().sum();
-        let bp_gens = RangeProofGens::new(nm)
-            .map_err(|_| RangeProofVerificationError::MaximumGeneratorLengthExceeded)?;
-
         if !nm.is_power_of_two() {
             return Err(RangeProofVerificationError::InvalidBitSize);
         }
+
+        let bp_gens = RangeProofGens::new(nm)
+            .map_err(|_| RangeProofVerificationError::MaximumGeneratorLengthExceeded)?;
 
         transcript.range_proof_domain_separator(nm as u64);
 
