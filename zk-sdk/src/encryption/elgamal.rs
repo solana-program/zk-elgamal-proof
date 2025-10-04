@@ -101,7 +101,21 @@ impl ElGamal {
     /// On input an amount, the function returns a twisted ElGamal ciphertext where the associated
     /// Pedersen opening is always zero. Since the opening is zero, any twisted ElGamal ciphertext
     /// of this form is a valid ciphertext under any ElGamal public key.
+    ///
+    /// # Warning
+    ///
+    /// This function produces a deterministic ciphertext by using a zero-value Pedersen opening.
+    /// This is **not** a confidential encryption. The resulting ciphertext is effectively a public
+    /// commitment to the value and is vulnerable to dictionary attacks for small amounts.
+    ///
+    /// It should only be used in contexts where the amount does not need to be kept secret.
+    /// For standard, confidential encryption, use `ElGamalPubkey::encrypt()`.
+    #[deprecated(
+        since = "4.1.0",
+        note = "This function is intended for internal use and will be removed from the public API in a future version."
+    )]
     pub fn encode<T: Into<Scalar>>(amount: T) -> ElGamalCiphertext {
+        #[allow(deprecated)]
         let commitment = Pedersen::encode(amount);
         let handle = DecryptHandle(RistrettoPoint::identity());
 
@@ -1147,6 +1161,7 @@ mod tests {
         let keypair2 = ElGamalKeypair::new_rand();
         let amount: u64 = 12345;
 
+        #[allow(deprecated)]
         let encoded_ciphertext = ElGamal::encode(amount);
 
         // ANY key should be able to "decrypt" the message

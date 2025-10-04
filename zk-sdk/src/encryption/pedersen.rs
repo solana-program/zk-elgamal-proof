@@ -54,6 +54,19 @@ impl Pedersen {
     /// as the opening.
     ///
     /// This function is deterministic.
+    ///
+    /// # Warning
+    ///
+    /// This function produces a deterministic commitment by using a fixed, zero-value opening.
+    /// This is **not** a hiding commitment. If the committed value is small, it may be
+    /// vulnerable to a dictionary attack (pre-computation of common values).
+    ///
+    /// This method should only be used in contexts where the committed value does not need to
+    /// be confidential. For a standard hiding commitment, use `Pedersen::new()`.
+    #[deprecated(
+        since = "4.1.0",
+        note = "This function is intended for internal use and will be removed from the public API in a future version."
+    )]
     pub fn encode<T: Into<Scalar>>(amount: T) -> PedersenCommitment {
         PedersenCommitment(amount.into() * &G)
     }
@@ -368,6 +381,7 @@ mod tests {
         let commitment_with_zero = Pedersen::with(amount, &zero_opening);
 
         // Compare with the encode function
+        #[allow(deprecated)]
         let encoded_commitment = Pedersen::encode(amount);
 
         assert_eq!(encoded_commitment, commitment_with_zero);
