@@ -103,7 +103,16 @@ impl ZkProofData<BatchedRangeProofContext> for BatchedRangeProofU256Data {
             return Err(ProofVerificationError::IllegalCommitmentLength);
         }
 
-        if num_commitments > MAX_COMMITMENTS || num_commitments != bit_lengths.len() {
+        if num_commitments > MAX_COMMITMENTS {
+            return Err(ProofVerificationError::IllegalCommitmentLength);
+        }
+
+        let batched_bit_length = bit_lengths
+            .iter()
+            .try_fold(0_usize, |acc, &x| acc.checked_add(x))
+            .ok_or(ProofVerificationError::ProofContext)?;
+
+        if batched_bit_length != BATCHED_RANGE_PROOF_U256_BIT_LENGTH {
             return Err(ProofVerificationError::IllegalCommitmentLength);
         }
 
