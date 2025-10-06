@@ -150,7 +150,7 @@ impl ElGamal {
 /// A (twisted) ElGamal encryption keypair.
 ///
 /// The instances of the secret key are zeroized on drop.
-#[derive(Clone, Debug, Deserialize, PartialEq, Eq, Serialize, Zeroize)]
+#[derive(Clone, Deserialize, PartialEq, Eq, Serialize, Zeroize)]
 pub struct ElGamalKeypair {
     /// The public half of this keypair.
     public: ElGamalPubkey,
@@ -248,6 +248,15 @@ impl ElGamalKeypair {
         outfile: F,
     ) -> Result<String, Box<dyn std::error::Error>> {
         self.write_to_file(outfile)
+    }
+}
+
+impl fmt::Debug for ElGamalKeypair {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ElGamalKeypair")
+            .field("public", &self.public)
+            .field("secret", &"[REDACTED]")
+            .finish()
     }
 }
 
@@ -439,7 +448,7 @@ impl From<&ElGamalPubkey> for [u8; ELGAMAL_PUBKEY_LEN] {
 /// Secret key for the ElGamal encryption scheme.
 ///
 /// Instances of ElGamal secret key are zeroized on drop.
-#[derive(Clone, Debug, Deserialize, Serialize, Zeroize)]
+#[derive(Clone, Deserialize, Serialize, Zeroize)]
 #[zeroize(drop)]
 pub struct ElGamalSecretKey(Scalar);
 impl ElGamalSecretKey {
@@ -537,6 +546,14 @@ impl ElGamalSecretKey {
         let result = hasher.finalize();
 
         result.to_vec()
+    }
+}
+
+impl fmt::Debug for ElGamalSecretKey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("ElGamalSecretKey")
+            .field(&"[REDACTED]")
+            .finish()
     }
 }
 

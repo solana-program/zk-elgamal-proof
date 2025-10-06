@@ -78,7 +78,7 @@ impl AuthenticatedEncryption {
     }
 }
 
-#[derive(Clone, Debug, Zeroize, Eq, PartialEq)]
+#[derive(Clone, Zeroize, Eq, PartialEq)]
 pub struct AeKey([u8; AE_KEY_LEN]);
 
 impl AeKey {
@@ -146,6 +146,12 @@ impl AeKey {
 
     pub fn decrypt(&self, ciphertext: &AeCiphertext) -> Option<u64> {
         AuthenticatedEncryption::decrypt(self, ciphertext)
+    }
+}
+
+impl fmt::Debug for AeKey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("AeKey").field(&"[REDACTED]").finish()
     }
 }
 
