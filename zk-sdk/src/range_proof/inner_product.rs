@@ -24,6 +24,7 @@ use {
     },
     merlin::Transcript,
     std::borrow::Borrow,
+    zeroize::Zeroize,
 };
 
 /// An inner-product proof.
@@ -223,12 +224,17 @@ impl InnerProductProof {
             H = H_L;
         }
 
-        Ok(InnerProductProof {
+        let proof = InnerProductProof {
             L_vec,
             R_vec,
             a: a[0],
             b: b[0],
-        })
+        };
+
+        a_vec.zeroize();
+        b_vec.zeroize();
+
+        Ok(proof)
     }
 
     /// Computes the verification scalars for a single inner product proof.

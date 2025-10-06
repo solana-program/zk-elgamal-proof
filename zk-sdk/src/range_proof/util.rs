@@ -2,7 +2,7 @@
 //! This module provides common mathematical operations over scalars and vectors needed to
 //! construct and verify Bulletproofs.
 
-use curve25519_dalek::scalar::Scalar;
+use {curve25519_dalek::scalar::Scalar, zeroize::Zeroize};
 
 /// Represents a degree-1 vector polynomial, such as `a + b*x`.
 ///
@@ -12,6 +12,8 @@ use curve25519_dalek::scalar::Scalar;
 /// This struct stores the constant terms (the `a_i`'s) and the linear terms (the `b_i`'s) as two
 /// separate vectors of scalars. In the Bulletproofs protocol, this is used to represent the `l(x)`
 /// and `r(x)` vector polynomials.
+#[derive(Zeroize)]
+#[zeroize(drop)]
 pub struct VecPoly1(pub Vec<Scalar>, pub Vec<Scalar>);
 
 impl VecPoly1 {
@@ -61,6 +63,8 @@ impl VecPoly1 {
 ///
 /// In the Bulletproofs protocol, this represents the `t(x)` polynomial
 /// that results from the inner product of `l(x)` and `r(x)`.
+#[derive(Zeroize)]
+#[zeroize(drop)]
 pub struct Poly2(pub Scalar, pub Scalar, pub Scalar);
 
 impl Poly2 {
