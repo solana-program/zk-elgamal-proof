@@ -46,7 +46,7 @@ use {
         path::Path,
     },
     subtle::{Choice, ConstantTimeEq},
-    zeroize::Zeroize,
+    zeroize::{Zeroize, Zeroizing},
 };
 
 /// Algorithm handle for the twisted ElGamal encryption scheme
@@ -57,11 +57,8 @@ impl ElGamal {
     /// This function is randomized. It internally samples a scalar element using `OsRng`.
     fn keygen() -> ElGamalKeypair {
         // secret scalar should be non-zero except with negligible probability
-        let mut s = Scalar::random(&mut OsRng);
-        let keypair = Self::keygen_with_scalar(&s);
-
-        s.zeroize();
-        keypair
+        let s = Zeroizing::new(Scalar::random(&mut OsRng));
+        Self::keygen_with_scalar(&s)
     }
 
     /// Generates an ElGamal keypair from a scalar input that determines the ElGamal private key.
@@ -151,6 +148,7 @@ impl ElGamal {
 ///
 /// The instances of the secret key are zeroized on drop.
 #[derive(Clone, Deserialize, PartialEq, Eq, Serialize, Zeroize)]
+#[zeroize(drop)]
 pub struct ElGamalKeypair {
     /// The public half of this keypair.
     public: ElGamalPubkey,
@@ -869,37 +867,40 @@ mod tests {
 
     #[test]
     fn test_encrypt_decrypt_correctness() {
-        let ElGamalKeypair { public, secret } = ElGamalKeypair::new_rand();
+        let keypair = ElGamalKeypair::new_rand();
+        let public = keypair.pubkey();
+        let secret = keypair.secret();
         let amount: u32 = 57;
-        let ciphertext = ElGamal::encrypt(&public, amount);
+        let ciphertext = ElGamal::encrypt(public, amount);
 
         let expected_instance = DiscreteLog::new(G, Scalar::from(amount) * &G);
 
-        assert_eq!(expected_instance, ElGamal::decrypt(&secret, &ciphertext));
+        assert_eq!(expected_instance, ElGamal::decrypt(secret, &ciphertext));
         assert_eq!(57_u64, secret.decrypt_u32(&ciphertext).unwrap());
     }
 
     #[test]
     fn test_encrypt_decrypt_correctness_multithreaded() {
-        let ElGamalKeypair { public, secret } = ElGamalKeypair::new_rand();
+        let keypair = ElGamalKeypair::new_rand();
+        let public = keypair.pubkey();
+        let secret = keypair.secret();
         let amount: u32 = 57;
-        let ciphertext = ElGamal::encrypt(&public, amount);
+        let ciphertext = ElGamal::encrypt(public, amount);
 
-        let mut instance = ElGamal::decrypt(&secret, &ciphertext);
+        let mut instance = ElGamal::decrypt(secret, &ciphertext);
         instance.num_threads(4.try_into().unwrap()).unwrap();
         assert_eq!(57_u64, instance.decode_u32().unwrap());
     }
 
     #[test]
     fn test_decrypt_handle() {
-        let ElGamalKeypair {
-            public: public_0,
-            secret: secret_0,
-        } = ElGamalKeypair::new_rand();
-        let ElGamalKeypair {
-            public: public_1,
-            secret: secret_1,
-        } = ElGamalKeypair::new_rand();
+        let keypair_0 = ElGamalKeypair::new_rand();
+        let public_0 = keypair_0.pubkey();
+        let secret_0 = keypair_0.secret();
+
+        let keypair_1 = ElGamalKeypair::new_rand();
+        let public_1 = keypair_1.pubkey();
+        let secret_1 = keypair_1.secret();
 
         let amount: u32 = 77;
         let (commitment, opening) = Pedersen::new(amount);
@@ -924,7 +925,8 @@ mod tests {
 
     #[test]
     fn test_homomorphic_addition() {
-        let ElGamalKeypair { public, secret: _ } = ElGamalKeypair::new_rand();
+        let keypair = ElGamalKeypair::new_rand();
+        let public = keypair.pubkey();
         let amount_0: u64 = 57;
         let amount_1: u64 = 77;
 
@@ -932,25 +934,26 @@ mod tests {
         let opening_0 = PedersenOpening::new_rand();
         let opening_1 = PedersenOpening::new_rand();
 
-        let ciphertext_0 = ElGamal::encrypt_with(amount_0, &public, &opening_0);
-        let ciphertext_1 = ElGamal::encrypt_with(amount_1, &public, &opening_1);
+        let ciphertext_0 = ElGamal::encrypt_with(amount_0, public, &opening_0);
+        let ciphertext_1 = ElGamal::encrypt_with(amount_1, public, &opening_1);
 
         let ciphertext_sum =
-            ElGamal::encrypt_with(amount_0 + amount_1, &public, &(&opening_0 + &opening_1));
+            ElGamal::encrypt_with(amount_0 + amount_1, public, &(&opening_0 + &opening_1));
 
         assert_eq!(ciphertext_sum, ciphertext_0 + ciphertext_1);
 
         // Add to ElGamal ciphertext
         let opening = PedersenOpening::new_rand();
-        let ciphertext = ElGamal::encrypt_with(amount_0, &public, &opening);
-        let ciphertext_sum = ElGamal::encrypt_with(amount_0 + amount_1, &public, &opening);
+        let ciphertext = ElGamal::encrypt_with(amount_0, public, &opening);
+        let ciphertext_sum = ElGamal::encrypt_with(amount_0 + amount_1, public, &opening);
 
         assert_eq!(ciphertext_sum, ciphertext.add_amount(amount_1));
     }
 
     #[test]
     fn test_homomorphic_subtraction() {
-        let ElGamalKeypair { public, secret: _ } = ElGamalKeypair::new_rand();
+        let keypair = ElGamalKeypair::new_rand();
+        let public = keypair.pubkey();
         let amount_0: u64 = 77;
         let amount_1: u64 = 55;
 
@@ -958,35 +961,36 @@ mod tests {
         let opening_0 = PedersenOpening::new_rand();
         let opening_1 = PedersenOpening::new_rand();
 
-        let ciphertext_0 = ElGamal::encrypt_with(amount_0, &public, &opening_0);
-        let ciphertext_1 = ElGamal::encrypt_with(amount_1, &public, &opening_1);
+        let ciphertext_0 = ElGamal::encrypt_with(amount_0, public, &opening_0);
+        let ciphertext_1 = ElGamal::encrypt_with(amount_1, public, &opening_1);
 
         let ciphertext_sub =
-            ElGamal::encrypt_with(amount_0 - amount_1, &public, &(&opening_0 - &opening_1));
+            ElGamal::encrypt_with(amount_0 - amount_1, public, &(&opening_0 - &opening_1));
 
         assert_eq!(ciphertext_sub, ciphertext_0 - ciphertext_1);
 
         // Subtract to ElGamal ciphertext
         let opening = PedersenOpening::new_rand();
-        let ciphertext = ElGamal::encrypt_with(amount_0, &public, &opening);
-        let ciphertext_sub = ElGamal::encrypt_with(amount_0 - amount_1, &public, &opening);
+        let ciphertext = ElGamal::encrypt_with(amount_0, public, &opening);
+        let ciphertext_sub = ElGamal::encrypt_with(amount_0 - amount_1, public, &opening);
 
         assert_eq!(ciphertext_sub, ciphertext.subtract_amount(amount_1));
     }
 
     #[test]
     fn test_homomorphic_multiplication() {
-        let ElGamalKeypair { public, secret: _ } = ElGamalKeypair::new_rand();
+        let keypair = ElGamalKeypair::new_rand();
+        let public = keypair.pubkey();
         let amount_0: u64 = 57;
         let amount_1: u64 = 77;
 
         let opening = PedersenOpening::new_rand();
 
-        let ciphertext = ElGamal::encrypt_with(amount_0, &public, &opening);
+        let ciphertext = ElGamal::encrypt_with(amount_0, public, &opening);
         let scalar = Scalar::from(amount_1);
 
         let ciphertext_prod =
-            ElGamal::encrypt_with(amount_0 * amount_1, &public, &(&opening * scalar));
+            ElGamal::encrypt_with(amount_0 * amount_1, public, &(&opening * scalar));
 
         assert_eq!(ciphertext_prod, ciphertext * scalar);
         assert_eq!(ciphertext_prod, scalar * ciphertext);
@@ -994,7 +998,8 @@ mod tests {
 
     #[test]
     fn test_serde_ciphertext() {
-        let ElGamalKeypair { public, secret: _ } = ElGamalKeypair::new_rand();
+        let keypair = ElGamalKeypair::new_rand();
+        let public = keypair.pubkey();
         let amount: u64 = 77;
         let ciphertext = public.encrypt(amount);
 
@@ -1006,22 +1011,23 @@ mod tests {
 
     #[test]
     fn test_serde_pubkey() {
-        let ElGamalKeypair { public, secret: _ } = ElGamalKeypair::new_rand();
-
+        let keypair = ElGamalKeypair::new_rand();
+        let public = keypair.pubkey();
         let encoded = bincode::serialize(&public).unwrap();
         let decoded: ElGamalPubkey = bincode::deserialize(&encoded).unwrap();
 
-        assert_eq!(public, decoded);
+        assert_eq!(*public, decoded);
     }
 
     #[test]
     fn test_serde_secretkey() {
-        let ElGamalKeypair { public: _, secret } = ElGamalKeypair::new_rand();
+        let keypair = ElGamalKeypair::new_rand();
+        let secret = keypair.secret();
 
         let encoded = bincode::serialize(&secret).unwrap();
         let decoded: ElGamalSecretKey = bincode::deserialize(&encoded).unwrap();
 
-        assert_eq!(secret, decoded);
+        assert_eq!(*secret, decoded);
     }
 
     fn tmp_file_path(name: &str) -> String {
