@@ -46,7 +46,7 @@ use {
         path::Path,
     },
     subtle::{Choice, ConstantTimeEq},
-    zeroize::Zeroize,
+    zeroize::{Zeroize, Zeroizing},
 };
 
 /// Algorithm handle for the twisted ElGamal encryption scheme
@@ -57,11 +57,8 @@ impl ElGamal {
     /// This function is randomized. It internally samples a scalar element using `OsRng`.
     fn keygen() -> ElGamalKeypair {
         // secret scalar should be non-zero except with negligible probability
-        let mut s = Scalar::random(&mut OsRng);
-        let keypair = Self::keygen_with_scalar(&s);
-
-        s.zeroize();
-        keypair
+        let s = Zeroizing::new(Scalar::random(&mut OsRng));
+        Self::keygen_with_scalar(&s)
     }
 
     /// Generates an ElGamal keypair from a scalar input that determines the ElGamal private key.

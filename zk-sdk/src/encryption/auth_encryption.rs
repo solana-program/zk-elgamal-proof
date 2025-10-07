@@ -26,7 +26,7 @@ use {
         io::{Read, Write},
     },
     subtle::ConstantTimeEq,
-    zeroize::Zeroize,
+    zeroize::{Zeroize, Zeroizing},
 };
 
 /// Byte length of an authenticated encryption nonce component
@@ -47,15 +47,13 @@ impl AuthenticatedEncryption {
     /// On input of an authenticated encryption key and an amount, the function returns a
     /// corresponding authenticated encryption ciphertext.
     fn encrypt(key: &AeKey, balance: u64) -> AeCiphertext {
-        let mut plaintext = balance.to_le_bytes();
+        let plaintext = Zeroizing::new(balance.to_le_bytes());
         let nonce: Nonce = OsRng.gen::<[u8; NONCE_LEN]>();
 
         // The balance and the nonce have fixed length and therefore, encryption should not fail.
         let ciphertext = Aes128GcmSiv::new(&key.0.into())
             .encrypt(&nonce.into(), plaintext.as_ref())
             .expect("authenticated encryption");
-
-        plaintext.zeroize();
 
         AeCiphertext {
             nonce,
@@ -69,20 +67,17 @@ impl AuthenticatedEncryption {
         let plaintext_result = Aes128GcmSiv::new(&key.0.into())
             .decrypt(&ciphertext.nonce.into(), ciphertext.ciphertext.as_ref());
 
-        if let Ok(mut plaintext) = plaintext_result {
-            let result = if plaintext.len() == 8 {
-                let mut amount_bytes = [0u8; 8];
+        if let Ok(plaintext_vec) = plaintext_result {
+            let plaintext = Zeroizing::new(plaintext_vec);
+            if plaintext.len() == 8 {
+                let mut amount_bytes = Zeroizing::new([0u8; 8]);
                 amount_bytes.copy_from_slice(&plaintext);
-                let amount = u64::from_le_bytes(amount_bytes);
 
-                amount_bytes.zeroize();
+                let amount = u64::from_le_bytes(*amount_bytes);
                 Some(amount)
             } else {
                 None
-            };
-
-            plaintext.zeroize();
-            result
+            }
         } else {
             None
         }
