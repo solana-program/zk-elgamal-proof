@@ -125,8 +125,7 @@ impl ElGamal {
     /// The output of this function is of type `DiscreteLog`. To recover, the originally encrypted
     /// amount, use `DiscreteLog::decode`.
     fn decrypt(secret: &ElGamalSecretKey, ciphertext: &ElGamalCiphertext) -> DiscreteLog {
-        DiscreteLog::new(
-            G,
+        DiscreteLog::new_for_g(
             ciphertext.commitment.get_point() - &(&secret.0 * &ciphertext.handle.0),
         )
     }
@@ -873,7 +872,7 @@ mod tests {
         let amount: u32 = 57;
         let ciphertext = ElGamal::encrypt(public, amount);
 
-        let expected_instance = DiscreteLog::new(G, Scalar::from(amount) * &G);
+        let expected_instance = DiscreteLog::new_for_g(Scalar::from(amount) * &G);
 
         assert_eq!(expected_instance, ElGamal::decrypt(secret, &ciphertext));
         assert_eq!(57_u64, secret.decrypt_u32(&ciphertext).unwrap());
@@ -917,7 +916,7 @@ mod tests {
             handle: handle_1,
         };
 
-        let expected_instance = DiscreteLog::new(G, Scalar::from(amount) * &G);
+        let expected_instance = DiscreteLog::new_for_g(Scalar::from(amount) * &G);
 
         assert_eq!(expected_instance, secret_0.decrypt(&ciphertext_0));
         assert_eq!(expected_instance, secret_1.decrypt(&ciphertext_1));
