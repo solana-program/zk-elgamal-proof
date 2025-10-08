@@ -48,6 +48,10 @@ pub enum DiscreteLogError {
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, Eq, PartialEq)]
 pub struct DiscreteLog {
     /// Generator point for discrete log
+    #[deprecated(
+        since = "4.1.0",
+        note = "The discrete log implementation is G-only. This field will be removed in a future version."
+    )]
     pub generator: RistrettoPoint,
     /// Target point for discrete log
     pub target: RistrettoPoint,
@@ -67,12 +71,12 @@ pub struct DecodePrecomputation(HashMap<[u8; RISTRETTO_POINT_LEN], u16>);
 
 /// Builds a HashMap of 2^16 elements
 #[allow(dead_code)]
-fn decode_u32_precomputation(generator: RistrettoPoint) -> DecodePrecomputation {
+fn decode_u32_precomputation() -> DecodePrecomputation {
     let mut hashmap = HashMap::new();
 
     let two17_scalar = Scalar::from(TWO17);
     let identity = RistrettoPoint::identity(); // 0 * G
-    let generator = two17_scalar * generator; // 2^17 * G
+    let generator = two17_scalar * G; // 2^17 * G
 
     // iterator for 2^17*0G , 2^17*1G, 2^17*2G, ...
     let ristretto_iter = RistrettoIterator::new((identity, 0), (generator, 1));
@@ -94,12 +98,32 @@ pub static DECODE_PRECOMPUTATION_FOR_G: std::sync::LazyLock<DecodePrecomputation
 
 /// Solves the discrete log instance using a 16/16 bit offline/online split
 impl DiscreteLog {
-    /// Discrete log instance constructor.
+    /// Discrete log instance constructor for an arbitrary generator.
     ///
     /// Default number of threads set to 1.
+    #[deprecated(
+        since = "4.1.0",
+        note = "Use `DiscreteLog::new_for_g` instead. The implementation is optimized for the Ristretto basepoint G only and will produce incorrect results for other generators."
+    )]
     pub fn new(generator: RistrettoPoint, target: RistrettoPoint) -> Self {
         Self {
+            #[allow(deprecated)]
             generator,
+            target,
+            num_threads: None,
+            range_bound: (TWO16 as usize).try_into().unwrap(),
+            step_point: G,
+            compression_batch_size: 32.try_into().unwrap(),
+        }
+    }
+
+    /// Discrete log instance constructor for a fixed generator.
+    ///
+    /// Default number of threads set to 1.
+    pub fn new_for_g(target: RistrettoPoint) -> Self {
+        Self {
+            #[allow(deprecated)]
+            generator: G,
             target,
             num_threads: None,
             range_bound: (TWO16 as usize).try_into().unwrap(),
@@ -253,8 +277,7 @@ mod tests {
     #[test]
     #[allow(non_snake_case)]
     fn test_serialize_decode_u32_precomputation_for_G() {
-        let decode_u32_precomputation_for_G = decode_u32_precomputation(G);
-        // let decode_u32_precomputation_for_G = decode_u32_precomputation(G);
+        let decode_u32_precomputation_for_G = decode_u32_precomputation();
 
         if decode_u32_precomputation_for_G.0 != DECODE_PRECOMPUTATION_FOR_G.0 {
             use std::{fs::File, io::Write, path::PathBuf};
@@ -273,7 +296,7 @@ mod tests {
         // general case
         let amount: u64 = 4294967295;
 
-        let instance = DiscreteLog::new(G, Scalar::from(amount) * G);
+        let instance = DiscreteLog::new_for_g(Scalar::from(amount) * G);
 
         // Very informal measurements for now
         let start_computation = Instant::now();
@@ -290,7 +313,7 @@ mod tests {
         // general case
         let amount: u64 = 55;
 
-        let mut instance = DiscreteLog::new(G, Scalar::from(amount) * G);
+        let mut instance = DiscreteLog::new_for_g(Scalar::from(amount) * G);
         instance.num_threads(4.try_into().unwrap()).unwrap();
 
         // Very informal measurements for now
@@ -305,7 +328,7 @@ mod tests {
         // amount 0
         let amount: u64 = 0;
 
-        let instance = DiscreteLog::new(G, Scalar::from(amount) * G);
+        let instance = DiscreteLog::new_for_g(Scalar::from(amount) * G);
 
         let decoded = instance.decode_u32();
         assert_eq!(amount, decoded.unwrap());
@@ -313,7 +336,7 @@ mod tests {
         // amount 1
         let amount: u64 = 1;
 
-        let instance = DiscreteLog::new(G, Scalar::from(amount) * G);
+        let instance = DiscreteLog::new_for_g(Scalar::from(amount) * G);
 
         let decoded = instance.decode_u32();
         assert_eq!(amount, decoded.unwrap());
@@ -321,7 +344,7 @@ mod tests {
         // amount 2
         let amount: u64 = 2;
 
-        let instance = DiscreteLog::new(G, Scalar::from(amount) * G);
+        let instance = DiscreteLog::new_for_g(Scalar::from(amount) * G);
 
         let decoded = instance.decode_u32();
         assert_eq!(amount, decoded.unwrap());
@@ -329,7 +352,7 @@ mod tests {
         // amount 3
         let amount: u64 = 3;
 
-        let instance = DiscreteLog::new(G, Scalar::from(amount) * G);
+        let instance = DiscreteLog::new_for_g(Scalar::from(amount) * G);
 
         let decoded = instance.decode_u32();
         assert_eq!(amount, decoded.unwrap());
@@ -337,7 +360,7 @@ mod tests {
         // max amount
         let amount: u64 = (1_u64 << 32) - 1;
 
-        let instance = DiscreteLog::new(G, Scalar::from(amount) * G);
+        let instance = DiscreteLog::new_for_g(Scalar::from(amount) * G);
 
         let decoded = instance.decode_u32();
         assert_eq!(amount, decoded.unwrap());
