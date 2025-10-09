@@ -39,13 +39,14 @@ impl WasmGroupedElGamalCiphertext2Handles {
     /// Decrypts the ciphertext using a secret key and a handle index.
     /// Returns the decrypted amount as a u64, or `undefined` if decryption fails.
     #[wasm_bindgen(js_name = "decrypt")]
-    pub fn decrypt(&self, secret_key: &WasmElGamalSecretKey, index: usize) -> Option<u64> {
-        // The `decrypt_u32` function returns a `Result<Option<u64>>`. Flatten the result
-        // to return `undefined` on error or if no amount is found.
-        self.inner
-            .decrypt_u32(&secret_key.inner, index)
-            .ok()
-            .flatten()
+    pub fn decrypt(&self, secret_key: &WasmElGamalSecretKey, index: usize) -> Result<u64, JsValue> {
+        match self.inner.decrypt_u32(&secret_key.inner, index) {
+            Ok(Some(amount)) => Ok(amount),
+            Ok(None) => Err(JsValue::from_str(
+                "Decryption failed: The secret key may be incorrect or the encrypted amount may be out of range.",
+            )),
+            Err(e) => Err(JsValue::from_str(&format!("Decryption failed: {}", e))),
+        }
     }
 
     /// Deserializes a 2-handle grouped ElGamal ciphertext from a byte slice.
@@ -110,11 +111,14 @@ impl WasmGroupedElGamalCiphertext3Handles {
     /// Decrypts the ciphertext using a secret key and a handle index.
     /// Returns the decrypted amount as a u64, or `undefined` if decryption fails.
     #[wasm_bindgen(js_name = "decrypt")]
-    pub fn decrypt(&self, secret_key: &WasmElGamalSecretKey, index: usize) -> Option<u64> {
-        self.inner
-            .decrypt_u32(&secret_key.inner, index)
-            .ok()
-            .flatten()
+    pub fn decrypt(&self, secret_key: &WasmElGamalSecretKey, index: usize) -> Result<u64, JsValue> {
+        match self.inner.decrypt_u32(&secret_key.inner, index) {
+            Ok(Some(amount)) => Ok(amount),
+            Ok(None) => Err(JsValue::from_str(
+                "Decryption failed: The secret key may be incorrect or the encrypted amount may be out of range.",
+            )),
+            Err(e) => Err(JsValue::from_str(&format!("Decryption failed: {}", e))),
+        }
     }
 
     /// Deserializes a 3-handle grouped ElGamal ciphertext from a byte slice.
@@ -163,20 +167,20 @@ mod tests {
 
         // Decrypt with first key
         let decrypted1 = ciphertext.decrypt(&keypair1.secret(), 0);
-        assert_eq!(decrypted1, Some(amount));
+        assert_eq!(decrypted1, Ok(amount));
 
         // Decrypt with second key
         let decrypted2 = ciphertext.decrypt(&keypair2.secret(), 1);
-        assert_eq!(decrypted2, Some(amount));
+        assert_eq!(decrypted2, Ok(amount));
 
         // Decrypt with wrong key fails
         let keypair_wrong = WasmElGamalKeypair::new_rand();
         let decrypted_wrong = ciphertext.decrypt(&keypair_wrong.secret(), 0);
-        assert!(decrypted_wrong.is_none());
+        assert!(decrypted_wrong.is_err());
 
         // Decrypt with wrong index fails
         let decrypted_wrong_index = ciphertext.decrypt(&keypair1.secret(), 1);
-        assert!(decrypted_wrong_index.is_none());
+        assert!(decrypted_wrong_index.is_err());
     }
 
     #[wasm_bindgen_test]
@@ -194,13 +198,13 @@ mod tests {
         );
 
         // Decrypt with each key
-        assert_eq!(ciphertext.decrypt(&keypair1.secret(), 0), Some(amount));
-        assert_eq!(ciphertext.decrypt(&keypair2.secret(), 1), Some(amount));
-        assert_eq!(ciphertext.decrypt(&keypair3.secret(), 2), Some(amount));
+        assert_eq!(ciphertext.decrypt(&keypair1.secret(), 0), Ok(amount));
+        assert_eq!(ciphertext.decrypt(&keypair2.secret(), 1), Ok(amount));
+        assert_eq!(ciphertext.decrypt(&keypair3.secret(), 2), Ok(amount));
 
         // Decrypt with wrong key fails
         let keypair_wrong = WasmElGamalKeypair::new_rand();
-        assert!(ciphertext.decrypt(&keypair_wrong.secret(), 1).is_none());
+        assert!(ciphertext.decrypt(&keypair_wrong.secret(), 1).is_err());
     }
 
     #[wasm_bindgen_test]
@@ -222,8 +226,8 @@ mod tests {
             WasmGroupedElGamalCiphertext2Handles::from_bytes(&Uint8Array::from(bytes.as_slice()))
                 .unwrap();
 
-        assert_eq!(recovered.decrypt(&keypair1.secret(), 0), Some(amount));
-        assert_eq!(recovered.decrypt(&keypair2.secret(), 1), Some(amount));
+        assert_eq!(recovered.decrypt(&keypair1.secret(), 0), Ok(amount));
+        assert_eq!(recovered.decrypt(&keypair2.secret(), 1), Ok(amount));
     }
 
     #[wasm_bindgen_test]
@@ -247,8 +251,8 @@ mod tests {
             WasmGroupedElGamalCiphertext3Handles::from_bytes(&Uint8Array::from(bytes.as_slice()))
                 .unwrap();
 
-        assert_eq!(recovered.decrypt(&keypair1.secret(), 0), Some(amount));
-        assert_eq!(recovered.decrypt(&keypair2.secret(), 1), Some(amount));
-        assert_eq!(recovered.decrypt(&keypair3.secret(), 2), Some(amount));
+        assert_eq!(recovered.decrypt(&keypair1.secret(), 0), Ok(amount));
+        assert_eq!(recovered.decrypt(&keypair2.secret(), 1), Ok(amount));
+        assert_eq!(recovered.decrypt(&keypair3.secret(), 2), Ok(amount));
     }
 }

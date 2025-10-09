@@ -61,8 +61,12 @@ impl WasmAeKey {
 
     /// Decrypts a ciphertext. Returns the amount if successful, otherwise `undefined`.
     #[wasm_bindgen]
-    pub fn decrypt(&self, ciphertext: &WasmAeCiphertext) -> Option<u64> {
-        self.inner.decrypt(ciphertext)
+    pub fn decrypt(&self, ciphertext: &WasmAeCiphertext) -> Result<u64, JsValue> {
+        self.inner.decrypt(&ciphertext.inner).ok_or_else(|| {
+            JsValue::from_str(
+                "Decryption failed: The ciphertext may be tampered or the key incorrect.",
+            )
+        })
     }
 }
 
@@ -129,7 +133,7 @@ mod tests {
 
         let ciphertext = key.encrypt(amount);
         let decrypted_amount_from_key = key.decrypt(&ciphertext);
-        assert_eq!(decrypted_amount_from_key, Some(amount));
+        assert_eq!(decrypted_amount_from_key, Ok(amount));
 
         let decrypted_amount_from_ciphertext = ciphertext.decrypt(&key);
         assert_eq!(decrypted_amount_from_ciphertext, Some(amount));
@@ -156,6 +160,6 @@ mod tests {
 
         // Attempt to decrypt with wrong key
         let result = key2.decrypt(&ciphertext);
-        assert!(result.is_none());
+        assert!(!result.is_ok());
     }
 }
