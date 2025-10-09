@@ -107,8 +107,14 @@ impl WasmElGamalSecretKey {
     /// Decrypts an ElGamal ciphertext.
     /// Returns the decrypted amount as a u64, or `undefined` if decryption fails.
     #[wasm_bindgen(js_name = "decrypt")]
-    pub fn decrypt(&self, ciphertext: &WasmElGamalCiphertext) -> Option<u64> {
-        self.inner.decrypt_u32(ciphertext)
+    pub fn decrypt(&self, ciphertext: &WasmElGamalCiphertext) -> Result<u64, JsValue> {
+        self.inner
+            .decrypt_u32(&ciphertext.inner)
+            .ok_or_else(|| {
+                JsValue::from_str(
+                    "Decryption failed: The secret key may be incorrect or the encrypted amount may be out of range.",
+                )
+            })
     }
 }
 
@@ -273,7 +279,7 @@ mod tests {
 
         let ciphertext = pubkey.encrypt_u64(amount_to_encrypt);
         let decrypted_amount = secret_key.decrypt(&ciphertext);
-        assert_eq!(decrypted_amount, Some(amount_to_encrypt));
+        assert_eq!(decrypted_amount, Ok(amount_to_encrypt));
     }
 
     #[wasm_bindgen_test]
@@ -314,7 +320,7 @@ mod tests {
 
         let ciphertext = keypair1.pubkey().encrypt_u64(amount);
         let decrypted_result = keypair2.secret().decrypt(&ciphertext);
-        assert!(decrypted_result.is_none());
+        assert!(decrypted_result.is_err());
     }
 
     #[wasm_bindgen_test]
