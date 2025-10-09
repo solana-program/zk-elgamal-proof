@@ -18,6 +18,11 @@ pub struct WasmGroupedElGamalCiphertext2Handles {
     pub(crate) inner: GroupedElGamalCiphertext<2>,
 }
 
+crate::conversion::impl_inner_conversion!(
+    WasmGroupedElGamalCiphertext2Handles,
+    GroupedElGamalCiphertext<2>
+);
+
 #[wasm_bindgen]
 impl WasmGroupedElGamalCiphertext2Handles {
     /// Encrypts a 64-bit amount under two ElGamal public keys.
@@ -75,6 +80,11 @@ impl WasmGroupedElGamalCiphertext2Handles {
 pub struct WasmGroupedElGamalCiphertext3Handles {
     pub(crate) inner: GroupedElGamalCiphertext<3>,
 }
+
+crate::conversion::impl_inner_conversion!(
+    WasmGroupedElGamalCiphertext3Handles,
+    GroupedElGamalCiphertext<3>
+);
 
 #[wasm_bindgen]
 impl WasmGroupedElGamalCiphertext3Handles {

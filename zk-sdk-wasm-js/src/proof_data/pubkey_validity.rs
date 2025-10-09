@@ -11,6 +11,8 @@ pub struct WasmPubkeyValidityProofData {
     pub(crate) inner: PubkeyValidityProofData,
 }
 
+crate::conversion::impl_inner_conversion!(WasmPubkeyValidityProofData, PubkeyValidityProofData);
+
 #[wasm_bindgen]
 impl WasmPubkeyValidityProofData {
     /// Creates a new public-key validity proof.

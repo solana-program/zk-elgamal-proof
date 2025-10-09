@@ -12,6 +12,8 @@ pub struct WasmZeroCiphertextProofData {
     pub(crate) inner: ZeroCiphertextProofData,
 }
 
+crate::conversion::impl_inner_conversion!(WasmZeroCiphertextProofData, ZeroCiphertextProofData);
+
 #[wasm_bindgen]
 impl WasmZeroCiphertextProofData {
     /// Creates a new zero-ciphertext proof.
