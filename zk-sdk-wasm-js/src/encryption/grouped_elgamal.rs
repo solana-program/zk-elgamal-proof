@@ -49,7 +49,7 @@ impl WasmGroupedElGamalCiphertext2Handles {
     }
 
     /// Deserializes a 2-handle grouped ElGamal ciphertext from a byte slice.
-    /// Returns `undefined` if the bytes are invalid.
+    /// Throws an error if the bytes are invalid.
     #[wasm_bindgen(js_name = "fromBytes")]
     pub fn from_bytes(bytes: &Uint8Array) -> Result<WasmGroupedElGamalCiphertext2Handles, JsValue> {
         let expected_length = GROUPED_ELGAMAL_CIPHERTEXT_2_HANDLES_LEN;
@@ -118,7 +118,7 @@ impl WasmGroupedElGamalCiphertext3Handles {
     }
 
     /// Deserializes a 3-handle grouped ElGamal ciphertext from a byte slice.
-    /// Returns `undefined` if the bytes are invalid.
+    /// Throws an error if the bytes are invalid.
     #[wasm_bindgen(js_name = "fromBytes")]
     pub fn from_bytes(bytes: &Uint8Array) -> Result<WasmGroupedElGamalCiphertext3Handles, JsValue> {
         let expected_length = GROUPED_ELGAMAL_CIPHERTEXT_3_HANDLES_LEN;
