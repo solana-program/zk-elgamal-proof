@@ -2,6 +2,7 @@
 #![cfg(target_arch = "wasm32")]
 
 pub mod encryption;
+pub mod proof_data;
 
 /// Simple macro for implementing conversion functions between wrapper types and
 /// wrapped types.
