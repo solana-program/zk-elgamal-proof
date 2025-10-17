@@ -255,15 +255,12 @@ mod test {
     use {
         super::*,
         crate::{
-            encryption::{
-                elgamal::ElGamalSecretKey,
-                pedersen::Pedersen,
-                pod::{
-                    elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
-                    pedersen::PodPedersenCommitment,
-                },
-            },
+            encryption::{elgamal::ElGamalSecretKey, pedersen::Pedersen},
             sigma_proofs::pod::PodCiphertextCommitmentEqualityProof,
+        },
+        solana_zk_sdk_pod::encryption::{
+            elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
+            pedersen::PodPedersenCommitment,
         },
         std::str::FromStr,
     };

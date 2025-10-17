@@ -1,0 +1,25 @@
+[package]
+name = "solana-zk-sdk-pod"
+description = "Solana ZK SDK Plain Old Data (Pod)"
+documentation = "https://docs.rs/solana-zk-sdk-pod"
+version = "0.1.0"
+authors = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+edition = { workspace = true }
+
+[dependencies]
+base64 = { workspace = true }
+bytemuck = { workspace = true }
+bytemuck_derive = { workspace = true }
+thiserror = { workspace = true }
+
+[lib]
+crate-type = ["rlib"]
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[lints]
+workspace = true

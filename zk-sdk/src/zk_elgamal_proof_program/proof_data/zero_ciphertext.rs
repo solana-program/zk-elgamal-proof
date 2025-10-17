@@ -17,11 +17,11 @@ use {
 };
 use {
     crate::{
-        encryption::pod::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
         sigma_proofs::pod::PodZeroCiphertextProof,
         zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
     },
     bytemuck_derive::{Pod, Zeroable},
+    solana_zk_sdk_pod::encryption::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
 };
 
 /// The instruction data that is needed for the `ProofInstruction::VerifyZeroCiphertext` instruction.

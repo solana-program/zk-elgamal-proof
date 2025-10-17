@@ -146,15 +146,9 @@ impl PubkeyValidityProof {
 #[cfg(test)]
 mod test {
     use {
-        super::*,
-        crate::{
-            encryption::pod::elgamal::PodElGamalPubkey, sigma_proofs::pod::PodPubkeyValidityProof,
-        },
-        bytemuck::Zeroable,
-        curve25519_dalek::traits::Identity,
-        solana_keypair::Keypair,
-        solana_pubkey::Pubkey,
-        std::str::FromStr,
+        super::*, crate::sigma_proofs::pod::PodPubkeyValidityProof, bytemuck::Zeroable,
+        curve25519_dalek::traits::Identity, solana_keypair::Keypair, solana_pubkey::Pubkey,
+        solana_zk_sdk_pod::encryption::elgamal::PodElGamalPubkey, std::str::FromStr,
     };
 
     #[test]

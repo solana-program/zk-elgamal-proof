@@ -5,14 +5,6 @@
 //! the proof, a prover must provide the decryption key for the first ciphertext and the randomness
 //! used to generate the second ciphertext.
 
-use {
-    crate::{
-        encryption::pod::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
-        sigma_proofs::pod::PodCiphertextCiphertextEqualityProof,
-        zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
-    },
-    bytemuck_derive::{Pod, Zeroable},
-};
 #[cfg(not(target_os = "solana"))]
 use {
     crate::{
@@ -26,6 +18,14 @@ use {
     bytemuck::bytes_of,
     merlin::Transcript,
     std::convert::TryInto,
+};
+use {
+    crate::{
+        sigma_proofs::pod::PodCiphertextCiphertextEqualityProof,
+        zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
+    },
+    bytemuck_derive::{Pod, Zeroable},
+    solana_zk_sdk_pod::encryption::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
 };
 
 /// The instruction data that is needed for the

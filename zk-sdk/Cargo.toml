@@ -21,6 +21,7 @@ num-traits = { workspace = true }
 solana-instruction = { workspace = true, features = ["std"] }
 solana-pubkey = { workspace = true, features = ["bytemuck"] }
 solana-sdk-ids = { workspace = true }
+solana-zk-sdk-pod = { workspace = true }
 thiserror = { workspace = true }
 
 [target.'cfg(not(target_os = "solana"))'.dependencies]
