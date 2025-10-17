@@ -20,6 +20,7 @@ use {
     solana_seed_phrase::generate_seed_from_seed_phrase_and_passphrase,
     solana_signature::Signature,
     solana_signer::{EncodableKey, Signer, SignerError},
+    solana_zk_sdk_pod::encryption::auth_encryption::PodAeCiphertext,
     std::{
         convert::TryInto,
         error, fmt,
@@ -279,11 +280,27 @@ impl fmt::Display for AeCiphertext {
     }
 }
 
+#[cfg(not(target_os = "solana"))]
+impl From<AeCiphertext> for PodAeCiphertext {
+    fn from(decoded_ciphertext: AeCiphertext) -> Self {
+        Self(decoded_ciphertext.to_bytes())
+    }
+}
+
+#[cfg(not(target_os = "solana"))]
+impl TryFrom<PodAeCiphertext> for AeCiphertext {
+    type Error = AuthenticatedEncryptionError;
+
+    fn try_from(pod_ciphertext: PodAeCiphertext) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_ciphertext.0).ok_or(AuthenticatedEncryptionError::Deserialization)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use {
         super::*, solana_keypair::Keypair, solana_pubkey::Pubkey,
-        solana_signer::null_signer::NullSigner,
+        solana_signer::null_signer::NullSigner, std::str::FromStr,
     };
 
     #[test]
@@ -391,5 +408,16 @@ mod tests {
         let ciphertext2 = key.encrypt(amount);
 
         assert_ne!(ciphertext1.to_bytes(), ciphertext2.to_bytes());
+    }
+
+    #[test]
+    fn ae_ciphertext_fromstr() {
+        let ae_key = AeKey::new_rand();
+        let expected_ae_ciphertext: PodAeCiphertext = ae_key.encrypt(0_u64).into();
+
+        let ae_ciphertext_base64_str = format!("{}", expected_ae_ciphertext);
+        let computed_ae_ciphertext = PodAeCiphertext::from_str(&ae_ciphertext_base64_str).unwrap();
+
+        assert_eq!(expected_ae_ciphertext, computed_ae_ciphertext);
     }
 }

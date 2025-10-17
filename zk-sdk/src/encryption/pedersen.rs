@@ -1,7 +1,10 @@
 //! Pedersen commitment implementation using the Ristretto prime-order group.
 
 use {
-    crate::encryption::{PEDERSEN_COMMITMENT_LEN, PEDERSEN_OPENING_LEN},
+    crate::{
+        encryption::{PEDERSEN_COMMITMENT_LEN, PEDERSEN_OPENING_LEN},
+        errors::ElGamalError,
+    },
     core::ops::{Add, Mul, Sub},
     curve25519_dalek::{
         constants::{RISTRETTO_BASEPOINT_COMPRESSED, RISTRETTO_BASEPOINT_POINT},
@@ -12,6 +15,7 @@ use {
     rand::rngs::OsRng,
     serde::{Deserialize, Serialize},
     sha3::Sha3_512,
+    solana_zk_sdk_pod::encryption::pedersen::PodPedersenCommitment,
     std::{convert::TryInto, fmt},
     subtle::{Choice, ConstantTimeEq},
     zeroize::Zeroize,
@@ -213,6 +217,22 @@ impl PedersenCommitment {
         };
 
         compressed_ristretto.decompress().map(PedersenCommitment)
+    }
+}
+
+#[cfg(not(target_os = "solana"))]
+impl From<PedersenCommitment> for PodPedersenCommitment {
+    fn from(decoded_commitment: PedersenCommitment) -> Self {
+        Self(decoded_commitment.to_bytes())
+    }
+}
+
+#[cfg(not(target_os = "solana"))]
+impl TryFrom<PodPedersenCommitment> for PedersenCommitment {
+    type Error = ElGamalError;
+
+    fn try_from(pod_commitment: PodPedersenCommitment) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_commitment.0).ok_or(ElGamalError::CiphertextDeserialization)
     }
 }
 
