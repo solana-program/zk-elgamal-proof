@@ -278,10 +278,8 @@ impl CiphertextCiphertextEqualityProof {
 mod test {
     use {
         super::*,
-        crate::{
-            encryption::pod::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
-            sigma_proofs::pod::PodCiphertextCiphertextEqualityProof,
-        },
+        crate::sigma_proofs::pod::PodCiphertextCiphertextEqualityProof,
+        solana_zk_sdk_pod::encryption::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
         std::str::FromStr,
     };
 
