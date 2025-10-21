@@ -86,16 +86,17 @@ impl WasmBatchedRangeProofU256Data {
     /// Throws an error if the bytes are invalid.
     #[wasm_bindgen(js_name = "fromBytes")]
     pub fn from_bytes(bytes: &Uint8Array) -> Result<WasmBatchedRangeProofU256Data, JsValue> {
-        let expected_len = std::mem::size_of::<BatchedRangeProofU256Data>();
-        if bytes.length() as usize != expected_len {
+        // Define expected length as a constant for stack allocation
+        const EXPECTED_LEN: usize = std::mem::size_of::<BatchedRangeProofU256Data>();
+        if bytes.length() as usize != EXPECTED_LEN {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for BatchedRangeProofU256: expected {}, got {}",
-                expected_len,
+                EXPECTED_LEN,
                 bytes.length()
             )));
         }
 
-        let mut data = vec![0u8; expected_len];
+        let mut data = vec![0u8; EXPECTED_LEN];
         bytes.copy_to(&mut data);
 
         bytemuck::try_from_bytes(&data)

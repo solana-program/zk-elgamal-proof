@@ -23,16 +23,17 @@ impl WasmBatchedRangeProofContext {
     /// Throws an error if the bytes are invalid.
     #[wasm_bindgen(js_name = "fromBytes")]
     pub fn from_bytes(bytes: &Uint8Array) -> Result<WasmBatchedRangeProofContext, JsValue> {
-        let expected_len = std::mem::size_of::<BatchedRangeProofContext>();
-        if bytes.length() as usize != expected_len {
+        // Define expected length as a constant for stack allocation
+        const EXPECTED_LEN: usize = std::mem::size_of::<BatchedRangeProofContext>();
+        if bytes.length() as usize != EXPECTED_LEN {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for BatchedRangeProofContext: expected {}, got {}",
-                expected_len,
+                EXPECTED_LEN,
                 bytes.length()
             )));
         }
 
-        let mut data = vec![0u8; expected_len];
+        let mut data = [0u8; EXPECTED_LEN];
         bytes.copy_to(&mut data);
 
         bytemuck::try_from_bytes(&data)
