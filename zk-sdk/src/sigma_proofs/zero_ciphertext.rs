@@ -185,10 +185,10 @@ mod test {
             encryption::{
                 elgamal::{DecryptHandle, ElGamalKeypair},
                 pedersen::{Pedersen, PedersenCommitment, PedersenOpening},
-                pod::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
             },
             sigma_proofs::pod::PodZeroCiphertextProof,
         },
+        solana_zk_sdk_pod::encryption::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
         std::str::FromStr,
     };
 

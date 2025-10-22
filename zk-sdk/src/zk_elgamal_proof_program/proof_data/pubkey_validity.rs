@@ -18,11 +18,11 @@ use {
 };
 use {
     crate::{
-        encryption::pod::elgamal::PodElGamalPubkey,
         sigma_proofs::pod::PodPubkeyValidityProof,
         zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
     },
     bytemuck_derive::{Pod, Zeroable},
+    solana_zk_sdk_pod::encryption::elgamal::PodElGamalPubkey,
 };
 
 /// The instruction data that is needed for the `ProofInstruction::VerifyPubkeyValidity`

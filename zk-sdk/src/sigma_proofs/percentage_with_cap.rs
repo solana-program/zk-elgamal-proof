@@ -612,10 +612,8 @@ fn conditional_select_ristretto(
 mod test {
     use {
         super::*,
-        crate::{
-            encryption::{pedersen::Pedersen, pod::pedersen::PodPedersenCommitment},
-            sigma_proofs::pod::PodPercentageWithCapProof,
-        },
+        crate::{encryption::pedersen::Pedersen, sigma_proofs::pod::PodPercentageWithCapProof},
+        solana_zk_sdk_pod::encryption::pedersen::PodPedersenCommitment,
         std::str::FromStr,
     };
 

@@ -21,7 +21,7 @@ pub mod batched_range_proof_u128;
 pub mod batched_range_proof_u256;
 pub mod batched_range_proof_u64;
 
-use crate::encryption::pod::pedersen::PodPedersenCommitment;
+use solana_zk_sdk_pod::encryption::pedersen::PodPedersenCommitment;
 #[cfg(not(target_os = "solana"))]
 use {
     crate::{

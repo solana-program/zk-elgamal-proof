@@ -279,15 +279,12 @@ mod test {
     use {
         super::*,
         crate::{
-            encryption::{
-                elgamal::ElGamalKeypair,
-                pedersen::Pedersen,
-                pod::{
-                    elgamal::{PodDecryptHandle, PodElGamalCiphertext, PodElGamalPubkey},
-                    pedersen::PodPedersenCommitment,
-                },
-            },
+            encryption::{elgamal::ElGamalKeypair, pedersen::Pedersen},
             sigma_proofs::pod::PodGroupedCiphertext3HandlesValidityProof,
+        },
+        solana_zk_sdk_pod::encryption::{
+            elgamal::{PodDecryptHandle, PodElGamalCiphertext, PodElGamalPubkey},
+            pedersen::PodPedersenCommitment,
         },
         std::str::FromStr,
     };

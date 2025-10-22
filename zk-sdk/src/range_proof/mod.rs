@@ -514,11 +514,8 @@ fn delta(bit_lengths: &[usize], y: &Scalar, z: &Scalar) -> Scalar {
 #[cfg(test)]
 mod tests {
     use {
-        super::*,
-        crate::{
-            encryption::pod::pedersen::PodPedersenCommitment, range_proof::pod::PodRangeProofU128,
-        },
-        std::str::FromStr,
+        super::*, crate::range_proof::pod::PodRangeProofU128,
+        solana_zk_sdk_pod::encryption::pedersen::PodPedersenCommitment, std::str::FromStr,
     };
 
     #[test]
