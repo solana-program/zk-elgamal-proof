@@ -1,43 +1,40 @@
 use {
     crate::encryption::{
-        elgamal::{WasmElGamalCiphertext, WasmElGamalKeypair, WasmElGamalPubkey},
-        pedersen::{WasmPedersenCommitment, WasmPedersenOpening},
+        elgamal::{ElGamalCiphertext, ElGamalKeypair, ElGamalPubkey},
+        pedersen::{PedersenCommitment, PedersenOpening},
     },
     js_sys::Uint8Array,
     solana_zk_sdk::zk_elgamal_proof_program::proof_data::{
-        ciphertext_commitment_equality::{
-            CiphertextCommitmentEqualityProofContext, CiphertextCommitmentEqualityProofData,
-        },
-        ZkProofData,
+        ciphertext_commitment_equality, ZkProofData,
     },
     wasm_bindgen::prelude::*,
 };
 
 /// A ciphertext-commitment equality proof. This proof certifies that an ElGamal
 /// ciphertext and a Pedersen commitment encrypt/encode the same message.
-#[wasm_bindgen(js_name = "CiphertextCommitmentEqualityProof")]
-pub struct WasmCiphertextCommitmentEqualityProofData {
-    pub(crate) inner: CiphertextCommitmentEqualityProofData,
+#[wasm_bindgen]
+pub struct CiphertextCommitmentEqualityProofData {
+    pub(crate) inner: ciphertext_commitment_equality::CiphertextCommitmentEqualityProofData,
 }
 
 crate::conversion::impl_inner_conversion!(
-    WasmCiphertextCommitmentEqualityProofData,
-    CiphertextCommitmentEqualityProofData
+    CiphertextCommitmentEqualityProofData,
+    ciphertext_commitment_equality::CiphertextCommitmentEqualityProofData
 );
 
 #[wasm_bindgen]
-impl WasmCiphertextCommitmentEqualityProofData {
+impl CiphertextCommitmentEqualityProofData {
     /// Creates a new ciphertext-commitment equality proof.
     #[wasm_bindgen(constructor)]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        keypair: &WasmElGamalKeypair,
-        ciphertext: &WasmElGamalCiphertext,
-        commitment: &WasmPedersenCommitment,
-        opening: &WasmPedersenOpening,
+        keypair: &ElGamalKeypair,
+        ciphertext: &ElGamalCiphertext,
+        commitment: &PedersenCommitment,
+        opening: &PedersenOpening,
         amount: u64,
-    ) -> Result<WasmCiphertextCommitmentEqualityProofData, JsValue> {
-        CiphertextCommitmentEqualityProofData::new(
+    ) -> Result<CiphertextCommitmentEqualityProofData, JsValue> {
+        ciphertext_commitment_equality::CiphertextCommitmentEqualityProofData::new(
             &keypair.inner,
             &ciphertext.inner,
             &commitment.inner,
@@ -50,7 +47,7 @@ impl WasmCiphertextCommitmentEqualityProofData {
 
     /// Returns the context data associated with the proof.
     #[wasm_bindgen]
-    pub fn context(&self) -> WasmCiphertextCommitmentEqualityProofContext {
+    pub fn context(&self) -> CiphertextCommitmentEqualityProofContext {
         self.inner.context.into()
     }
 
@@ -68,9 +65,11 @@ impl WasmCiphertextCommitmentEqualityProofData {
     #[wasm_bindgen(js_name = "fromBytes")]
     pub fn from_bytes(
         bytes: &Uint8Array,
-    ) -> Result<WasmCiphertextCommitmentEqualityProofData, JsValue> {
+    ) -> Result<CiphertextCommitmentEqualityProofData, JsValue> {
         // Define expected length as a constant for stack allocation
-        const EXPECTED_LEN: usize = std::mem::size_of::<CiphertextCommitmentEqualityProofData>();
+        const EXPECTED_LEN: usize = std::mem::size_of::<
+            ciphertext_commitment_equality::CiphertextCommitmentEqualityProofData,
+        >();
         if bytes.length() as usize != EXPECTED_LEN {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for CiphertextCommitmentEqualityProof: expected {}, got {}",
@@ -83,7 +82,11 @@ impl WasmCiphertextCommitmentEqualityProofData {
         bytes.copy_to(&mut data);
 
         bytemuck::try_from_bytes(&data)
-            .map(|pod: &CiphertextCommitmentEqualityProofData| Self { inner: *pod })
+            .map(
+                |pod: &ciphertext_commitment_equality::CiphertextCommitmentEqualityProofData| {
+                    Self { inner: *pod }
+                },
+            )
             .map_err(|_| JsValue::from_str("Invalid bytes for CiphertextCommitmentEqualityProof"))
     }
 
@@ -96,24 +99,26 @@ impl WasmCiphertextCommitmentEqualityProofData {
 
 /// The context data needed to verify a ciphertext-commitment equality proof.
 #[wasm_bindgen]
-pub struct WasmCiphertextCommitmentEqualityProofContext {
-    pub(crate) inner: CiphertextCommitmentEqualityProofContext,
+pub struct CiphertextCommitmentEqualityProofContext {
+    pub(crate) inner: ciphertext_commitment_equality::CiphertextCommitmentEqualityProofContext,
 }
 
 crate::conversion::impl_inner_conversion!(
-    WasmCiphertextCommitmentEqualityProofContext,
-    CiphertextCommitmentEqualityProofContext
+    CiphertextCommitmentEqualityProofContext,
+    ciphertext_commitment_equality::CiphertextCommitmentEqualityProofContext
 );
 
 #[wasm_bindgen]
-impl WasmCiphertextCommitmentEqualityProofContext {
+impl CiphertextCommitmentEqualityProofContext {
     /// Deserializes a ciphertext-commitment equality proof context from a byte slice.
     /// Throws an error if the bytes are invalid.
     #[wasm_bindgen(js_name = "fromBytes")]
     pub fn from_bytes(
         bytes: &Uint8Array,
-    ) -> Result<WasmCiphertextCommitmentEqualityProofContext, JsValue> {
-        let expected_len = std::mem::size_of::<CiphertextCommitmentEqualityProofContext>();
+    ) -> Result<CiphertextCommitmentEqualityProofContext, JsValue> {
+        let expected_len = std::mem::size_of::<
+            ciphertext_commitment_equality::CiphertextCommitmentEqualityProofContext,
+        >();
         if bytes.length() as usize != expected_len {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for CiphertextCommitmentEqualityProofContext: expected {}, got {}",
@@ -124,7 +129,11 @@ impl WasmCiphertextCommitmentEqualityProofContext {
         let mut data = vec![0u8; expected_len];
         bytes.copy_to(&mut data);
         bytemuck::try_from_bytes(&data)
-            .map(|pod: &CiphertextCommitmentEqualityProofContext| Self { inner: *pod })
+            .map(
+                |pod: &ciphertext_commitment_equality::CiphertextCommitmentEqualityProofContext| {
+                    Self { inner: *pod }
+                },
+            )
             .map_err(|_| {
                 JsValue::from_str("Invalid bytes for CiphertextCommitmentEqualityProofContext")
             })
@@ -143,14 +152,14 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_ciphertext_commitment_equality_proof_creation_and_verification() {
-        let keypair = WasmElGamalKeypair::new_rand();
+        let keypair = ElGamalKeypair::new_rand();
         let amount: u64 = 55;
 
         let ciphertext = keypair.pubkey().encrypt_u64(amount);
-        let opening = WasmPedersenOpening::new_rand();
-        let commitment = WasmPedersenCommitment::with_u64(amount, &opening);
+        let opening = PedersenOpening::new_rand();
+        let commitment = PedersenCommitment::with_u64(amount, &opening);
 
-        let proof = WasmCiphertextCommitmentEqualityProofData::new(
+        let proof = CiphertextCommitmentEqualityProofData::new(
             &keypair,
             &ciphertext,
             &commitment,
@@ -164,14 +173,14 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_ciphertext_commitment_equality_proof_bytes_roundtrip() {
-        let keypair = WasmElGamalKeypair::new_rand();
+        let keypair = ElGamalKeypair::new_rand();
         let amount: u64 = 55;
 
         let ciphertext = keypair.pubkey().encrypt_u64(amount);
-        let opening = WasmPedersenOpening::new_rand();
-        let commitment = WasmPedersenCommitment::with_u64(amount, &opening);
+        let opening = PedersenOpening::new_rand();
+        let commitment = PedersenCommitment::with_u64(amount, &opening);
 
-        let proof = WasmCiphertextCommitmentEqualityProofData::new(
+        let proof = CiphertextCommitmentEqualityProofData::new(
             &keypair,
             &ciphertext,
             &commitment,
@@ -181,16 +190,15 @@ mod tests {
         .unwrap();
 
         let bytes = proof.to_bytes();
-        let recovered_proof = WasmCiphertextCommitmentEqualityProofData::from_bytes(
-            &Uint8Array::from(bytes.as_slice()),
-        )
-        .unwrap();
+        let recovered_proof =
+            CiphertextCommitmentEqualityProofData::from_bytes(&Uint8Array::from(bytes.as_slice()))
+                .unwrap();
 
         assert_eq!(proof.to_bytes(), recovered_proof.to_bytes());
 
         let context = proof.context();
         let context_bytes = context.to_bytes();
-        let recovered_context = WasmCiphertextCommitmentEqualityProofContext::from_bytes(
+        let recovered_context = CiphertextCommitmentEqualityProofContext::from_bytes(
             &Uint8Array::from(context_bytes.as_slice()),
         )
         .unwrap();
