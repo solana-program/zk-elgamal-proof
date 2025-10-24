@@ -1,10 +1,10 @@
 use {
     crate::{
-        encryption::pedersen::{WasmPedersenCommitment, WasmPedersenOpening},
-        proof_data::batched_range_proof::WasmBatchedRangeProofContext,
+        encryption::pedersen::{PedersenCommitment, PedersenOpening},
+        proof_data::batched_range_proof::BatchedRangeProofContext,
     },
     js_sys::{BigUint64Array, Uint8Array},
-    solana_zk_sdk::zk_elgamal_proof_program::proof_data::{BatchedRangeProofU256Data, ZkProofData},
+    solana_zk_sdk::zk_elgamal_proof_program::proof_data::{self, ZkProofData},
     wasm_bindgen::prelude::*,
 };
 
@@ -13,15 +13,18 @@ use {
 /// This proof certifies that a batch of Pedersen commitments encrypt values
 /// that are within specified bit ranges, summing up to 256 bits in total.
 /// Each individual bit length must not exceed 128.
-#[wasm_bindgen(js_name = "BatchedRangeProofU256")]
-pub struct WasmBatchedRangeProofU256Data {
-    pub(crate) inner: BatchedRangeProofU256Data,
+#[wasm_bindgen]
+pub struct BatchedRangeProofU256Data {
+    pub(crate) inner: proof_data::BatchedRangeProofU256Data,
 }
 
-crate::conversion::impl_inner_conversion!(WasmBatchedRangeProofU256Data, BatchedRangeProofU256Data);
+crate::conversion::impl_inner_conversion!(
+    BatchedRangeProofU256Data,
+    proof_data::BatchedRangeProofU256Data
+);
 
 #[wasm_bindgen]
-impl WasmBatchedRangeProofU256Data {
+impl BatchedRangeProofU256Data {
     /// Creates a new 256-bit batched range proof.
     ///
     /// The function takes arrays of Pedersen commitments, amounts (as BigUint64Array),
@@ -30,17 +33,17 @@ impl WasmBatchedRangeProofU256Data {
     ///
     /// # Arguments
     ///
-    /// * `commitments` - An array of `WasmPedersenCommitment`.
+    /// * `commitments` - An array of `PedersenCommitment`.
     /// * `amounts` - An array of 64-bit amounts (as `BigUint64Array`).
     /// * `bit_lengths` - An array of bit lengths (as `Uint8Array`).
-    /// * `openings` - An array of `WasmPedersenOpening`.
+    /// * `openings` - An array of `PedersenOpening`.
     #[wasm_bindgen(constructor)]
     pub fn new(
-        commitments: Box<[WasmPedersenCommitment]>,
+        commitments: Box<[PedersenCommitment]>,
         amounts: BigUint64Array,
         bit_lengths: Uint8Array,
-        openings: Box<[WasmPedersenOpening]>,
-    ) -> Result<WasmBatchedRangeProofU256Data, JsValue> {
+        openings: Box<[PedersenOpening]>,
+    ) -> Result<BatchedRangeProofU256Data, JsValue> {
         // Check array lengths for early exit and clearer error messages
         if commitments.len() != amounts.length() as usize
             || commitments.len() != bit_lengths.length() as usize
@@ -58,7 +61,7 @@ impl WasmBatchedRangeProofU256Data {
             .collect();
         let openings_inner: Vec<_> = openings.iter().map(|o| &o.inner).collect();
 
-        BatchedRangeProofU256Data::new(
+        proof_data::BatchedRangeProofU256Data::new(
             commitments_inner,
             amounts_vec,
             bit_lengths_vec,
@@ -70,7 +73,7 @@ impl WasmBatchedRangeProofU256Data {
 
     /// Returns the context data associated with the proof.
     #[wasm_bindgen]
-    pub fn context(&self) -> WasmBatchedRangeProofContext {
+    pub fn context(&self) -> BatchedRangeProofContext {
         self.inner.context.into()
     }
 
@@ -85,9 +88,9 @@ impl WasmBatchedRangeProofU256Data {
     /// Deserializes a 256-bit batched range proof from a byte slice.
     /// Throws an error if the bytes are invalid.
     #[wasm_bindgen(js_name = "fromBytes")]
-    pub fn from_bytes(bytes: &Uint8Array) -> Result<WasmBatchedRangeProofU256Data, JsValue> {
+    pub fn from_bytes(bytes: &Uint8Array) -> Result<BatchedRangeProofU256Data, JsValue> {
         // Define expected length as a constant for stack allocation
-        const EXPECTED_LEN: usize = std::mem::size_of::<BatchedRangeProofU256Data>();
+        const EXPECTED_LEN: usize = std::mem::size_of::<proof_data::BatchedRangeProofU256Data>();
         if bytes.length() as usize != EXPECTED_LEN {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for BatchedRangeProofU256: expected {}, got {}",
@@ -100,7 +103,7 @@ impl WasmBatchedRangeProofU256Data {
         bytes.copy_to(&mut data);
 
         bytemuck::try_from_bytes(&data)
-            .map(|pod: &BatchedRangeProofU256Data| Self { inner: *pod })
+            .map(|pod: &proof_data::BatchedRangeProofU256Data| Self { inner: *pod })
             .map_err(|_| JsValue::from_str("Invalid bytes for BatchedRangeProofU256"))
     }
 
@@ -115,7 +118,7 @@ impl WasmBatchedRangeProofU256Data {
 mod tests {
     use {
         super::*,
-        crate::encryption::pedersen::{WasmPedersenCommitment, WasmPedersenOpening},
+        crate::encryption::pedersen::{PedersenCommitment, PedersenOpening},
         wasm_bindgen_test::*,
     };
 
@@ -123,11 +126,11 @@ mod tests {
     fn test_batched_range_proof_u256_creation_and_verification() {
         // Case 1: Success (e.g., 4 * 64 bits = 256 bits). All powers of two.
         let amounts_vec = vec![1_u64, 2_u64, 3_u64, 4_u64];
-        let openings_vec: Vec<_> = (0..4).map(|_| WasmPedersenOpening::new_rand()).collect();
+        let openings_vec: Vec<_> = (0..4).map(|_| PedersenOpening::new_rand()).collect();
         let commitments_vec: Vec<_> = amounts_vec
             .iter()
             .zip(openings_vec.iter())
-            .map(|(amount, opening)| WasmPedersenCommitment::with_u64(*amount, opening))
+            .map(|(amount, opening)| PedersenCommitment::with_u64(*amount, opening))
             .collect();
 
         let commitments = commitments_vec.into_boxed_slice();
@@ -137,7 +140,7 @@ mod tests {
 
         // Inputs are moved into new()
         let proof =
-            WasmBatchedRangeProofU256Data::new(commitments, amounts, bit_lengths.clone(), openings)
+            BatchedRangeProofU256Data::new(commitments, amounts, bit_lengths.clone(), openings)
                 .unwrap();
         assert!(proof.verify().is_ok());
 
@@ -147,12 +150,11 @@ mod tests {
 
         // Must regenerate inputs as they were moved in Case 1.
         let amounts_invalid_vec = vec![amount_1_invalid, 2_u64, 3_u64, 4_u64, 5_u64];
-        let openings_invalid_vec: Vec<_> =
-            (0..5).map(|_| WasmPedersenOpening::new_rand()).collect();
+        let openings_invalid_vec: Vec<_> = (0..5).map(|_| PedersenOpening::new_rand()).collect();
         let commitments_invalid_vec: Vec<_> = amounts_invalid_vec
             .iter()
             .zip(openings_invalid_vec.iter())
-            .map(|(amount, opening)| WasmPedersenCommitment::with_u64(*amount, opening))
+            .map(|(amount, opening)| PedersenCommitment::with_u64(*amount, opening))
             .collect();
 
         // Ensure all are powers of two and sum is 256.
@@ -160,7 +162,7 @@ mod tests {
             Uint8Array::from(vec![32_u8, 64_u8, 64_u8, 64_u8, 32_u8].as_slice());
 
         // Proof generation succeeds because the structure (bit lengths) is valid.
-        let proof_invalid = WasmBatchedRangeProofU256Data::new(
+        let proof_invalid = BatchedRangeProofU256Data::new(
             commitments_invalid_vec.into_boxed_slice(),
             BigUint64Array::from(amounts_invalid_vec.as_slice()),
             bit_lengths_for_exceed,
@@ -177,10 +179,10 @@ mod tests {
         // Regenerate inputs.
         let amount_1_valid = 1_u64;
         let amount_2_valid = 1_u64;
-        let opening_1_valid = WasmPedersenOpening::new_rand();
-        let opening_2_valid = WasmPedersenOpening::new_rand();
-        let commitment_1_valid = WasmPedersenCommitment::with_u64(amount_1_valid, &opening_1_valid);
-        let commitment_2_valid = WasmPedersenCommitment::with_u64(amount_2_valid, &opening_2_valid);
+        let opening_1_valid = PedersenOpening::new_rand();
+        let opening_2_valid = PedersenOpening::new_rand();
+        let commitment_1_valid = PedersenCommitment::with_u64(amount_1_valid, &opening_1_valid);
+        let commitment_2_valid = PedersenCommitment::with_u64(amount_2_valid, &opening_2_valid);
 
         let commitments_invalid_len =
             vec![commitment_1_valid, commitment_2_valid].into_boxed_slice();
@@ -191,7 +193,7 @@ mod tests {
         let openings_invalid_len = vec![opening_1_valid, opening_2_valid].into_boxed_slice();
 
         // Proof generation itself should fail due to bit length > 128
-        let proof_gen_result = WasmBatchedRangeProofU256Data::new(
+        let proof_gen_result = BatchedRangeProofU256Data::new(
             commitments_invalid_len,
             amounts_invalid_len,
             bit_lengths_for_invalid,
@@ -202,17 +204,17 @@ mod tests {
         // Case 4: Failure (Total bit length != 256)
         // Regenerate inputs.
         let amounts_vec_case4 = vec![1_u64, 2_u64];
-        let openings_vec_case4: Vec<_> = (0..2).map(|_| WasmPedersenOpening::new_rand()).collect();
+        let openings_vec_case4: Vec<_> = (0..2).map(|_| PedersenOpening::new_rand()).collect();
         let commitments_vec_case4: Vec<_> = amounts_vec_case4
             .iter()
             .zip(openings_vec_case4.iter())
-            .map(|(amount, opening)| WasmPedersenCommitment::with_u64(*amount, opening))
+            .map(|(amount, opening)| PedersenCommitment::with_u64(*amount, opening))
             .collect();
 
         // Sum is 192, not 256.
         let bit_lengths_wrong_sum = Uint8Array::from(vec![128_u8, 64_u8].as_slice());
 
-        let result = WasmBatchedRangeProofU256Data::new(
+        let result = BatchedRangeProofU256Data::new(
             commitments_vec_case4.into_boxed_slice(),
             BigUint64Array::from(amounts_vec_case4.as_slice()),
             bit_lengths_wrong_sum,
@@ -222,17 +224,17 @@ mod tests {
 
         // Case 5: Failure (Bit length not a power of two)
         let amounts_vec_case5 = vec![1_u64, 2_u64];
-        let openings_vec_case5: Vec<_> = (0..2).map(|_| WasmPedersenOpening::new_rand()).collect();
+        let openings_vec_case5: Vec<_> = (0..2).map(|_| PedersenOpening::new_rand()).collect();
         let commitments_vec_case5: Vec<_> = amounts_vec_case5
             .iter()
             .zip(openings_vec_case5.iter())
-            .map(|(amount, opening)| WasmPedersenCommitment::with_u64(*amount, opening))
+            .map(|(amount, opening)| PedersenCommitment::with_u64(*amount, opening))
             .collect();
 
         // 96 and 160 are not powers of two. Sum is 256.
         let bit_lengths_not_pow2 = Uint8Array::from(vec![160_u8, 96_u8].as_slice());
 
-        let result_pow2 = WasmBatchedRangeProofU256Data::new(
+        let result_pow2 = BatchedRangeProofU256Data::new(
             commitments_vec_case5.into_boxed_slice(),
             BigUint64Array::from(amounts_vec_case5.as_slice()),
             bit_lengths_not_pow2,
@@ -246,14 +248,14 @@ mod tests {
     fn test_batched_range_proof_u256_bytes_roundtrip() {
         let amounts_vec = vec![10_u64, 20_u64, 30_u64, 40_u64];
         let bit_lengths_vec = vec![64_u8, 64_u8, 64_u8, 64_u8];
-        let openings_vec: Vec<_> = (0..4).map(|_| WasmPedersenOpening::new_rand()).collect();
+        let openings_vec: Vec<_> = (0..4).map(|_| PedersenOpening::new_rand()).collect();
         let commitments_vec: Vec<_> = amounts_vec
             .iter()
             .zip(openings_vec.iter())
-            .map(|(amount, opening)| WasmPedersenCommitment::with_u64(*amount, opening))
+            .map(|(amount, opening)| PedersenCommitment::with_u64(*amount, opening))
             .collect();
 
-        let proof = WasmBatchedRangeProofU256Data::new(
+        let proof = BatchedRangeProofU256Data::new(
             commitments_vec.into_boxed_slice(),
             BigUint64Array::from(amounts_vec.as_slice()),
             Uint8Array::from(bit_lengths_vec.as_slice()),
@@ -263,7 +265,7 @@ mod tests {
 
         let bytes = proof.to_bytes();
         let recovered_proof =
-            WasmBatchedRangeProofU256Data::from_bytes(&Uint8Array::from(bytes.as_slice())).unwrap();
+            BatchedRangeProofU256Data::from_bytes(&Uint8Array::from(bytes.as_slice())).unwrap();
 
         assert_eq!(proof.to_bytes(), recovered_proof.to_bytes());
     }

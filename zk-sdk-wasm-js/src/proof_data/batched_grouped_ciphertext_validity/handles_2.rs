@@ -1,47 +1,44 @@
 use {
     crate::encryption::{
-        elgamal::WasmElGamalPubkey, grouped_elgamal::WasmGroupedElGamalCiphertext2Handles,
-        pedersen::WasmPedersenOpening,
+        elgamal::ElGamalPubkey, grouped_elgamal::GroupedElGamalCiphertext2Handles,
+        pedersen::PedersenOpening,
     },
     js_sys::Uint8Array,
     solana_zk_sdk::zk_elgamal_proof_program::proof_data::{
-        batched_grouped_ciphertext_validity::{
-            BatchedGroupedCiphertext2HandlesValidityProofContext,
-            BatchedGroupedCiphertext2HandlesValidityProofData,
-        },
-        ZkProofData,
+        batched_grouped_ciphertext_validity, ZkProofData,
     },
     wasm_bindgen::prelude::*,
 };
 
 /// A batched grouped ciphertext validity proof with two decryption handles. This proof certifies
 /// the validity of two grouped ElGamal ciphertexts that are encrypted under the same public keys.
-#[wasm_bindgen(js_name = "BatchedGroupedCiphertext2HandlesValidityProof")]
-pub struct WasmBatchedGroupedCiphertext2HandlesValidityProofData {
-    pub(crate) inner: BatchedGroupedCiphertext2HandlesValidityProofData,
+#[wasm_bindgen]
+pub struct BatchedGroupedCiphertext2HandlesValidityProofData {
+    pub(crate) inner:
+        batched_grouped_ciphertext_validity::BatchedGroupedCiphertext2HandlesValidityProofData,
 }
 
 crate::conversion::impl_inner_conversion!(
-    WasmBatchedGroupedCiphertext2HandlesValidityProofData,
-    BatchedGroupedCiphertext2HandlesValidityProofData
+    BatchedGroupedCiphertext2HandlesValidityProofData,
+    batched_grouped_ciphertext_validity::BatchedGroupedCiphertext2HandlesValidityProofData
 );
 
 #[wasm_bindgen]
-impl WasmBatchedGroupedCiphertext2HandlesValidityProofData {
+impl BatchedGroupedCiphertext2HandlesValidityProofData {
     /// Creates a new batched grouped ciphertext validity proof with two handles.
     #[wasm_bindgen(constructor)]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        first_pubkey: &WasmElGamalPubkey,
-        second_pubkey: &WasmElGamalPubkey,
-        grouped_ciphertext_lo: &WasmGroupedElGamalCiphertext2Handles,
-        grouped_ciphertext_hi: &WasmGroupedElGamalCiphertext2Handles,
+        first_pubkey: &ElGamalPubkey,
+        second_pubkey: &ElGamalPubkey,
+        grouped_ciphertext_lo: &GroupedElGamalCiphertext2Handles,
+        grouped_ciphertext_hi: &GroupedElGamalCiphertext2Handles,
         amount_lo: u64,
         amount_hi: u64,
-        opening_lo: &WasmPedersenOpening,
-        opening_hi: &WasmPedersenOpening,
-    ) -> Result<WasmBatchedGroupedCiphertext2HandlesValidityProofData, JsValue> {
-        BatchedGroupedCiphertext2HandlesValidityProofData::new(
+        opening_lo: &PedersenOpening,
+        opening_hi: &PedersenOpening,
+    ) -> Result<BatchedGroupedCiphertext2HandlesValidityProofData, JsValue> {
+        batched_grouped_ciphertext_validity::BatchedGroupedCiphertext2HandlesValidityProofData::new(
             &first_pubkey.inner,
             &second_pubkey.inner,
             &grouped_ciphertext_lo.inner,
@@ -57,7 +54,7 @@ impl WasmBatchedGroupedCiphertext2HandlesValidityProofData {
 
     /// Returns the context data associated with the proof.
     #[wasm_bindgen]
-    pub fn context(&self) -> WasmBatchedGroupedCiphertext2HandlesValidityProofContext {
+    pub fn context(&self) -> BatchedGroupedCiphertext2HandlesValidityProofContext {
         self.inner.context.into()
     }
 
@@ -75,10 +72,11 @@ impl WasmBatchedGroupedCiphertext2HandlesValidityProofData {
     #[wasm_bindgen(js_name = "fromBytes")]
     pub fn from_bytes(
         bytes: &Uint8Array,
-    ) -> Result<WasmBatchedGroupedCiphertext2HandlesValidityProofData, JsValue> {
+    ) -> Result<BatchedGroupedCiphertext2HandlesValidityProofData, JsValue> {
         // Define expected length as a constant for stack allocation
-        const EXPECTED_LEN: usize =
-            std::mem::size_of::<BatchedGroupedCiphertext2HandlesValidityProofData>();
+        const EXPECTED_LEN: usize = std::mem::size_of::<
+            batched_grouped_ciphertext_validity::BatchedGroupedCiphertext2HandlesValidityProofData,
+        >();
         if bytes.length() as usize != EXPECTED_LEN {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for BatchedGroupedCiphertext2HandlesValidityProof: expected {}, got {}",
@@ -91,7 +89,7 @@ impl WasmBatchedGroupedCiphertext2HandlesValidityProofData {
         bytes.copy_to(&mut data);
 
         bytemuck::try_from_bytes(&data)
-            .map(|pod: &BatchedGroupedCiphertext2HandlesValidityProofData| Self { inner: *pod })
+            .map(|pod: &batched_grouped_ciphertext_validity::BatchedGroupedCiphertext2HandlesValidityProofData| Self { inner: *pod })
             .map_err(|_| {
                 JsValue::from_str("Invalid bytes for BatchedGroupedCiphertext2HandlesValidityProof")
             })
@@ -106,25 +104,26 @@ impl WasmBatchedGroupedCiphertext2HandlesValidityProofData {
 
 /// The context data needed to verify a batched grouped ciphertext 2-handles validity proof.
 #[wasm_bindgen]
-pub struct WasmBatchedGroupedCiphertext2HandlesValidityProofContext {
-    pub(crate) inner: BatchedGroupedCiphertext2HandlesValidityProofContext,
+pub struct BatchedGroupedCiphertext2HandlesValidityProofContext {
+    pub(crate) inner:
+        batched_grouped_ciphertext_validity::BatchedGroupedCiphertext2HandlesValidityProofContext,
 }
 
 crate::conversion::impl_inner_conversion!(
-    WasmBatchedGroupedCiphertext2HandlesValidityProofContext,
-    BatchedGroupedCiphertext2HandlesValidityProofContext
+    BatchedGroupedCiphertext2HandlesValidityProofContext,
+    batched_grouped_ciphertext_validity::BatchedGroupedCiphertext2HandlesValidityProofContext
 );
 
 #[wasm_bindgen]
-impl WasmBatchedGroupedCiphertext2HandlesValidityProofContext {
+impl BatchedGroupedCiphertext2HandlesValidityProofContext {
     /// Deserializes a batched grouped ciphertext 2-handles validity proof context from a byte slice.
     /// Throws an error if the bytes are invalid.
     #[wasm_bindgen(js_name = "fromBytes")]
     pub fn from_bytes(
         bytes: &Uint8Array,
-    ) -> Result<WasmBatchedGroupedCiphertext2HandlesValidityProofContext, JsValue> {
+    ) -> Result<BatchedGroupedCiphertext2HandlesValidityProofContext, JsValue> {
         let expected_len =
-            std::mem::size_of::<BatchedGroupedCiphertext2HandlesValidityProofContext>();
+            std::mem::size_of::<batched_grouped_ciphertext_validity::BatchedGroupedCiphertext2HandlesValidityProofContext>();
         if bytes.length() as usize != expected_len {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for BatchedGroupedCiphertext2HandlesValidityProofContext: expected {}, got {}",
@@ -135,7 +134,7 @@ impl WasmBatchedGroupedCiphertext2HandlesValidityProofContext {
         let mut data = vec![0u8; expected_len];
         bytes.copy_to(&mut data);
         bytemuck::try_from_bytes(&data)
-            .map(|pod: &BatchedGroupedCiphertext2HandlesValidityProofContext| Self { inner: *pod })
+            .map(|pod: &batched_grouped_ciphertext_validity::BatchedGroupedCiphertext2HandlesValidityProofContext| Self { inner: *pod })
             .map_err(|_| {
                 JsValue::from_str(
                     "Invalid bytes for BatchedGroupedCiphertext2HandlesValidityProofContext",
@@ -153,20 +152,20 @@ impl WasmBatchedGroupedCiphertext2HandlesValidityProofContext {
 #[cfg(test)]
 mod tests {
     use {
-        super::*, crate::encryption::elgamal::WasmElGamalKeypair,
+        super::*, crate::encryption::elgamal::ElGamalKeypair,
         solana_zk_sdk::encryption::grouped_elgamal::GroupedElGamal, wasm_bindgen_test::*,
     };
 
     #[wasm_bindgen_test]
     fn test_batched_grouped_ciphertext_2_handles_validity_proof_creation_and_verification() {
-        let first_keypair = WasmElGamalKeypair::new_rand();
-        let second_keypair = WasmElGamalKeypair::new_rand();
+        let first_keypair = ElGamalKeypair::new_rand();
+        let second_keypair = ElGamalKeypair::new_rand();
         let amount_lo: u64 = 11;
         let amount_hi: u64 = 22;
-        let opening_lo = WasmPedersenOpening::new_rand();
-        let opening_hi = WasmPedersenOpening::new_rand();
+        let opening_lo = PedersenOpening::new_rand();
+        let opening_hi = PedersenOpening::new_rand();
 
-        let grouped_ciphertext_lo = WasmGroupedElGamalCiphertext2Handles {
+        let grouped_ciphertext_lo = GroupedElGamalCiphertext2Handles {
             inner: GroupedElGamal::encrypt_with(
                 [
                     &first_keypair.pubkey().inner,
@@ -177,7 +176,7 @@ mod tests {
             ),
         };
 
-        let grouped_ciphertext_hi = WasmGroupedElGamalCiphertext2Handles {
+        let grouped_ciphertext_hi = GroupedElGamalCiphertext2Handles {
             inner: GroupedElGamal::encrypt_with(
                 [
                     &first_keypair.pubkey().inner,
@@ -188,7 +187,7 @@ mod tests {
             ),
         };
 
-        let proof = WasmBatchedGroupedCiphertext2HandlesValidityProofData::new(
+        let proof = BatchedGroupedCiphertext2HandlesValidityProofData::new(
             &first_keypair.pubkey(),
             &second_keypair.pubkey(),
             &grouped_ciphertext_lo,
@@ -205,14 +204,14 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_batched_grouped_ciphertext_2_handles_validity_proof_bytes_roundtrip() {
-        let first_keypair = WasmElGamalKeypair::new_rand();
-        let second_keypair = WasmElGamalKeypair::new_rand();
+        let first_keypair = ElGamalKeypair::new_rand();
+        let second_keypair = ElGamalKeypair::new_rand();
         let amount_lo: u64 = 11;
         let amount_hi: u64 = 22;
-        let opening_lo = WasmPedersenOpening::new_rand();
-        let opening_hi = WasmPedersenOpening::new_rand();
+        let opening_lo = PedersenOpening::new_rand();
+        let opening_hi = PedersenOpening::new_rand();
 
-        let grouped_ciphertext_lo = WasmGroupedElGamalCiphertext2Handles {
+        let grouped_ciphertext_lo = GroupedElGamalCiphertext2Handles {
             inner: GroupedElGamal::encrypt_with(
                 [
                     &first_keypair.pubkey().inner,
@@ -223,7 +222,7 @@ mod tests {
             ),
         };
 
-        let grouped_ciphertext_hi = WasmGroupedElGamalCiphertext2Handles {
+        let grouped_ciphertext_hi = GroupedElGamalCiphertext2Handles {
             inner: GroupedElGamal::encrypt_with(
                 [
                     &first_keypair.pubkey().inner,
@@ -234,7 +233,7 @@ mod tests {
             ),
         };
 
-        let proof = WasmBatchedGroupedCiphertext2HandlesValidityProofData::new(
+        let proof = BatchedGroupedCiphertext2HandlesValidityProofData::new(
             &first_keypair.pubkey(),
             &second_keypair.pubkey(),
             &grouped_ciphertext_lo,
@@ -247,7 +246,7 @@ mod tests {
         .unwrap();
 
         let bytes = proof.to_bytes();
-        let recovered_proof = WasmBatchedGroupedCiphertext2HandlesValidityProofData::from_bytes(
+        let recovered_proof = BatchedGroupedCiphertext2HandlesValidityProofData::from_bytes(
             &Uint8Array::from(bytes.as_slice()),
         )
         .unwrap();
@@ -256,11 +255,10 @@ mod tests {
 
         let context = proof.context();
         let context_bytes = context.to_bytes();
-        let recovered_context =
-            WasmBatchedGroupedCiphertext2HandlesValidityProofContext::from_bytes(
-                &Uint8Array::from(context_bytes.as_slice()),
-            )
-            .unwrap();
+        let recovered_context = BatchedGroupedCiphertext2HandlesValidityProofContext::from_bytes(
+            &Uint8Array::from(context_bytes.as_slice()),
+        )
+        .unwrap();
         assert_eq!(context_bytes, recovered_context.to_bytes());
     }
 }

@@ -9,29 +9,27 @@ pub mod zero_ciphertext;
 
 pub use {
     batched_grouped_ciphertext_validity::{
-        WasmBatchedGroupedCiphertext2HandlesValidityProofContext,
-        WasmBatchedGroupedCiphertext2HandlesValidityProofData,
-        WasmBatchedGroupedCiphertext3HandlesValidityProofContext,
-        WasmBatchedGroupedCiphertext3HandlesValidityProofData,
+        BatchedGroupedCiphertext2HandlesValidityProofContext,
+        BatchedGroupedCiphertext2HandlesValidityProofData,
+        BatchedGroupedCiphertext3HandlesValidityProofContext,
+        BatchedGroupedCiphertext3HandlesValidityProofData,
     },
     batched_range_proof::{
-        batched_range_proof_u128::WasmBatchedRangeProofU128Data,
-        batched_range_proof_u256::WasmBatchedRangeProofU256Data,
-        batched_range_proof_u64::WasmBatchedRangeProofU64Data, WasmBatchedRangeProofContext,
+        batched_range_proof_u128::BatchedRangeProofU128Data,
+        batched_range_proof_u256::BatchedRangeProofU256Data,
+        batched_range_proof_u64::BatchedRangeProofU64Data, BatchedRangeProofContext,
     },
     ciphertext_ciphertext_equality::{
-        WasmCiphertextCiphertextEqualityProofContext, WasmCiphertextCiphertextEqualityProofData,
+        CiphertextCiphertextEqualityProofContext, CiphertextCiphertextEqualityProofData,
     },
     ciphertext_commitment_equality::{
-        WasmCiphertextCommitmentEqualityProofContext, WasmCiphertextCommitmentEqualityProofData,
+        CiphertextCommitmentEqualityProofContext, CiphertextCommitmentEqualityProofData,
     },
     grouped_ciphertext_validity::{
-        WasmGroupedCiphertext2HandlesValidityProofContext,
-        WasmGroupedCiphertext2HandlesValidityProofData,
-        WasmGroupedCiphertext3HandlesValidityProofContext,
-        WasmGroupedCiphertext3HandlesValidityProofData,
+        GroupedCiphertext2HandlesValidityProofContext, GroupedCiphertext2HandlesValidityProofData,
+        GroupedCiphertext3HandlesValidityProofContext, GroupedCiphertext3HandlesValidityProofData,
     },
-    percentage_with_cap::{WasmPercentageWithCapProofContext, WasmPercentageWithCapProofData},
-    pubkey_validity::{WasmPubkeyValidityProofContext, WasmPubkeyValidityProofData},
-    zero_ciphertext::{WasmZeroCiphertextProofContext, WasmZeroCiphertextProofData},
+    percentage_with_cap::{PercentageWithCapProofContext, PercentageWithCapProofData},
+    pubkey_validity::{PubkeyValidityProofContext, PubkeyValidityProofData},
+    zero_ciphertext::{ZeroCiphertextProofContext, ZeroCiphertextProofData},
 };

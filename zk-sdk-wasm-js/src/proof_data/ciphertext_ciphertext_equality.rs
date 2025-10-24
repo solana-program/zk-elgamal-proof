@@ -1,44 +1,41 @@
 use {
     crate::encryption::{
-        elgamal::{WasmElGamalCiphertext, WasmElGamalKeypair, WasmElGamalPubkey},
-        pedersen::WasmPedersenOpening,
+        elgamal::{ElGamalCiphertext, ElGamalKeypair, ElGamalPubkey},
+        pedersen::PedersenOpening,
     },
     js_sys::Uint8Array,
     solana_zk_sdk::zk_elgamal_proof_program::proof_data::{
-        ciphertext_ciphertext_equality::{
-            CiphertextCiphertextEqualityProofContext, CiphertextCiphertextEqualityProofData,
-        },
-        ZkProofData,
+        ciphertext_ciphertext_equality, ZkProofData,
     },
     wasm_bindgen::prelude::*,
 };
 
 /// A ciphertext-ciphertext equality proof. This proof certifies that two ElGamal
 /// ciphertexts encrypt the same message.
-#[wasm_bindgen(js_name = "CiphertextCiphertextEqualityProof")]
-pub struct WasmCiphertextCiphertextEqualityProofData {
-    pub(crate) inner: CiphertextCiphertextEqualityProofData,
+#[wasm_bindgen]
+pub struct CiphertextCiphertextEqualityProofData {
+    pub(crate) inner: ciphertext_ciphertext_equality::CiphertextCiphertextEqualityProofData,
 }
 
 crate::conversion::impl_inner_conversion!(
-    WasmCiphertextCiphertextEqualityProofData,
-    CiphertextCiphertextEqualityProofData
+    CiphertextCiphertextEqualityProofData,
+    ciphertext_ciphertext_equality::CiphertextCiphertextEqualityProofData
 );
 
 #[wasm_bindgen]
-impl WasmCiphertextCiphertextEqualityProofData {
+impl CiphertextCiphertextEqualityProofData {
     /// Creates a new ciphertext-ciphertext equality proof.
     #[wasm_bindgen(constructor)]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        first_keypair: &WasmElGamalKeypair,
-        second_pubkey: &WasmElGamalPubkey,
-        first_ciphertext: &WasmElGamalCiphertext,
-        second_ciphertext: &WasmElGamalCiphertext,
-        second_opening: &WasmPedersenOpening,
+        first_keypair: &ElGamalKeypair,
+        second_pubkey: &ElGamalPubkey,
+        first_ciphertext: &ElGamalCiphertext,
+        second_ciphertext: &ElGamalCiphertext,
+        second_opening: &PedersenOpening,
         amount: u64,
-    ) -> Result<WasmCiphertextCiphertextEqualityProofData, JsValue> {
-        CiphertextCiphertextEqualityProofData::new(
+    ) -> Result<CiphertextCiphertextEqualityProofData, JsValue> {
+        ciphertext_ciphertext_equality::CiphertextCiphertextEqualityProofData::new(
             &first_keypair.inner,
             &second_pubkey.inner,
             &first_ciphertext.inner,
@@ -52,7 +49,7 @@ impl WasmCiphertextCiphertextEqualityProofData {
 
     /// Returns the context data associated with the proof.
     #[wasm_bindgen]
-    pub fn context(&self) -> WasmCiphertextCiphertextEqualityProofContext {
+    pub fn context(&self) -> CiphertextCiphertextEqualityProofContext {
         self.inner.context.into()
     }
 
@@ -70,9 +67,11 @@ impl WasmCiphertextCiphertextEqualityProofData {
     #[wasm_bindgen(js_name = "fromBytes")]
     pub fn from_bytes(
         bytes: &Uint8Array,
-    ) -> Result<WasmCiphertextCiphertextEqualityProofData, JsValue> {
+    ) -> Result<CiphertextCiphertextEqualityProofData, JsValue> {
         // Define expected length as a constant for stack allocation
-        const EXPECTED_LEN: usize = std::mem::size_of::<CiphertextCiphertextEqualityProofData>();
+        const EXPECTED_LEN: usize = std::mem::size_of::<
+            ciphertext_ciphertext_equality::CiphertextCiphertextEqualityProofData,
+        >();
         if bytes.length() as usize != EXPECTED_LEN {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for CiphertextCiphertextEqualityProof: expected {}, got {}",
@@ -85,7 +84,11 @@ impl WasmCiphertextCiphertextEqualityProofData {
         bytes.copy_to(&mut data);
 
         bytemuck::try_from_bytes(&data)
-            .map(|pod: &CiphertextCiphertextEqualityProofData| Self { inner: *pod })
+            .map(
+                |pod: &ciphertext_ciphertext_equality::CiphertextCiphertextEqualityProofData| {
+                    Self { inner: *pod }
+                },
+            )
             .map_err(|_| JsValue::from_str("Invalid bytes for CiphertextCiphertextEqualityProof"))
     }
 
@@ -98,24 +101,26 @@ impl WasmCiphertextCiphertextEqualityProofData {
 
 /// The context data needed to verify a ciphertext-ciphertext equality proof.
 #[wasm_bindgen]
-pub struct WasmCiphertextCiphertextEqualityProofContext {
-    pub(crate) inner: CiphertextCiphertextEqualityProofContext,
+pub struct CiphertextCiphertextEqualityProofContext {
+    pub(crate) inner: ciphertext_ciphertext_equality::CiphertextCiphertextEqualityProofContext,
 }
 
 crate::conversion::impl_inner_conversion!(
-    WasmCiphertextCiphertextEqualityProofContext,
-    CiphertextCiphertextEqualityProofContext
+    CiphertextCiphertextEqualityProofContext,
+    ciphertext_ciphertext_equality::CiphertextCiphertextEqualityProofContext
 );
 
 #[wasm_bindgen]
-impl WasmCiphertextCiphertextEqualityProofContext {
+impl CiphertextCiphertextEqualityProofContext {
     /// Deserializes a ciphertext-ciphertext equality proof context from a byte slice.
     /// Throws an error if the bytes are invalid.
     #[wasm_bindgen(js_name = "fromBytes")]
     pub fn from_bytes(
         bytes: &Uint8Array,
-    ) -> Result<WasmCiphertextCiphertextEqualityProofContext, JsValue> {
-        let expected_len = std::mem::size_of::<CiphertextCiphertextEqualityProofContext>();
+    ) -> Result<CiphertextCiphertextEqualityProofContext, JsValue> {
+        let expected_len = std::mem::size_of::<
+            ciphertext_ciphertext_equality::CiphertextCiphertextEqualityProofContext,
+        >();
         if bytes.length() as usize != expected_len {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for CiphertextCiphertextEqualityProofContext: expected {}, got {}",
@@ -126,7 +131,11 @@ impl WasmCiphertextCiphertextEqualityProofContext {
         let mut data = vec![0u8; expected_len];
         bytes.copy_to(&mut data);
         bytemuck::try_from_bytes(&data)
-            .map(|pod: &CiphertextCiphertextEqualityProofContext| Self { inner: *pod })
+            .map(
+                |pod: &ciphertext_ciphertext_equality::CiphertextCiphertextEqualityProofContext| {
+                    Self { inner: *pod }
+                },
+            )
             .map_err(|_| {
                 JsValue::from_str("Invalid bytes for CiphertextCiphertextEqualityProofContext")
             })
@@ -145,20 +154,20 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_ciphertext_ciphertext_equality_proof_creation_and_verification() {
-        let first_keypair = WasmElGamalKeypair::new_rand();
-        let second_keypair = WasmElGamalKeypair::new_rand();
+        let first_keypair = ElGamalKeypair::new_rand();
+        let second_keypair = ElGamalKeypair::new_rand();
         let amount: u64 = 55;
 
         let first_ciphertext = first_keypair.pubkey().encrypt_u64(amount);
-        let second_opening = WasmPedersenOpening::new_rand();
-        let second_ciphertext = WasmElGamalCiphertext {
+        let second_opening = PedersenOpening::new_rand();
+        let second_ciphertext = ElGamalCiphertext {
             inner: second_keypair
                 .pubkey()
                 .inner
                 .encrypt_with(amount, &second_opening.inner),
         };
 
-        let proof = WasmCiphertextCiphertextEqualityProofData::new(
+        let proof = CiphertextCiphertextEqualityProofData::new(
             &first_keypair,
             &second_keypair.pubkey(),
             &first_ciphertext,
@@ -173,20 +182,20 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_ciphertext_ciphertext_equality_proof_bytes_roundtrip() {
-        let first_keypair = WasmElGamalKeypair::new_rand();
-        let second_keypair = WasmElGamalKeypair::new_rand();
+        let first_keypair = ElGamalKeypair::new_rand();
+        let second_keypair = ElGamalKeypair::new_rand();
         let amount: u64 = 55;
 
         let first_ciphertext = first_keypair.pubkey().encrypt_u64(amount);
-        let second_opening = WasmPedersenOpening::new_rand();
-        let second_ciphertext = WasmElGamalCiphertext {
+        let second_opening = PedersenOpening::new_rand();
+        let second_ciphertext = ElGamalCiphertext {
             inner: second_keypair
                 .pubkey()
                 .inner
                 .encrypt_with(amount, &second_opening.inner),
         };
 
-        let proof = WasmCiphertextCiphertextEqualityProofData::new(
+        let proof = CiphertextCiphertextEqualityProofData::new(
             &first_keypair,
             &second_keypair.pubkey(),
             &first_ciphertext,
@@ -197,16 +206,15 @@ mod tests {
         .unwrap();
 
         let bytes = proof.to_bytes();
-        let recovered_proof = WasmCiphertextCiphertextEqualityProofData::from_bytes(
-            &Uint8Array::from(bytes.as_slice()),
-        )
-        .unwrap();
+        let recovered_proof =
+            CiphertextCiphertextEqualityProofData::from_bytes(&Uint8Array::from(bytes.as_slice()))
+                .unwrap();
 
         assert_eq!(proof.to_bytes(), recovered_proof.to_bytes());
 
         let context = proof.context();
         let context_bytes = context.to_bytes();
-        let recovered_context = WasmCiphertextCiphertextEqualityProofContext::from_bytes(
+        let recovered_context = CiphertextCiphertextEqualityProofContext::from_bytes(
             &Uint8Array::from(context_bytes.as_slice()),
         )
         .unwrap();

@@ -1,48 +1,45 @@
 use {
     crate::encryption::{
-        elgamal::WasmElGamalPubkey, grouped_elgamal::WasmGroupedElGamalCiphertext3Handles,
-        pedersen::WasmPedersenOpening,
+        elgamal::ElGamalPubkey, grouped_elgamal::GroupedElGamalCiphertext3Handles,
+        pedersen::PedersenOpening,
     },
     js_sys::Uint8Array,
     solana_zk_sdk::zk_elgamal_proof_program::proof_data::{
-        batched_grouped_ciphertext_validity::{
-            BatchedGroupedCiphertext3HandlesValidityProofContext,
-            BatchedGroupedCiphertext3HandlesValidityProofData,
-        },
-        ZkProofData,
+        batched_grouped_ciphertext_validity, ZkProofData,
     },
     wasm_bindgen::prelude::*,
 };
 
 /// A batched grouped ciphertext validity proof with three decryption handles. This proof certifies
 /// the validity of two grouped ElGamal ciphertexts that are encrypted under the same public keys.
-#[wasm_bindgen(js_name = "BatchedGroupedCiphertext3HandlesValidityProof")]
-pub struct WasmBatchedGroupedCiphertext3HandlesValidityProofData {
-    pub(crate) inner: BatchedGroupedCiphertext3HandlesValidityProofData,
+#[wasm_bindgen]
+pub struct BatchedGroupedCiphertext3HandlesValidityProofData {
+    pub(crate) inner:
+        batched_grouped_ciphertext_validity::BatchedGroupedCiphertext3HandlesValidityProofData,
 }
 
 crate::conversion::impl_inner_conversion!(
-    WasmBatchedGroupedCiphertext3HandlesValidityProofData,
-    BatchedGroupedCiphertext3HandlesValidityProofData
+    BatchedGroupedCiphertext3HandlesValidityProofData,
+    batched_grouped_ciphertext_validity::BatchedGroupedCiphertext3HandlesValidityProofData
 );
 
 #[wasm_bindgen]
-impl WasmBatchedGroupedCiphertext3HandlesValidityProofData {
+impl BatchedGroupedCiphertext3HandlesValidityProofData {
     /// Creates a new batched grouped ciphertext validity proof with three handles.
     #[wasm_bindgen(constructor)]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        first_pubkey: &WasmElGamalPubkey,
-        second_pubkey: &WasmElGamalPubkey,
-        third_pubkey: &WasmElGamalPubkey,
-        grouped_ciphertext_lo: &WasmGroupedElGamalCiphertext3Handles,
-        grouped_ciphertext_hi: &WasmGroupedElGamalCiphertext3Handles,
+        first_pubkey: &ElGamalPubkey,
+        second_pubkey: &ElGamalPubkey,
+        third_pubkey: &ElGamalPubkey,
+        grouped_ciphertext_lo: &GroupedElGamalCiphertext3Handles,
+        grouped_ciphertext_hi: &GroupedElGamalCiphertext3Handles,
         amount_lo: u64,
         amount_hi: u64,
-        opening_lo: &WasmPedersenOpening,
-        opening_hi: &WasmPedersenOpening,
-    ) -> Result<WasmBatchedGroupedCiphertext3HandlesValidityProofData, JsValue> {
-        BatchedGroupedCiphertext3HandlesValidityProofData::new(
+        opening_lo: &PedersenOpening,
+        opening_hi: &PedersenOpening,
+    ) -> Result<BatchedGroupedCiphertext3HandlesValidityProofData, JsValue> {
+        batched_grouped_ciphertext_validity::BatchedGroupedCiphertext3HandlesValidityProofData::new(
             &first_pubkey.inner,
             &second_pubkey.inner,
             &third_pubkey.inner,
@@ -59,7 +56,7 @@ impl WasmBatchedGroupedCiphertext3HandlesValidityProofData {
 
     /// Returns the context data associated with the proof.
     #[wasm_bindgen]
-    pub fn context(&self) -> WasmBatchedGroupedCiphertext3HandlesValidityProofContext {
+    pub fn context(&self) -> BatchedGroupedCiphertext3HandlesValidityProofContext {
         self.inner.context.into()
     }
 
@@ -77,8 +74,10 @@ impl WasmBatchedGroupedCiphertext3HandlesValidityProofData {
     #[wasm_bindgen(js_name = "fromBytes")]
     pub fn from_bytes(
         bytes: &Uint8Array,
-    ) -> Result<WasmBatchedGroupedCiphertext3HandlesValidityProofData, JsValue> {
-        let expected_len = std::mem::size_of::<BatchedGroupedCiphertext3HandlesValidityProofData>();
+    ) -> Result<BatchedGroupedCiphertext3HandlesValidityProofData, JsValue> {
+        let expected_len = std::mem::size_of::<
+            batched_grouped_ciphertext_validity::BatchedGroupedCiphertext3HandlesValidityProofData,
+        >();
         if bytes.length() as usize != expected_len {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for BatchedGroupedCiphertext3HandlesValidityProof: expected {}, got {}",
@@ -91,7 +90,7 @@ impl WasmBatchedGroupedCiphertext3HandlesValidityProofData {
         bytes.copy_to(&mut data);
 
         bytemuck::try_from_bytes(&data)
-            .map(|pod: &BatchedGroupedCiphertext3HandlesValidityProofData| Self { inner: *pod })
+            .map(|pod: &batched_grouped_ciphertext_validity::BatchedGroupedCiphertext3HandlesValidityProofData| Self { inner: *pod })
             .map_err(|_| {
                 JsValue::from_str("Invalid bytes for BatchedGroupedCiphertext3HandlesValidityProof")
             })
@@ -106,26 +105,27 @@ impl WasmBatchedGroupedCiphertext3HandlesValidityProofData {
 
 /// The context data needed to verify a batched grouped ciphertext 3-handles validity proof.
 #[wasm_bindgen]
-pub struct WasmBatchedGroupedCiphertext3HandlesValidityProofContext {
-    pub(crate) inner: BatchedGroupedCiphertext3HandlesValidityProofContext,
+pub struct BatchedGroupedCiphertext3HandlesValidityProofContext {
+    pub(crate) inner:
+        batched_grouped_ciphertext_validity::BatchedGroupedCiphertext3HandlesValidityProofContext,
 }
 
 crate::conversion::impl_inner_conversion!(
-    WasmBatchedGroupedCiphertext3HandlesValidityProofContext,
-    BatchedGroupedCiphertext3HandlesValidityProofContext
+    BatchedGroupedCiphertext3HandlesValidityProofContext,
+    batched_grouped_ciphertext_validity::BatchedGroupedCiphertext3HandlesValidityProofContext
 );
 
 #[wasm_bindgen]
-impl WasmBatchedGroupedCiphertext3HandlesValidityProofContext {
+impl BatchedGroupedCiphertext3HandlesValidityProofContext {
     /// Deserializes a batched grouped ciphertext 3-handles validity proof context from a byte slice.
     /// Throws an error if the bytes are invalid.
     #[wasm_bindgen(js_name = "fromBytes")]
     pub fn from_bytes(
         bytes: &Uint8Array,
-    ) -> Result<WasmBatchedGroupedCiphertext3HandlesValidityProofContext, JsValue> {
+    ) -> Result<BatchedGroupedCiphertext3HandlesValidityProofContext, JsValue> {
         // Define expected length as a constant for stack allocation
         const EXPECTED_LEN: usize =
-            std::mem::size_of::<BatchedGroupedCiphertext3HandlesValidityProofContext>();
+            std::mem::size_of::<batched_grouped_ciphertext_validity::BatchedGroupedCiphertext3HandlesValidityProofContext>();
         if bytes.length() as usize != EXPECTED_LEN {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for BatchedGroupedCiphertext3HandlesValidityProofContext: expected {}, got {}",
@@ -136,7 +136,7 @@ impl WasmBatchedGroupedCiphertext3HandlesValidityProofContext {
         let mut data = [0u8; EXPECTED_LEN];
         bytes.copy_to(&mut data);
         bytemuck::try_from_bytes(&data)
-            .map(|pod: &BatchedGroupedCiphertext3HandlesValidityProofContext| Self { inner: *pod })
+            .map(|pod: &batched_grouped_ciphertext_validity::BatchedGroupedCiphertext3HandlesValidityProofContext| Self { inner: *pod })
             .map_err(|_| {
                 JsValue::from_str(
                     "Invalid bytes for BatchedGroupedCiphertext3HandlesValidityProofContext",
@@ -154,21 +154,21 @@ impl WasmBatchedGroupedCiphertext3HandlesValidityProofContext {
 #[cfg(test)]
 mod tests {
     use {
-        super::*, crate::encryption::elgamal::WasmElGamalKeypair,
+        super::*, crate::encryption::elgamal::ElGamalKeypair,
         solana_zk_sdk::encryption::grouped_elgamal::GroupedElGamal, wasm_bindgen_test::*,
     };
 
     #[wasm_bindgen_test]
     fn test_batched_grouped_ciphertext_3_handles_validity_proof_creation_and_verification() {
-        let first_keypair = WasmElGamalKeypair::new_rand();
-        let second_keypair = WasmElGamalKeypair::new_rand();
-        let third_keypair = WasmElGamalKeypair::new_rand();
+        let first_keypair = ElGamalKeypair::new_rand();
+        let second_keypair = ElGamalKeypair::new_rand();
+        let third_keypair = ElGamalKeypair::new_rand();
         let amount_lo: u64 = 11;
         let amount_hi: u64 = 22;
-        let opening_lo = WasmPedersenOpening::new_rand();
-        let opening_hi = WasmPedersenOpening::new_rand();
+        let opening_lo = PedersenOpening::new_rand();
+        let opening_hi = PedersenOpening::new_rand();
 
-        let grouped_ciphertext_lo = WasmGroupedElGamalCiphertext3Handles {
+        let grouped_ciphertext_lo = GroupedElGamalCiphertext3Handles {
             inner: GroupedElGamal::encrypt_with(
                 [
                     &first_keypair.pubkey().inner,
@@ -180,7 +180,7 @@ mod tests {
             ),
         };
 
-        let grouped_ciphertext_hi = WasmGroupedElGamalCiphertext3Handles {
+        let grouped_ciphertext_hi = GroupedElGamalCiphertext3Handles {
             inner: GroupedElGamal::encrypt_with(
                 [
                     &first_keypair.pubkey().inner,
@@ -192,7 +192,7 @@ mod tests {
             ),
         };
 
-        let proof = WasmBatchedGroupedCiphertext3HandlesValidityProofData::new(
+        let proof = BatchedGroupedCiphertext3HandlesValidityProofData::new(
             &first_keypair.pubkey(),
             &second_keypair.pubkey(),
             &third_keypair.pubkey(),
@@ -210,15 +210,15 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_batched_grouped_ciphertext_3_handles_validity_proof_bytes_roundtrip() {
-        let first_keypair = WasmElGamalKeypair::new_rand();
-        let second_keypair = WasmElGamalKeypair::new_rand();
-        let third_keypair = WasmElGamalKeypair::new_rand();
+        let first_keypair = ElGamalKeypair::new_rand();
+        let second_keypair = ElGamalKeypair::new_rand();
+        let third_keypair = ElGamalKeypair::new_rand();
         let amount_lo: u64 = 11;
         let amount_hi: u64 = 22;
-        let opening_lo = WasmPedersenOpening::new_rand();
-        let opening_hi = WasmPedersenOpening::new_rand();
+        let opening_lo = PedersenOpening::new_rand();
+        let opening_hi = PedersenOpening::new_rand();
 
-        let grouped_ciphertext_lo = WasmGroupedElGamalCiphertext3Handles {
+        let grouped_ciphertext_lo = GroupedElGamalCiphertext3Handles {
             inner: GroupedElGamal::encrypt_with(
                 [
                     &first_keypair.pubkey().inner,
@@ -230,7 +230,7 @@ mod tests {
             ),
         };
 
-        let grouped_ciphertext_hi = WasmGroupedElGamalCiphertext3Handles {
+        let grouped_ciphertext_hi = GroupedElGamalCiphertext3Handles {
             inner: GroupedElGamal::encrypt_with(
                 [
                     &first_keypair.pubkey().inner,
@@ -242,7 +242,7 @@ mod tests {
             ),
         };
 
-        let proof = WasmBatchedGroupedCiphertext3HandlesValidityProofData::new(
+        let proof = BatchedGroupedCiphertext3HandlesValidityProofData::new(
             &first_keypair.pubkey(),
             &second_keypair.pubkey(),
             &third_keypair.pubkey(),
@@ -256,7 +256,7 @@ mod tests {
         .unwrap();
 
         let bytes = proof.to_bytes();
-        let recovered_proof = WasmBatchedGroupedCiphertext3HandlesValidityProofData::from_bytes(
+        let recovered_proof = BatchedGroupedCiphertext3HandlesValidityProofData::from_bytes(
             &Uint8Array::from(bytes.as_slice()),
         )
         .unwrap();
@@ -265,11 +265,10 @@ mod tests {
 
         let context = proof.context();
         let context_bytes = context.to_bytes();
-        let recovered_context =
-            WasmBatchedGroupedCiphertext3HandlesValidityProofContext::from_bytes(
-                &Uint8Array::from(context_bytes.as_slice()),
-            )
-            .unwrap();
+        let recovered_context = BatchedGroupedCiphertext3HandlesValidityProofContext::from_bytes(
+            &Uint8Array::from(context_bytes.as_slice()),
+        )
+        .unwrap();
         assert_eq!(context_bytes, recovered_context.to_bytes());
     }
 }
