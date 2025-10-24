@@ -16,6 +16,9 @@ rustdoc-args = ["--cfg=docsrs"]
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[features]
+test-browser = []
+
 [dependencies]
 solana-zk-sdk = { workspace = true }
 bytemuck = { workspace = true }
