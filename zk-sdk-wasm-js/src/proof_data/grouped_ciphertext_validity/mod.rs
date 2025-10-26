@@ -3,11 +3,9 @@ mod handles_3;
 
 pub use {
     handles_2::{
-        WasmGroupedCiphertext2HandlesValidityProofContext,
-        WasmGroupedCiphertext2HandlesValidityProofData,
+        GroupedCiphertext2HandlesValidityProofContext, GroupedCiphertext2HandlesValidityProofData,
     },
     handles_3::{
-        WasmGroupedCiphertext3HandlesValidityProofContext,
-        WasmGroupedCiphertext3HandlesValidityProofData,
+        GroupedCiphertext3HandlesValidityProofContext, GroupedCiphertext3HandlesValidityProofData,
     },
 };

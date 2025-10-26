@@ -1,10 +1,7 @@
 use {
-    crate::encryption::elgamal::{WasmElGamalPubkey, WasmElGamalSecretKey},
+    crate::encryption::elgamal::{ElGamalPubkey, ElGamalSecretKey},
     js_sys::Uint8Array,
-    solana_zk_sdk::encryption::{
-        grouped_elgamal::{GroupedElGamal, GroupedElGamalCiphertext},
-        DECRYPT_HANDLE_LEN, PEDERSEN_COMMITMENT_LEN,
-    },
+    solana_zk_sdk::encryption::{grouped_elgamal, DECRYPT_HANDLE_LEN, PEDERSEN_COMMITMENT_LEN},
     wasm_bindgen::prelude::*,
 };
 
@@ -13,33 +10,36 @@ const GROUPED_ELGAMAL_CIPHERTEXT_2_HANDLES_LEN: usize =
 const GROUPED_ELGAMAL_CIPHERTEXT_3_HANDLES_LEN: usize =
     DECRYPT_HANDLE_LEN * 3 + PEDERSEN_COMMITMENT_LEN;
 
-#[wasm_bindgen(js_name = "GroupedElGamalCiphertext2Handles")]
-pub struct WasmGroupedElGamalCiphertext2Handles {
-    pub(crate) inner: GroupedElGamalCiphertext<2>,
+#[wasm_bindgen]
+pub struct GroupedElGamalCiphertext2Handles {
+    pub(crate) inner: grouped_elgamal::GroupedElGamalCiphertext<2>,
 }
 
 crate::conversion::impl_inner_conversion!(
-    WasmGroupedElGamalCiphertext2Handles,
-    GroupedElGamalCiphertext<2>
+    GroupedElGamalCiphertext2Handles,
+    grouped_elgamal::GroupedElGamalCiphertext<2>
 );
 
 #[wasm_bindgen]
-impl WasmGroupedElGamalCiphertext2Handles {
+impl GroupedElGamalCiphertext2Handles {
     /// Encrypts a 64-bit amount under two ElGamal public keys.
     #[wasm_bindgen(js_name = "encrypt")]
     pub fn encrypt(
-        first_pubkey: &WasmElGamalPubkey,
-        second_pubkey: &WasmElGamalPubkey,
+        first_pubkey: &ElGamalPubkey,
+        second_pubkey: &ElGamalPubkey,
         amount: u64,
     ) -> Self {
-        let inner = GroupedElGamal::encrypt([&first_pubkey.inner, &second_pubkey.inner], amount);
+        let inner = grouped_elgamal::GroupedElGamal::encrypt(
+            [&first_pubkey.inner, &second_pubkey.inner],
+            amount,
+        );
         Self { inner }
     }
 
     /// Decrypts the ciphertext using a secret key and a handle index.
     /// Returns the decrypted amount as a u64, or `undefined` if decryption fails.
     #[wasm_bindgen(js_name = "decrypt")]
-    pub fn decrypt(&self, secret_key: &WasmElGamalSecretKey, index: usize) -> Result<u64, JsValue> {
+    pub fn decrypt(&self, secret_key: &ElGamalSecretKey, index: usize) -> Result<u64, JsValue> {
         match self.inner.decrypt_u32(&secret_key.inner, index) {
             Ok(Some(amount)) => Ok(amount),
             Ok(None) => Err(JsValue::from_str(
@@ -52,7 +52,7 @@ impl WasmGroupedElGamalCiphertext2Handles {
     /// Deserializes a 2-handle grouped ElGamal ciphertext from a byte slice.
     /// Throws an error if the bytes are invalid.
     #[wasm_bindgen(js_name = "fromBytes")]
-    pub fn from_bytes(bytes: &Uint8Array) -> Result<WasmGroupedElGamalCiphertext2Handles, JsValue> {
+    pub fn from_bytes(bytes: &Uint8Array) -> Result<GroupedElGamalCiphertext2Handles, JsValue> {
         let expected_length = GROUPED_ELGAMAL_CIPHERTEXT_2_HANDLES_LEN;
         if bytes.length() as usize != expected_length {
             return Err(JsValue::from_str(&format!(
@@ -65,7 +65,7 @@ impl WasmGroupedElGamalCiphertext2Handles {
         let mut arr = vec![0u8; bytes.length() as usize];
         bytes.copy_to(&mut arr);
 
-        GroupedElGamalCiphertext::<2>::from_bytes(&arr)
+        grouped_elgamal::GroupedElGamalCiphertext::<2>::from_bytes(&arr)
             .map(|inner| Self { inner })
             .ok_or_else(|| JsValue::from_str("Invalid bytes for GroupedElGamalCiphertext2Handles"))
     }
@@ -77,27 +77,27 @@ impl WasmGroupedElGamalCiphertext2Handles {
     }
 }
 
-#[wasm_bindgen(js_name = "GroupedElGamalCiphertext3Handles")]
-pub struct WasmGroupedElGamalCiphertext3Handles {
-    pub(crate) inner: GroupedElGamalCiphertext<3>,
+#[wasm_bindgen]
+pub struct GroupedElGamalCiphertext3Handles {
+    pub(crate) inner: grouped_elgamal::GroupedElGamalCiphertext<3>,
 }
 
 crate::conversion::impl_inner_conversion!(
-    WasmGroupedElGamalCiphertext3Handles,
-    GroupedElGamalCiphertext<3>
+    GroupedElGamalCiphertext3Handles,
+    grouped_elgamal::GroupedElGamalCiphertext<3>
 );
 
 #[wasm_bindgen]
-impl WasmGroupedElGamalCiphertext3Handles {
+impl GroupedElGamalCiphertext3Handles {
     /// Encrypts a 64-bit amount under three ElGamal public keys.
     #[wasm_bindgen(js_name = "encrypt")]
     pub fn encrypt(
-        first_pubkey: &WasmElGamalPubkey,
-        second_pubkey: &WasmElGamalPubkey,
-        third_pubkey: &WasmElGamalPubkey,
+        first_pubkey: &ElGamalPubkey,
+        second_pubkey: &ElGamalPubkey,
+        third_pubkey: &ElGamalPubkey,
         amount: u64,
     ) -> Self {
-        let inner = GroupedElGamal::encrypt(
+        let inner = grouped_elgamal::GroupedElGamal::encrypt(
             [
                 &first_pubkey.inner,
                 &second_pubkey.inner,
@@ -111,7 +111,7 @@ impl WasmGroupedElGamalCiphertext3Handles {
     /// Decrypts the ciphertext using a secret key and a handle index.
     /// Returns the decrypted amount as a u64, or `undefined` if decryption fails.
     #[wasm_bindgen(js_name = "decrypt")]
-    pub fn decrypt(&self, secret_key: &WasmElGamalSecretKey, index: usize) -> Result<u64, JsValue> {
+    pub fn decrypt(&self, secret_key: &ElGamalSecretKey, index: usize) -> Result<u64, JsValue> {
         match self.inner.decrypt_u32(&secret_key.inner, index) {
             Ok(Some(amount)) => Ok(amount),
             Ok(None) => Err(JsValue::from_str(
@@ -124,7 +124,7 @@ impl WasmGroupedElGamalCiphertext3Handles {
     /// Deserializes a 3-handle grouped ElGamal ciphertext from a byte slice.
     /// Throws an error if the bytes are invalid.
     #[wasm_bindgen(js_name = "fromBytes")]
-    pub fn from_bytes(bytes: &Uint8Array) -> Result<WasmGroupedElGamalCiphertext3Handles, JsValue> {
+    pub fn from_bytes(bytes: &Uint8Array) -> Result<GroupedElGamalCiphertext3Handles, JsValue> {
         let expected_length = GROUPED_ELGAMAL_CIPHERTEXT_3_HANDLES_LEN;
         if bytes.length() as usize != expected_length {
             return Err(JsValue::from_str(&format!(
@@ -137,7 +137,7 @@ impl WasmGroupedElGamalCiphertext3Handles {
         let mut arr = vec![0u8; bytes.length() as usize];
         bytes.copy_to(&mut arr);
 
-        GroupedElGamalCiphertext::<3>::from_bytes(&arr)
+        grouped_elgamal::GroupedElGamalCiphertext::<3>::from_bytes(&arr)
             .map(|inner| Self { inner })
             .ok_or_else(|| JsValue::from_str("Invalid bytes for GroupedElGamalCiphertext3Handles"))
     }
@@ -151,15 +151,15 @@ impl WasmGroupedElGamalCiphertext3Handles {
 
 #[cfg(test)]
 mod tests {
-    use {super::*, crate::encryption::elgamal::WasmElGamalKeypair, wasm_bindgen_test::*};
+    use {super::*, crate::encryption::elgamal::ElGamalKeypair, wasm_bindgen_test::*};
 
     #[wasm_bindgen_test]
     fn test_grouped_elgamal_2_handles_cycle() {
-        let keypair1 = WasmElGamalKeypair::new_rand();
-        let keypair2 = WasmElGamalKeypair::new_rand();
+        let keypair1 = ElGamalKeypair::new_rand();
+        let keypair2 = ElGamalKeypair::new_rand();
         let amount: u64 = 123456789;
 
-        let ciphertext = WasmGroupedElGamalCiphertext2Handles::encrypt(
+        let ciphertext = GroupedElGamalCiphertext2Handles::encrypt(
             &keypair1.pubkey(),
             &keypair2.pubkey(),
             amount,
@@ -174,7 +174,7 @@ mod tests {
         assert_eq!(decrypted2, Ok(amount));
 
         // Decrypt with wrong key fails
-        let keypair_wrong = WasmElGamalKeypair::new_rand();
+        let keypair_wrong = ElGamalKeypair::new_rand();
         let decrypted_wrong = ciphertext.decrypt(&keypair_wrong.secret(), 0);
         assert!(decrypted_wrong.is_err());
 
@@ -185,12 +185,12 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_grouped_elgamal_3_handles_cycle() {
-        let keypair1 = WasmElGamalKeypair::new_rand();
-        let keypair2 = WasmElGamalKeypair::new_rand();
-        let keypair3 = WasmElGamalKeypair::new_rand();
+        let keypair1 = ElGamalKeypair::new_rand();
+        let keypair2 = ElGamalKeypair::new_rand();
+        let keypair3 = ElGamalKeypair::new_rand();
         let amount: u64 = 987654321;
 
-        let ciphertext = WasmGroupedElGamalCiphertext3Handles::encrypt(
+        let ciphertext = GroupedElGamalCiphertext3Handles::encrypt(
             &keypair1.pubkey(),
             &keypair2.pubkey(),
             &keypair3.pubkey(),
@@ -203,17 +203,17 @@ mod tests {
         assert_eq!(ciphertext.decrypt(&keypair3.secret(), 2), Ok(amount));
 
         // Decrypt with wrong key fails
-        let keypair_wrong = WasmElGamalKeypair::new_rand();
+        let keypair_wrong = ElGamalKeypair::new_rand();
         assert!(ciphertext.decrypt(&keypair_wrong.secret(), 1).is_err());
     }
 
     #[wasm_bindgen_test]
     fn test_bytes_roundtrip_2_handles() {
-        let keypair1 = WasmElGamalKeypair::new_rand();
-        let keypair2 = WasmElGamalKeypair::new_rand();
+        let keypair1 = ElGamalKeypair::new_rand();
+        let keypair2 = ElGamalKeypair::new_rand();
         let amount: u64 = 55;
 
-        let ciphertext = WasmGroupedElGamalCiphertext2Handles::encrypt(
+        let ciphertext = GroupedElGamalCiphertext2Handles::encrypt(
             &keypair1.pubkey(),
             &keypair2.pubkey(),
             amount,
@@ -223,7 +223,7 @@ mod tests {
         // N=2 -> (2+1)*32 = 96 bytes
         assert_eq!(bytes.len(), 96);
         let recovered =
-            WasmGroupedElGamalCiphertext2Handles::from_bytes(&Uint8Array::from(bytes.as_slice()))
+            GroupedElGamalCiphertext2Handles::from_bytes(&Uint8Array::from(bytes.as_slice()))
                 .unwrap();
 
         assert_eq!(recovered.decrypt(&keypair1.secret(), 0), Ok(amount));
@@ -232,12 +232,12 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_bytes_roundtrip_3_handles() {
-        let keypair1 = WasmElGamalKeypair::new_rand();
-        let keypair2 = WasmElGamalKeypair::new_rand();
-        let keypair3 = WasmElGamalKeypair::new_rand();
+        let keypair1 = ElGamalKeypair::new_rand();
+        let keypair2 = ElGamalKeypair::new_rand();
+        let keypair3 = ElGamalKeypair::new_rand();
         let amount: u64 = 77;
 
-        let ciphertext = WasmGroupedElGamalCiphertext3Handles::encrypt(
+        let ciphertext = GroupedElGamalCiphertext3Handles::encrypt(
             &keypair1.pubkey(),
             &keypair2.pubkey(),
             &keypair3.pubkey(),
@@ -248,7 +248,7 @@ mod tests {
         // N=3 -> (3+1)*32 = 128 bytes
         assert_eq!(bytes.len(), 128);
         let recovered =
-            WasmGroupedElGamalCiphertext3Handles::from_bytes(&Uint8Array::from(bytes.as_slice()))
+            GroupedElGamalCiphertext3Handles::from_bytes(&Uint8Array::from(bytes.as_slice()))
                 .unwrap();
 
         assert_eq!(recovered.decrypt(&keypair1.secret(), 0), Ok(amount));
