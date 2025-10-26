@@ -1,6 +1,6 @@
 use {
     crate::encryption::{
-        elgamal::{ElGamalCiphertext, ElGamalKeypair, ElGamalPubkey},
+        elgamal::{ElGamalCiphertext, ElGamalKeypair},
         pedersen::{PedersenCommitment, PedersenOpening},
     },
     js_sys::Uint8Array,

@@ -1,5 +1,5 @@
 use {
-    crate::encryption::pedersen::{PedersenCommitment, PedersenOpening},
+    crate::encryption::pedersen::PedersenCommitment,
     js_sys::Uint8Array,
     solana_zk_sdk::encryption::{
         elgamal, DECRYPT_HANDLE_LEN, ELGAMAL_CIPHERTEXT_LEN, ELGAMAL_PUBKEY_LEN,
