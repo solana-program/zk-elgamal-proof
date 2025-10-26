@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Bundler (Vite) Integration Test</title>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 20px;
+      }
+      #status {
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+      }
+      .success {
+        background-color: #d4edda;
+        color: #155724;
+      }
+      .failure {
+        background-color: #f8d7da;
+        color: #721c24;
+      }
+      .running {
+        background-color: #fff3cd;
+        color: #856404;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Bundler (Vite) Integration Test</h1>
+    <div id="status" class="running">Initializing...</div>
+    <h2>Logs:</h2>
+    <pre id="logs"></pre>
+
+    <script type="module" src="/index.test.js"></script>
+  </body>
+</html>
