@@ -20,11 +20,12 @@ use {
 use {
     crate::{
         pod::PodU64,
-        sigma_proofs::pod::PodPercentageWithCapProof,
         zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
     },
     bytemuck_derive::{Pod, Zeroable},
-    solana_zk_sdk_pod::encryption::pedersen::PodPedersenCommitment,
+    solana_zk_sdk_pod::{
+        encryption::pedersen::PodPedersenCommitment, sigma_proofs::PodPercentageWithCapProof,
+    },
 };
 
 /// The instruction data that is needed for the `ProofInstruction::VerifyPercentageWithCap`

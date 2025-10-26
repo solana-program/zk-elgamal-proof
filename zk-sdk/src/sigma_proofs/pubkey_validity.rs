@@ -14,6 +14,7 @@ use {
         UNIT_LEN,
     },
     rand::rngs::OsRng,
+    solana_zk_sdk_pod::sigma_proofs::PodPubkeyValidityProof,
     zeroize::Zeroize,
 };
 use {
@@ -143,12 +144,28 @@ impl PubkeyValidityProof {
     }
 }
 
+#[cfg(not(target_os = "solana"))]
+impl From<PubkeyValidityProof> for PodPubkeyValidityProof {
+    fn from(decoded_proof: PubkeyValidityProof) -> Self {
+        Self(decoded_proof.to_bytes())
+    }
+}
+
+#[cfg(not(target_os = "solana"))]
+impl TryFrom<PodPubkeyValidityProof> for PubkeyValidityProof {
+    type Error = PubkeyValidityProofVerificationError;
+
+    fn try_from(pod_proof: PodPubkeyValidityProof) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_proof.0)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use {
-        super::*, crate::sigma_proofs::pod::PodPubkeyValidityProof, bytemuck::Zeroable,
-        curve25519_dalek::traits::Identity, solana_keypair::Keypair, solana_pubkey::Pubkey,
-        solana_zk_sdk_pod::encryption::elgamal::PodElGamalPubkey, std::str::FromStr,
+        super::*, bytemuck::Zeroable, curve25519_dalek::traits::Identity, solana_keypair::Keypair,
+        solana_pubkey::Pubkey, solana_zk_sdk_pod::encryption::elgamal::PodElGamalPubkey,
+        std::str::FromStr,
     };
 
     #[test]

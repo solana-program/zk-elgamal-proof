@@ -20,6 +20,7 @@ use {
     },
     curve25519_dalek::traits::MultiscalarMul,
     rand::rngs::OsRng,
+    solana_zk_sdk_pod::sigma_proofs::PodGroupedCiphertext3HandlesValidityProof,
     zeroize::Zeroize,
 };
 use {
@@ -274,14 +275,27 @@ impl GroupedCiphertext3HandlesValidityProof {
     }
 }
 
+#[cfg(not(target_os = "solana"))]
+impl From<GroupedCiphertext3HandlesValidityProof> for PodGroupedCiphertext3HandlesValidityProof {
+    fn from(decoded_proof: GroupedCiphertext3HandlesValidityProof) -> Self {
+        Self(decoded_proof.to_bytes())
+    }
+}
+
+#[cfg(not(target_os = "solana"))]
+impl TryFrom<PodGroupedCiphertext3HandlesValidityProof> for GroupedCiphertext3HandlesValidityProof {
+    type Error = ValidityProofVerificationError;
+
+    fn try_from(pod_proof: PodGroupedCiphertext3HandlesValidityProof) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_proof.0)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use {
         super::*,
-        crate::{
-            encryption::{elgamal::ElGamalKeypair, pedersen::Pedersen},
-            sigma_proofs::pod::PodGroupedCiphertext3HandlesValidityProof,
-        },
+        crate::encryption::{elgamal::ElGamalKeypair, pedersen::Pedersen},
         solana_zk_sdk_pod::encryption::{
             elgamal::{PodDecryptHandle, PodElGamalCiphertext, PodElGamalPubkey},
             pedersen::PodPedersenCommitment,

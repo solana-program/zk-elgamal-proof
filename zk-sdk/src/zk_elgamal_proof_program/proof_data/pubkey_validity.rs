@@ -5,6 +5,13 @@
 //! corresponding secret key). To generate the proof, a prover must provide the secret key for the
 //! public key.
 
+use {
+    crate::zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
+    bytemuck_derive::{Pod, Zeroable},
+    solana_zk_sdk_pod::{
+        encryption::elgamal::PodElGamalPubkey, sigma_proofs::PodPubkeyValidityProof,
+    },
+};
 #[cfg(not(target_os = "solana"))]
 use {
     crate::{
@@ -15,14 +22,6 @@ use {
     bytemuck::bytes_of,
     merlin::Transcript,
     std::convert::TryInto,
-};
-use {
-    crate::{
-        sigma_proofs::pod::PodPubkeyValidityProof,
-        zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
-    },
-    bytemuck_derive::{Pod, Zeroable},
-    solana_zk_sdk_pod::encryption::elgamal::PodElGamalPubkey,
 };
 
 /// The instruction data that is needed for the `ProofInstruction::VerifyPubkeyValidity`

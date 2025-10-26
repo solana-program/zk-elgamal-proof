@@ -20,6 +20,7 @@ use {
     },
     curve25519_dalek::traits::MultiscalarMul,
     rand::rngs::OsRng,
+    solana_zk_sdk_pod::sigma_proofs::PodCiphertextCommitmentEqualityProof,
     zeroize::Zeroize,
 };
 use {
@@ -250,14 +251,27 @@ impl CiphertextCommitmentEqualityProof {
     }
 }
 
+#[cfg(not(target_os = "solana"))]
+impl From<CiphertextCommitmentEqualityProof> for PodCiphertextCommitmentEqualityProof {
+    fn from(decoded_proof: CiphertextCommitmentEqualityProof) -> Self {
+        Self(decoded_proof.to_bytes())
+    }
+}
+
+#[cfg(not(target_os = "solana"))]
+impl TryFrom<PodCiphertextCommitmentEqualityProof> for CiphertextCommitmentEqualityProof {
+    type Error = EqualityProofVerificationError;
+
+    fn try_from(pod_proof: PodCiphertextCommitmentEqualityProof) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_proof.0)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use {
         super::*,
-        crate::{
-            encryption::{elgamal::ElGamalSecretKey, pedersen::Pedersen},
-            sigma_proofs::pod::PodCiphertextCommitmentEqualityProof,
-        },
+        crate::encryption::{elgamal::ElGamalSecretKey, pedersen::Pedersen},
         solana_zk_sdk_pod::encryption::{
             elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
             pedersen::PodPedersenCommitment,

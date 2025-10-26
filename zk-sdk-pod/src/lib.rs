@@ -1,6 +1,7 @@
 pub mod encryption;
 pub mod errors;
 pub mod macros;
+pub mod sigma_proofs;
 
 /// Byte length of a compressed Ristretto point or scalar in Curve255519
 const UNIT_LEN: usize = 32;

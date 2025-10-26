@@ -26,6 +26,7 @@ use {
         UNIT_LEN,
     },
     rand::rngs::OsRng,
+    solana_zk_sdk_pod::sigma_proofs::PodPercentageWithCapProof,
     zeroize::Zeroize,
 };
 use {
@@ -608,13 +609,27 @@ fn conditional_select_ristretto(
     CompressedRistretto(bytes)
 }
 
+#[cfg(not(target_os = "solana"))]
+impl From<PercentageWithCapProof> for PodPercentageWithCapProof {
+    fn from(decoded_proof: PercentageWithCapProof) -> Self {
+        Self(decoded_proof.to_bytes())
+    }
+}
+
+#[cfg(not(target_os = "solana"))]
+impl TryFrom<PodPercentageWithCapProof> for PercentageWithCapProof {
+    type Error = PercentageWithCapProofVerificationError;
+
+    fn try_from(pod_proof: PodPercentageWithCapProof) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_proof.0)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use {
-        super::*,
-        crate::{encryption::pedersen::Pedersen, sigma_proofs::pod::PodPercentageWithCapProof},
-        solana_zk_sdk_pod::encryption::pedersen::PodPedersenCommitment,
-        std::str::FromStr,
+        super::*, crate::encryption::pedersen::Pedersen,
+        solana_zk_sdk_pod::encryption::pedersen::PodPedersenCommitment, std::str::FromStr,
     };
 
     #[test]

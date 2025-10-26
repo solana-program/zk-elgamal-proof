@@ -5,6 +5,16 @@
 //! decryption handles. To generate the proof, a prover must provide the Pedersen opening
 //! associated with the grouped ciphertext's commitment.
 
+use {
+    crate::zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
+    bytemuck_derive::{Pod, Zeroable},
+    solana_zk_sdk_pod::{
+        encryption::{
+            elgamal::PodElGamalPubkey, grouped_elgamal::PodGroupedElGamalCiphertext3Handles,
+        },
+        sigma_proofs::PodGroupedCiphertext3HandlesValidityProof,
+    },
+};
 #[cfg(not(target_os = "solana"))]
 use {
     crate::{
@@ -17,16 +27,6 @@ use {
     },
     bytemuck::bytes_of,
     merlin::Transcript,
-};
-use {
-    crate::{
-        sigma_proofs::pod::PodGroupedCiphertext3HandlesValidityProof,
-        zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
-    },
-    bytemuck_derive::{Pod, Zeroable},
-    solana_zk_sdk_pod::encryption::{
-        elgamal::PodElGamalPubkey, grouped_elgamal::PodGroupedElGamalCiphertext3Handles,
-    },
 };
 
 /// The instruction data that is needed for the
