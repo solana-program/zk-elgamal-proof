@@ -1,0 +1,14 @@
+{
+  "name": "example-web-integration",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "http-server -c-1 -p 8080"
+  },
+  "dependencies": {
+    "@solana/zk-sdk": "file:../.."
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
