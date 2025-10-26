@@ -1,4 +1,11 @@
-# A script to compile the crate to all of node, web, and bundler targets
+#!/bin/bash
+
+# a script to compile the crate to all of node, web, and bundler targets
+
+set -e
+
+# make relative paths work
+cd -- "$(dirname -- "$0")" || exit
 
 # 1. Clean up previous build artifacts
 echo "--- Cleaning up old builds ---"
