@@ -6,3 +6,4 @@ const [folder, ...args] = cliArguments();
 const cratePath = path.join(workingDirectory, folder);
 
 await $`wasm-pack test --node ${cratePath} ${args}`;
+await $`wasm-pack test --headless --firefox ${cratePath} ${args} --features test-browser`;

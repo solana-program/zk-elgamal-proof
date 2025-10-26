@@ -1,0 +1,31 @@
+{
+  "name": "@solana/zk-sdk",
+  "version": "0.2.0",
+  "description": "Universal WASM package for the rust solana-zk-sdk",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "types": "./dist/node/index.d.ts",
+  "browser": "./dist/bundler/index.js",
+  "exports": {
+    "./node": {
+      "import": "./dist/node/index.cjs",
+      "require": "./dist/node/index.cjs",
+      "types": "./dist/node/index.d.ts"
+    },
+    "./web": {
+      "import": "./dist/web/index.js",
+      "default": "./dist/web/index.js",
+      "types": "./dist/web/index.d.ts"
+    },
+    "./bundler": {
+      "import": "./dist/bundler/index.js",
+      "default": "./dist/bundler/index.js",
+      "types": "./dist/bundler/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "./compile-wasm.sh"
+  }
+}
