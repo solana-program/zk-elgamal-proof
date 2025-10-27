@@ -1,5 +1,12 @@
 //! The 64-bit batched range proof instruction.
 
+use {
+    crate::zk_elgamal_proof_program::proof_data::{
+        batched_range_proof::BatchedRangeProofContext, ProofType, ZkProofData,
+    },
+    bytemuck_derive::{Pod, Zeroable},
+    solana_zk_sdk_pod::range_proof::PodRangeProofU64,
+};
 #[cfg(not(target_os = "solana"))]
 use {
     crate::{
@@ -11,15 +18,6 @@ use {
         },
     },
     std::convert::TryInto,
-};
-use {
-    crate::{
-        range_proof::pod::PodRangeProofU64,
-        zk_elgamal_proof_program::proof_data::{
-            batched_range_proof::BatchedRangeProofContext, ProofType, ZkProofData,
-        },
-    },
-    bytemuck_derive::{Pod, Zeroable},
 };
 
 /// The instruction data that is needed for the

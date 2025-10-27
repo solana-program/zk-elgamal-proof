@@ -14,7 +14,6 @@
 
 #![allow(dead_code)]
 
-use crate::{RISTRETTO_POINT_LEN, SCALAR_LEN};
 #[cfg(not(target_os = "solana"))]
 use {
     crate::{
@@ -25,6 +24,7 @@ use {
             inner_product::InnerProductProof,
         },
         transcript::TranscriptProtocol,
+        UNIT_LEN,
     },
     core::iter,
     curve25519_dalek::traits::MultiscalarMul,
@@ -35,13 +35,12 @@ use {
     },
     merlin::Transcript,
     rand::rngs::OsRng,
+    solana_zk_sdk_pod::range_proof::{PodRangeProofU128, PodRangeProofU256, PodRangeProofU64},
     subtle::{Choice, ConditionallySelectable},
     zeroize::Zeroize,
 };
 
 pub mod errors;
-pub mod pod;
-
 #[cfg(not(target_os = "solana"))]
 pub mod generators;
 #[cfg(not(target_os = "solana"))]
@@ -49,30 +48,11 @@ pub mod inner_product;
 #[cfg(not(target_os = "solana"))]
 pub mod util;
 
-/// Byte length of a range proof excluding the inner-product proof component
-pub const RANGE_PROOF_MODULO_INNER_PRODUCT_PROOF_LEN: usize =
-    5 * RISTRETTO_POINT_LEN + 2 * SCALAR_LEN;
-
-/// Byte length of an inner-product proof for a vector of length 64
-pub const INNER_PRODUCT_PROOF_U64_LEN: usize = 448;
-
-/// Byte length of a range proof for an unsigned 64-bit number
-pub const RANGE_PROOF_U64_LEN: usize =
-    INNER_PRODUCT_PROOF_U64_LEN + RANGE_PROOF_MODULO_INNER_PRODUCT_PROOF_LEN; // 672 bytes
-
-/// Byte length of an inner-product proof for a vector of length 128
-pub const INNER_PRODUCT_PROOF_U128_LEN: usize = 512;
-
-/// Byte length of a range proof for an unsigned 128-bit number
-pub const RANGE_PROOF_U128_LEN: usize =
-    INNER_PRODUCT_PROOF_U128_LEN + RANGE_PROOF_MODULO_INNER_PRODUCT_PROOF_LEN; // 736 bytes
-
-/// Byte length of an inner-product proof for a vector of length 256
-pub const INNER_PRODUCT_PROOF_U256_LEN: usize = 576;
-
-/// Byte length of a range proof for an unsigned 256-bit number
-pub const RANGE_PROOF_U256_LEN: usize =
-    INNER_PRODUCT_PROOF_U256_LEN + RANGE_PROOF_MODULO_INNER_PRODUCT_PROOF_LEN; // 800 bytes
+pub use solana_zk_sdk_pod::range_proof::{
+    INNER_PRODUCT_PROOF_U128_LEN, INNER_PRODUCT_PROOF_U256_LEN, INNER_PRODUCT_PROOF_U64_LEN,
+    RANGE_PROOF_MODULO_INNER_PRODUCT_PROOF_LEN, RANGE_PROOF_U128_LEN, RANGE_PROOF_U256_LEN,
+    RANGE_PROOF_U64_LEN,
+};
 
 /// A Bulletproofs range proof.
 #[allow(non_snake_case)]
@@ -491,6 +471,102 @@ impl RangeProof {
     }
 }
 
+#[cfg(not(target_os = "solana"))]
+impl TryFrom<PodRangeProofU64> for RangeProof {
+    type Error = RangeProofVerificationError;
+
+    fn try_from(pod_proof: PodRangeProofU64) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_proof.0)
+    }
+}
+
+#[cfg(not(target_os = "solana"))]
+impl TryFrom<RangeProof> for PodRangeProofU64 {
+    type Error = RangeProofVerificationError;
+
+    fn try_from(decoded_proof: RangeProof) -> Result<Self, Self::Error> {
+        if decoded_proof.ipp_proof.serialized_size() != INNER_PRODUCT_PROOF_U64_LEN {
+            return Err(RangeProofVerificationError::Deserialization);
+        }
+
+        let mut buf = [0_u8; RANGE_PROOF_U64_LEN];
+        copy_range_proof_modulo_inner_product_proof(&decoded_proof, &mut buf);
+        buf[RANGE_PROOF_MODULO_INNER_PRODUCT_PROOF_LEN..RANGE_PROOF_U64_LEN]
+            .copy_from_slice(&decoded_proof.ipp_proof.to_bytes());
+        Ok(PodRangeProofU64(buf))
+    }
+}
+
+#[cfg(not(target_os = "solana"))]
+impl TryFrom<PodRangeProofU128> for RangeProof {
+    type Error = RangeProofVerificationError;
+
+    fn try_from(pod_proof: PodRangeProofU128) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_proof.0)
+    }
+}
+
+#[cfg(not(target_os = "solana"))]
+impl TryFrom<RangeProof> for PodRangeProofU128 {
+    type Error = RangeProofVerificationError;
+
+    fn try_from(decoded_proof: RangeProof) -> Result<Self, Self::Error> {
+        if decoded_proof.ipp_proof.serialized_size() != INNER_PRODUCT_PROOF_U128_LEN {
+            return Err(RangeProofVerificationError::Deserialization);
+        }
+
+        let mut buf = [0_u8; RANGE_PROOF_U128_LEN];
+        copy_range_proof_modulo_inner_product_proof(&decoded_proof, &mut buf);
+        buf[RANGE_PROOF_MODULO_INNER_PRODUCT_PROOF_LEN..RANGE_PROOF_U128_LEN]
+            .copy_from_slice(&decoded_proof.ipp_proof.to_bytes());
+        Ok(PodRangeProofU128(buf))
+    }
+}
+
+#[cfg(not(target_os = "solana"))]
+impl TryFrom<PodRangeProofU256> for RangeProof {
+    type Error = RangeProofVerificationError;
+
+    fn try_from(pod_proof: PodRangeProofU256) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_proof.0)
+    }
+}
+
+#[cfg(not(target_os = "solana"))]
+impl TryFrom<RangeProof> for PodRangeProofU256 {
+    type Error = RangeProofVerificationError;
+
+    fn try_from(decoded_proof: RangeProof) -> Result<Self, Self::Error> {
+        if decoded_proof.ipp_proof.serialized_size() != INNER_PRODUCT_PROOF_U256_LEN {
+            return Err(RangeProofVerificationError::Deserialization);
+        }
+
+        let mut buf = [0_u8; RANGE_PROOF_U256_LEN];
+        copy_range_proof_modulo_inner_product_proof(&decoded_proof, &mut buf);
+        buf[RANGE_PROOF_MODULO_INNER_PRODUCT_PROOF_LEN..RANGE_PROOF_U256_LEN]
+            .copy_from_slice(&decoded_proof.ipp_proof.to_bytes());
+        Ok(PodRangeProofU256(buf))
+    }
+}
+
+#[cfg(not(target_os = "solana"))]
+fn copy_range_proof_modulo_inner_product_proof(proof: &RangeProof, buf: &mut [u8]) {
+    let mut chunks = buf.chunks_mut(UNIT_LEN);
+    chunks.next().unwrap().copy_from_slice(proof.A.as_bytes());
+    chunks.next().unwrap().copy_from_slice(proof.S.as_bytes());
+    chunks.next().unwrap().copy_from_slice(proof.T_1.as_bytes());
+    chunks.next().unwrap().copy_from_slice(proof.T_2.as_bytes());
+    chunks.next().unwrap().copy_from_slice(proof.t_x.as_bytes());
+    chunks
+        .next()
+        .unwrap()
+        .copy_from_slice(proof.t_x_blinding.as_bytes());
+    chunks
+        .next()
+        .unwrap()
+        .copy_from_slice(proof.e_blinding.as_bytes());
+}
+
 /// Computes the `delta(y,z)` term for the verification equation.
 ///
 /// This term is a function of the challenges `y` and `z` and the proof dimensions.
@@ -514,8 +590,7 @@ fn delta(bit_lengths: &[usize], y: &Scalar, z: &Scalar) -> Scalar {
 #[cfg(test)]
 mod tests {
     use {
-        super::*, crate::range_proof::pod::PodRangeProofU128,
-        solana_zk_sdk_pod::encryption::pedersen::PodPedersenCommitment, std::str::FromStr,
+        super::*, solana_zk_sdk_pod::encryption::pedersen::PodPedersenCommitment, std::str::FromStr,
     };
 
     #[test]

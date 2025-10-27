@@ -35,7 +35,10 @@ pub use solana_zk_sdk_pod::sigma_proofs::{
 
 #[cfg(not(target_os = "solana"))]
 use {
-    crate::{sigma_proofs::errors::SigmaProofVerificationError, RISTRETTO_POINT_LEN, SCALAR_LEN},
+    crate::{
+        sigma_proofs::errors::SigmaProofVerificationError, RISTRETTO_POINT_LEN, SCALAR_LEN,
+        UNIT_LEN,
+    },
     curve25519_dalek::{ristretto::CompressedRistretto, scalar::Scalar},
 };
 
