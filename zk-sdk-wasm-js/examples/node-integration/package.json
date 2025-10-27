@@ -1,0 +1,11 @@
+{
+  "name": "example-node-integration",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "test": "node index.test.js"
+  },
+  "dependencies": {
+    "@solana/zk-sdk": "file:../.."
+  }
+}

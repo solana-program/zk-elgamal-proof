@@ -1,5 +1,5 @@
 use {
-    crate::encryption::elgamal::{ElGamalCiphertext, ElGamalKeypair, ElGamalPubkey},
+    crate::encryption::elgamal::{ElGamalCiphertext, ElGamalKeypair},
     js_sys::Uint8Array,
     solana_zk_sdk::zk_elgamal_proof_program::proof_data::{zero_ciphertext, ZkProofData},
     wasm_bindgen::prelude::*,
