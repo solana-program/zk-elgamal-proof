@@ -1,7 +1,10 @@
 use {
     crate::encryption::pedersen::{PedersenCommitment, PedersenOpening},
     js_sys::Uint8Array,
-    solana_zk_sdk::zk_elgamal_proof_program::proof_data::{percentage_with_cap, ZkProofData},
+    solana_zk_sdk::zk_elgamal_proof_program::proof_data::{
+        PercentageWithCapProofDataExt, ZkProofData,
+    },
+    solana_zk_sdk_pod::proof_data::percentage_with_cap,
     wasm_bindgen::prelude::*,
 };
 

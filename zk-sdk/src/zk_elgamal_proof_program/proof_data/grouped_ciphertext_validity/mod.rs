@@ -1,11 +1,8 @@
 mod handles_2;
 mod handles_3;
 
+#[cfg(not(target_os = "solana"))]
 pub use {
-    handles_2::{
-        GroupedCiphertext2HandlesValidityProofContext, GroupedCiphertext2HandlesValidityProofData,
-    },
-    handles_3::{
-        GroupedCiphertext3HandlesValidityProofContext, GroupedCiphertext3HandlesValidityProofData,
-    },
+    handles_2::GroupedCiphertext2HandlesValidityProofDataExt,
+    handles_3::GroupedCiphertext3HandlesValidityProofDataExt,
 };
