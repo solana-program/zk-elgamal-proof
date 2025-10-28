@@ -16,6 +16,33 @@ pub mod pod;
 pub mod pubkey_validity;
 pub mod zero_ciphertext;
 
+pub use solana_zk_sdk_pod::proof_data::{
+    batched_grouped_ciphertext_validity::{
+        BatchedGroupedCiphertext2HandlesValidityProofContext,
+        BatchedGroupedCiphertext2HandlesValidityProofData,
+        BatchedGroupedCiphertext3HandlesValidityProofContext,
+        BatchedGroupedCiphertext3HandlesValidityProofData,
+    },
+    batched_range_proof::{
+        batched_range_proof_u128::BatchedRangeProofU128Data,
+        batched_range_proof_u256::BatchedRangeProofU256Data,
+        batched_range_proof_u64::BatchedRangeProofU64Data, BatchedRangeProofContext,
+    },
+    ciphertext_ciphertext_equality::{
+        CiphertextCiphertextEqualityProofContext, CiphertextCiphertextEqualityProofData,
+    },
+    ciphertext_commitment_equality::{
+        CiphertextCommitmentEqualityProofContext, CiphertextCommitmentEqualityProofData,
+    },
+    grouped_ciphertext_validity::{
+        GroupedCiphertext2HandlesValidityProofContext, GroupedCiphertext2HandlesValidityProofData,
+        GroupedCiphertext3HandlesValidityProofContext, GroupedCiphertext3HandlesValidityProofData,
+    },
+    percentage_with_cap::{PercentageWithCapProofContext, PercentageWithCapProofData},
+    pubkey_validity::{PubkeyValidityProofContext, PubkeyValidityProofData},
+    zero_ciphertext::{ZeroCiphertextProofContext, ZeroCiphertextProofData},
+};
+#[cfg(not(target_os = "solana"))]
 pub use {
     batched_grouped_ciphertext_validity::{
         BatchedGroupedCiphertext2HandlesValidityProofDataExt,
@@ -34,34 +61,6 @@ pub use {
     },
     percentage_with_cap::PercentageWithCapProofDataExt,
     pubkey_validity::PubkeyValidityProofDataExt,
-    solana_zk_sdk_pod::proof_data::{
-        batched_grouped_ciphertext_validity::{
-            BatchedGroupedCiphertext2HandlesValidityProofContext,
-            BatchedGroupedCiphertext2HandlesValidityProofData,
-            BatchedGroupedCiphertext3HandlesValidityProofContext,
-            BatchedGroupedCiphertext3HandlesValidityProofData,
-        },
-        batched_range_proof::{
-            batched_range_proof_u128::BatchedRangeProofU128Data,
-            batched_range_proof_u256::BatchedRangeProofU256Data,
-            batched_range_proof_u64::BatchedRangeProofU64Data, BatchedRangeProofContext,
-        },
-        ciphertext_ciphertext_equality::{
-            CiphertextCiphertextEqualityProofContext, CiphertextCiphertextEqualityProofData,
-        },
-        ciphertext_commitment_equality::{
-            CiphertextCommitmentEqualityProofContext, CiphertextCommitmentEqualityProofData,
-        },
-        grouped_ciphertext_validity::{
-            GroupedCiphertext2HandlesValidityProofContext,
-            GroupedCiphertext2HandlesValidityProofData,
-            GroupedCiphertext3HandlesValidityProofContext,
-            GroupedCiphertext3HandlesValidityProofData,
-        },
-        percentage_with_cap::{PercentageWithCapProofContext, PercentageWithCapProofData},
-        pubkey_validity::{PubkeyValidityProofContext, PubkeyValidityProofData},
-        zero_ciphertext::{ZeroCiphertextProofContext, ZeroCiphertextProofData},
-    },
     zero_ciphertext::ZeroCiphertextProofDataExt,
 };
 
@@ -93,6 +92,7 @@ pub trait ZkProofData<T: Pod> {
     fn verify_proof(&self) -> Result<(), ProofVerificationError>;
 }
 
+#[cfg(not(target_os = "solana"))]
 trait ProofContext {
     fn new_transcript(&self) -> Transcript;
 }

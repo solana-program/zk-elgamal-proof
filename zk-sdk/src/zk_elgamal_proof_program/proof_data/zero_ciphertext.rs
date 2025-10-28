@@ -5,10 +5,9 @@
 //! generate the proof, a prover must provide the decryption key for the ciphertext.
 
 use {
-    crate::zk_elgamal_proof_program::proof_data::{ProofContext, ProofType, ZkProofData},
-    solana_zk_sdk_pod::{
-        encryption::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
-        proof_data::zero_ciphertext::{ZeroCiphertextProofContext, ZeroCiphertextProofData},
+    crate::zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
+    solana_zk_sdk_pod::proof_data::zero_ciphertext::{
+        ZeroCiphertextProofContext, ZeroCiphertextProofData,
     },
 };
 #[cfg(not(target_os = "solana"))]
@@ -16,13 +15,18 @@ use {
     crate::{
         encryption::elgamal::{ElGamalCiphertext, ElGamalKeypair},
         sigma_proofs::zero_ciphertext::ZeroCiphertextProof,
-        zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
+        zk_elgamal_proof_program::{
+            errors::{ProofGenerationError, ProofVerificationError},
+            proof_data::ProofContext,
+        },
     },
     bytemuck::bytes_of,
     merlin::Transcript,
+    solana_zk_sdk_pod::encryption::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
     std::convert::TryInto,
 };
 
+#[cfg(not(target_os = "solana"))]
 pub trait ZeroCiphertextProofDataExt {
     fn new(
         keypair: &ElGamalKeypair,

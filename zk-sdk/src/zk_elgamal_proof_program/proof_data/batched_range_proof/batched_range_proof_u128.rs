@@ -2,9 +2,8 @@
 
 use {
     crate::zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
-    solana_zk_sdk_pod::{
-        proof_data::batched_range_proof::{BatchedRangeProofContext, BatchedRangeProofU128Data},
-        range_proof::PodRangeProofU128,
+    solana_zk_sdk_pod::proof_data::batched_range_proof::{
+        BatchedRangeProofContext, BatchedRangeProofU128Data,
     },
 };
 #[cfg(not(target_os = "solana"))]
@@ -20,9 +19,11 @@ use {
             },
         },
     },
+    solana_zk_sdk_pod::range_proof::PodRangeProofU128,
     std::convert::TryInto,
 };
 
+#[cfg(not(target_os = "solana"))]
 pub trait BatchedRangeProofU128DataExt {
     fn new(
         commitments: Vec<&PedersenCommitment>,

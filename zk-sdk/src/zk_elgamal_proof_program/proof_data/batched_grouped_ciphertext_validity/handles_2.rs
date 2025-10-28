@@ -6,13 +6,10 @@
 //! grouped-ciphertext validity proofs.
 
 use {
-    crate::zk_elgamal_proof_program::proof_data::{ProofContext, ProofType, ZkProofData},
-    solana_zk_sdk_pod::{
-        encryption::elgamal::PodElGamalPubkey,
-        proof_data::batched_grouped_ciphertext_validity::{
-            BatchedGroupedCiphertext2HandlesValidityProofContext,
-            BatchedGroupedCiphertext2HandlesValidityProofData,
-        },
+    crate::zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
+    solana_zk_sdk_pod::proof_data::batched_grouped_ciphertext_validity::{
+        BatchedGroupedCiphertext2HandlesValidityProofContext,
+        BatchedGroupedCiphertext2HandlesValidityProofData,
     },
 };
 #[cfg(not(target_os = "solana"))]
@@ -23,12 +20,17 @@ use {
             pedersen::PedersenOpening,
         },
         sigma_proofs::batched_grouped_ciphertext_validity::BatchedGroupedCiphertext2HandlesValidityProof,
-        zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
+        zk_elgamal_proof_program::{
+            errors::{ProofGenerationError, ProofVerificationError},
+            proof_data::ProofContext,
+        },
     },
     bytemuck::bytes_of,
     merlin::Transcript,
+    solana_zk_sdk_pod::encryption::elgamal::PodElGamalPubkey,
 };
 
+#[cfg(not(target_os = "solana"))]
 pub trait BatchedGroupedCiphertext2HandlesValidityProofDataExt {
     #[allow(clippy::too_many_arguments)]
     fn new(

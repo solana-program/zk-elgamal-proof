@@ -22,6 +22,7 @@ use {
     std::convert::TryInto,
 };
 
+#[cfg(not(target_os = "solana"))]
 pub trait BatchedRangeProofU64DataExt {
     fn new(
         commitments: Vec<&PedersenCommitment>,

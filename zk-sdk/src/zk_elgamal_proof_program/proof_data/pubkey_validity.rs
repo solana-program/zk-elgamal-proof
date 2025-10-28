@@ -6,10 +6,9 @@
 //! public key.
 
 use {
-    crate::zk_elgamal_proof_program::proof_data::{ProofContext, ProofType, ZkProofData},
-    solana_zk_sdk_pod::{
-        encryption::elgamal::PodElGamalPubkey,
-        proof_data::pubkey_validity::{PubkeyValidityProofContext, PubkeyValidityProofData},
+    crate::zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
+    solana_zk_sdk_pod::proof_data::pubkey_validity::{
+        PubkeyValidityProofContext, PubkeyValidityProofData,
     },
 };
 #[cfg(not(target_os = "solana"))]
@@ -17,13 +16,18 @@ use {
     crate::{
         encryption::elgamal::ElGamalKeypair,
         sigma_proofs::pubkey_validity::PubkeyValidityProof,
-        zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
+        zk_elgamal_proof_program::{
+            errors::{ProofGenerationError, ProofVerificationError},
+            proof_data::ProofContext,
+        },
     },
     bytemuck::bytes_of,
     merlin::Transcript,
+    solana_zk_sdk_pod::encryption::elgamal::PodElGamalPubkey,
     std::convert::TryInto,
 };
 
+#[cfg(not(target_os = "solana"))]
 pub trait PubkeyValidityProofDataExt {
     fn new(keypair: &ElGamalKeypair) -> Result<Self, ProofGenerationError>
     where

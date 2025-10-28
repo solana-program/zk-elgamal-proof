@@ -6,13 +6,9 @@
 //! associated with the grouped ciphertext's commitment.
 
 use {
-    crate::zk_elgamal_proof_program::proof_data::{ProofContext, ProofType, ZkProofData},
-    solana_zk_sdk_pod::{
-        encryption::elgamal::PodElGamalPubkey,
-        proof_data::grouped_ciphertext_validity::{
-            GroupedCiphertext3HandlesValidityProofContext,
-            GroupedCiphertext3HandlesValidityProofData,
-        },
+    crate::zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
+    solana_zk_sdk_pod::proof_data::grouped_ciphertext_validity::{
+        GroupedCiphertext3HandlesValidityProofContext, GroupedCiphertext3HandlesValidityProofData,
     },
 };
 #[cfg(not(target_os = "solana"))]
@@ -23,12 +19,17 @@ use {
             pedersen::PedersenOpening,
         },
         sigma_proofs::grouped_ciphertext_validity::GroupedCiphertext3HandlesValidityProof,
-        zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
+        zk_elgamal_proof_program::{
+            errors::{ProofGenerationError, ProofVerificationError},
+            proof_data::ProofContext,
+        },
     },
     bytemuck::bytes_of,
     merlin::Transcript,
+    solana_zk_sdk_pod::encryption::elgamal::PodElGamalPubkey,
 };
 
+#[cfg(not(target_os = "solana"))]
 pub trait GroupedCiphertext3HandlesValidityProofDataExt {
     fn new(
         first_pubkey: &ElGamalPubkey,

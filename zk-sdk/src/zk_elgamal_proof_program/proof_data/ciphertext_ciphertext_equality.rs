@@ -6,12 +6,9 @@
 //! used to generate the second ciphertext.
 
 use {
-    crate::zk_elgamal_proof_program::proof_data::{ProofContext, ProofType, ZkProofData},
-    solana_zk_sdk_pod::{
-        encryption::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
-        proof_data::ciphertext_ciphertext_equality::{
-            CiphertextCiphertextEqualityProofContext, CiphertextCiphertextEqualityProofData,
-        },
+    crate::zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
+    solana_zk_sdk_pod::proof_data::ciphertext_ciphertext_equality::{
+        CiphertextCiphertextEqualityProofContext, CiphertextCiphertextEqualityProofData,
     },
 };
 #[cfg(not(target_os = "solana"))]
@@ -22,13 +19,18 @@ use {
             pedersen::PedersenOpening,
         },
         sigma_proofs::ciphertext_ciphertext_equality::CiphertextCiphertextEqualityProof,
-        zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
+        zk_elgamal_proof_program::{
+            errors::{ProofGenerationError, ProofVerificationError},
+            proof_data::ProofContext,
+        },
     },
     bytemuck::bytes_of,
     merlin::Transcript,
+    solana_zk_sdk_pod::encryption::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
     std::convert::TryInto,
 };
 
+#[cfg(not(target_os = "solana"))]
 pub trait CiphertextCiphertextEqualityProofDataExt {
     fn new(
         first_keypair: &ElGamalKeypair,

@@ -21,7 +21,6 @@ pub mod batched_range_proof_u128;
 pub mod batched_range_proof_u256;
 pub mod batched_range_proof_u64;
 
-use solana_zk_sdk_pod::encryption::pedersen::PodPedersenCommitment;
 #[cfg(not(target_os = "solana"))]
 use {
     crate::{
@@ -34,11 +33,15 @@ use {
     bytemuck::{bytes_of, Zeroable},
     curve25519_dalek::traits::IsIdentity,
     merlin::Transcript,
-    solana_zk_sdk_pod::proof_data::batched_range_proof::BatchedRangeProofContext,
+    solana_zk_sdk_pod::{
+        encryption::pedersen::PodPedersenCommitment,
+        proof_data::batched_range_proof::BatchedRangeProofContext,
+    },
     std::convert::TryInto,
 };
 
 /// The maximum number of Pedersen commitments that can be processed in a single batched range proof.
+#[cfg(not(target_os = "solana"))]
 const MAX_COMMITMENTS: usize = 8;
 
 /// A bit length in a batched range proof must be at most 128.
@@ -48,6 +51,7 @@ const MAX_COMMITMENTS: usize = 8;
 #[cfg(not(target_os = "solana"))]
 const MAX_SINGLE_BIT_LENGTH: usize = 128;
 
+#[cfg(not(target_os = "solana"))]
 pub trait BatchedRangeProofContextExt {
     fn new(
         commitments: &[&PedersenCommitment],
@@ -129,6 +133,7 @@ impl BatchedRangeProofContextExt for BatchedRangeProofContext {
     }
 }
 
+#[cfg(not(target_os = "solana"))]
 impl ProofContext for BatchedRangeProofContext {
     fn new_transcript(&self) -> Transcript {
         let mut transcript = Transcript::new(b"batched-range-proof-instruction");

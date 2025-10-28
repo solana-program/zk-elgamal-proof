@@ -48,6 +48,7 @@ pub mod inner_product;
 #[cfg(not(target_os = "solana"))]
 pub mod util;
 
+#[cfg(not(target_os = "solana"))]
 pub use solana_zk_sdk_pod::range_proof::{
     INNER_PRODUCT_PROOF_U128_LEN, INNER_PRODUCT_PROOF_U256_LEN, INNER_PRODUCT_PROOF_U64_LEN,
     RANGE_PROOF_MODULO_INNER_PRODUCT_PROOF_LEN, RANGE_PROOF_U128_LEN, RANGE_PROOF_U256_LEN,

@@ -6,15 +6,9 @@
 //! key for the first ciphertext and the Pedersen opening for the commitment.
 
 use {
-    crate::zk_elgamal_proof_program::proof_data::{ProofContext, ProofType, ZkProofData},
-    solana_zk_sdk_pod::{
-        encryption::{
-            elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
-            pedersen::PodPedersenCommitment,
-        },
-        proof_data::ciphertext_commitment_equality::{
-            CiphertextCommitmentEqualityProofContext, CiphertextCommitmentEqualityProofData,
-        },
+    crate::zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
+    solana_zk_sdk_pod::proof_data::ciphertext_commitment_equality::{
+        CiphertextCommitmentEqualityProofContext, CiphertextCommitmentEqualityProofData,
     },
 };
 #[cfg(not(target_os = "solana"))]
@@ -25,13 +19,21 @@ use {
             pedersen::{PedersenCommitment, PedersenOpening},
         },
         sigma_proofs::ciphertext_commitment_equality::CiphertextCommitmentEqualityProof,
-        zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
+        zk_elgamal_proof_program::{
+            errors::{ProofGenerationError, ProofVerificationError},
+            proof_data::ProofContext,
+        },
     },
     bytemuck::bytes_of,
     merlin::Transcript,
+    solana_zk_sdk_pod::encryption::{
+        elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
+        pedersen::PodPedersenCommitment,
+    },
     std::convert::TryInto,
 };
 
+#[cfg(not(target_os = "solana"))]
 pub trait CiphertextCommitmentEqualityProofDataExt {
     fn new(
         keypair: &ElGamalKeypair,

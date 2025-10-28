@@ -7,12 +7,9 @@
 //! - the `delta` and `claimed` amounts are equal
 
 use {
-    crate::zk_elgamal_proof_program::proof_data::{ProofContext, ProofType, ZkProofData},
-    solana_zk_sdk_pod::{
-        encryption::pedersen::PodPedersenCommitment,
-        proof_data::percentage_with_cap::{
-            PercentageWithCapProofContext, PercentageWithCapProofData,
-        },
+    crate::zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
+    solana_zk_sdk_pod::proof_data::percentage_with_cap::{
+        PercentageWithCapProofContext, PercentageWithCapProofData,
     },
 };
 #[cfg(not(target_os = "solana"))]
@@ -20,13 +17,18 @@ use {
     crate::{
         encryption::pedersen::{PedersenCommitment, PedersenOpening},
         sigma_proofs::percentage_with_cap::PercentageWithCapProof,
-        zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
+        zk_elgamal_proof_program::{
+            errors::{ProofGenerationError, ProofVerificationError},
+            proof_data::ProofContext,
+        },
     },
     bytemuck::bytes_of,
     merlin::Transcript,
+    solana_zk_sdk_pod::encryption::pedersen::PodPedersenCommitment,
     std::convert::TryInto,
 };
 
+#[cfg(not(target_os = "solana"))]
 pub trait PercentageWithCapProofDataExt {
     #[allow(clippy::too_many_arguments)]
     fn new(

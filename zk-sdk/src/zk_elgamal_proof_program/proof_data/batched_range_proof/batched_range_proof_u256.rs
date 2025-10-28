@@ -27,6 +27,7 @@ use {
 #[cfg(not(target_os = "solana"))]
 const BATCHED_RANGE_PROOF_U256_BIT_LENGTH: usize = 256;
 
+#[cfg(not(target_os = "solana"))]
 pub trait BatchedRangeProofU256DataExt {
     fn new(
         commitments: Vec<&PedersenCommitment>,
