@@ -22,15 +22,20 @@ pub mod batched_range_proof_u256;
 pub mod batched_range_proof_u64;
 
 use solana_zk_sdk_pod::encryption::pedersen::PodPedersenCommitment;
+
 #[cfg(not(target_os = "solana"))]
 use {
     crate::{
         encryption::pedersen::{PedersenCommitment, PedersenOpening},
-        zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
+        zk_elgamal_proof_program::{
+            errors::{ProofGenerationError, ProofVerificationError},
+            proof_data::ProofContext,
+        },
     },
     bytemuck::{bytes_of, Zeroable},
     curve25519_dalek::traits::IsIdentity,
     merlin::Transcript,
+    solana_zk_sdk_pod::proof_data::batched_range_proof::BatchedRangeProofContext,
     std::convert::TryInto,
 };
 
@@ -44,28 +49,24 @@ const MAX_COMMITMENTS: usize = 8;
 #[cfg(not(target_os = "solana"))]
 const MAX_SINGLE_BIT_LENGTH: usize = 128;
 
-/// The context data needed to verify a range-proof for a Pedersen committed value.
-///
-/// This struct holds the public information that a batched range proof certifies. It includes the
-/// Pedersen commitments and their corresponding bit lengths. This context is shared by all
-/// `VerifyBatchedRangeProof{N}` instructions.
-#[derive(Clone, Copy, bytemuck_derive::Pod, bytemuck_derive::Zeroable)]
-#[repr(C)]
-pub struct BatchedRangeProofContext {
-    pub commitments: [PodPedersenCommitment; MAX_COMMITMENTS],
-    pub bit_lengths: [u8; MAX_COMMITMENTS],
+pub trait BatchedRangeProofContextExt {
+    fn new(
+        commitments: &[&PedersenCommitment],
+        amounts: &[u64],
+        bit_lengths: &[usize],
+        openings: &[&PedersenOpening],
+    ) -> Result<Self, ProofGenerationError>
+    where
+        Self: Sized;
+
+    fn try_into_commitment_bit_lengths_vec(
+        &self,
+    ) -> Result<(Vec<PedersenCommitment>, Vec<usize>), ProofVerificationError>;
 }
 
 #[allow(non_snake_case)]
 #[cfg(not(target_os = "solana"))]
-impl BatchedRangeProofContext {
-    fn new_transcript(&self) -> Transcript {
-        let mut transcript = Transcript::new(b"batched-range-proof-instruction");
-        transcript.append_message(b"commitments", bytes_of(&self.commitments));
-        transcript.append_message(b"bit-lengths", bytes_of(&self.bit_lengths));
-        transcript
-    }
-
+impl BatchedRangeProofContextExt for BatchedRangeProofContext {
     fn new(
         commitments: &[&PedersenCommitment],
         amounts: &[u64],
@@ -106,13 +107,10 @@ impl BatchedRangeProofContext {
             bit_lengths: pod_bit_lengths,
         })
     }
-}
 
-#[cfg(not(target_os = "solana"))]
-impl TryInto<(Vec<PedersenCommitment>, Vec<usize>)> for BatchedRangeProofContext {
-    type Error = ProofVerificationError;
-
-    fn try_into(self) -> Result<(Vec<PedersenCommitment>, Vec<usize>), Self::Error> {
+    fn try_into_commitment_bit_lengths_vec(
+        &self,
+    ) -> Result<(Vec<PedersenCommitment>, Vec<usize>), ProofVerificationError> {
         let commitments = self
             .commitments
             .into_iter()
@@ -129,5 +127,14 @@ impl TryInto<(Vec<PedersenCommitment>, Vec<usize>)> for BatchedRangeProofContext
             .collect();
 
         Ok((commitments, bit_lengths))
+    }
+}
+
+impl ProofContext for BatchedRangeProofContext {
+    fn new_transcript(&self) -> Transcript {
+        let mut transcript = Transcript::new(b"batched-range-proof-instruction");
+        transcript.append_message(b"commitments", bytes_of(&self.commitments));
+        transcript.append_message(b"bit-lengths", bytes_of(&self.bit_lengths));
+        transcript
     }
 }

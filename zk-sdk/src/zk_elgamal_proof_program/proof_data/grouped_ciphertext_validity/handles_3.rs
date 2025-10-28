@@ -6,13 +6,13 @@
 //! associated with the grouped ciphertext's commitment.
 
 use {
-    crate::zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
-    bytemuck_derive::{Pod, Zeroable},
+    crate::zk_elgamal_proof_program::proof_data::{ProofContext, ProofType, ZkProofData},
     solana_zk_sdk_pod::{
-        encryption::{
-            elgamal::PodElGamalPubkey, grouped_elgamal::PodGroupedElGamalCiphertext3Handles,
+        encryption::elgamal::PodElGamalPubkey,
+        proof_data::grouped_ciphertext_validity::{
+            GroupedCiphertext3HandlesValidityProofContext,
+            GroupedCiphertext3HandlesValidityProofData,
         },
-        sigma_proofs::PodGroupedCiphertext3HandlesValidityProof,
     },
 };
 #[cfg(not(target_os = "solana"))]
@@ -29,34 +29,22 @@ use {
     merlin::Transcript,
 };
 
-/// The instruction data that is needed for the
-/// `ProofInstruction::VerifyGroupedCiphertext3HandlesValidity` instruction.
-///
-/// It includes the cryptographic proof as well as the context data information needed to verify
-/// the proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
-#[repr(C)]
-pub struct GroupedCiphertext3HandlesValidityProofData {
-    pub context: GroupedCiphertext3HandlesValidityProofContext,
-
-    pub proof: PodGroupedCiphertext3HandlesValidityProof,
-}
-
-#[derive(Clone, Copy, Pod, Zeroable)]
-#[repr(C)]
-pub struct GroupedCiphertext3HandlesValidityProofContext {
-    pub first_pubkey: PodElGamalPubkey, // 32 bytes
-
-    pub second_pubkey: PodElGamalPubkey, // 32 bytes
-
-    pub third_pubkey: PodElGamalPubkey, // 32 bytes
-
-    pub grouped_ciphertext: PodGroupedElGamalCiphertext3Handles, // 128 bytes
+pub trait GroupedCiphertext3HandlesValidityProofDataExt {
+    fn new(
+        first_pubkey: &ElGamalPubkey,
+        second_pubkey: &ElGamalPubkey,
+        third_pubkey: &ElGamalPubkey,
+        grouped_ciphertext: &GroupedElGamalCiphertext<3>,
+        amount: u64,
+        opening: &PedersenOpening,
+    ) -> Result<Self, ProofGenerationError>
+    where
+        Self: Sized;
 }
 
 #[cfg(not(target_os = "solana"))]
-impl GroupedCiphertext3HandlesValidityProofData {
-    pub fn new(
+impl GroupedCiphertext3HandlesValidityProofDataExt for GroupedCiphertext3HandlesValidityProofData {
+    fn new(
         first_pubkey: &ElGamalPubkey,
         second_pubkey: &ElGamalPubkey,
         third_pubkey: &ElGamalPubkey,
@@ -133,7 +121,7 @@ impl ZkProofData<GroupedCiphertext3HandlesValidityProofContext>
 }
 
 #[cfg(not(target_os = "solana"))]
-impl GroupedCiphertext3HandlesValidityProofContext {
+impl ProofContext for GroupedCiphertext3HandlesValidityProofContext {
     fn new_transcript(&self) -> Transcript {
         let mut transcript = Transcript::new(b"grouped-ciphertext-validity-3-handles-instruction");
 

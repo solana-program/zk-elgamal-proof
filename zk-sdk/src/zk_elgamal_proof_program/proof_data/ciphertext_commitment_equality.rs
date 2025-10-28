@@ -6,14 +6,15 @@
 //! key for the first ciphertext and the Pedersen opening for the commitment.
 
 use {
-    crate::zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
-    bytemuck_derive::{Pod, Zeroable},
+    crate::zk_elgamal_proof_program::proof_data::{ProofContext, ProofType, ZkProofData},
     solana_zk_sdk_pod::{
         encryption::{
             elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
             pedersen::PodPedersenCommitment,
         },
-        sigma_proofs::PodCiphertextCommitmentEqualityProof,
+        proof_data::ciphertext_commitment_equality::{
+            CiphertextCommitmentEqualityProofContext, CiphertextCommitmentEqualityProofData,
+        },
     },
 };
 #[cfg(not(target_os = "solana"))]
@@ -30,35 +31,22 @@ use {
     merlin::Transcript,
     std::convert::TryInto,
 };
-/// The instruction data that is needed for the
-/// `ProofInstruction::VerifyCiphertextCommitmentEquality` instruction.
-///
-/// It includes the cryptographic proof as well as the context data information needed to verify
-/// the proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
-#[repr(C)]
-pub struct CiphertextCommitmentEqualityProofData {
-    pub context: CiphertextCommitmentEqualityProofContext,
-    pub proof: PodCiphertextCommitmentEqualityProof,
-}
 
-/// The context data needed to verify a ciphertext-commitment equality proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
-#[repr(C)]
-pub struct CiphertextCommitmentEqualityProofContext {
-    /// The ElGamal pubkey
-    pub pubkey: PodElGamalPubkey, // 32 bytes
-
-    /// The ciphertext encrypted under the ElGamal pubkey
-    pub ciphertext: PodElGamalCiphertext, // 64 bytes
-
-    /// The Pedersen commitment
-    pub commitment: PodPedersenCommitment, // 32 bytes
+pub trait CiphertextCommitmentEqualityProofDataExt {
+    fn new(
+        keypair: &ElGamalKeypair,
+        ciphertext: &ElGamalCiphertext,
+        commitment: &PedersenCommitment,
+        opening: &PedersenOpening,
+        amount: u64,
+    ) -> Result<Self, ProofGenerationError>
+    where
+        Self: Sized;
 }
 
 #[cfg(not(target_os = "solana"))]
-impl CiphertextCommitmentEqualityProofData {
-    pub fn new(
+impl CiphertextCommitmentEqualityProofDataExt for CiphertextCommitmentEqualityProofData {
+    fn new(
         keypair: &ElGamalKeypair,
         ciphertext: &ElGamalCiphertext,
         commitment: &PedersenCommitment,
@@ -111,7 +99,7 @@ impl ZkProofData<CiphertextCommitmentEqualityProofContext>
 
 #[allow(non_snake_case)]
 #[cfg(not(target_os = "solana"))]
-impl CiphertextCommitmentEqualityProofContext {
+impl ProofContext for CiphertextCommitmentEqualityProofContext {
     fn new_transcript(&self) -> Transcript {
         let mut transcript = Transcript::new(b"ciphertext-commitment-equality-instruction");
         transcript.append_message(b"pubkey", bytes_of(&self.pubkey));

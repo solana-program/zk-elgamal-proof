@@ -976,6 +976,7 @@ dependencies = [
  "getrandom",
  "js-sys",
  "solana-zk-sdk",
+ "solana-zk-sdk-pod",
  "wasm-bindgen",
  "wasm-bindgen-test",
 ]

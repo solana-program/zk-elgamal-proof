@@ -6,6 +6,15 @@
 //! - the `percentage` amount is equal to a constant (referred to as the `max_value`)
 //! - the `delta` and `claimed` amounts are equal
 
+use {
+    crate::zk_elgamal_proof_program::proof_data::{ProofContext, ProofType, ZkProofData},
+    solana_zk_sdk_pod::{
+        encryption::pedersen::PodPedersenCommitment,
+        proof_data::percentage_with_cap::{
+            PercentageWithCapProofContext, PercentageWithCapProofData,
+        },
+    },
+};
 #[cfg(not(target_os = "solana"))]
 use {
     crate::{
@@ -17,56 +26,28 @@ use {
     merlin::Transcript,
     std::convert::TryInto,
 };
-use {
-    crate::{
-        pod::PodU64,
-        zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
-    },
-    bytemuck_derive::{Pod, Zeroable},
-    solana_zk_sdk_pod::{
-        encryption::pedersen::PodPedersenCommitment, sigma_proofs::PodPercentageWithCapProof,
-    },
-};
 
-/// The instruction data that is needed for the `ProofInstruction::VerifyPercentageWithCap`
-/// instruction.
-///
-/// It includes the cryptographic proof as well as the context data information needed to verify
-/// the proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
-#[repr(C)]
-pub struct PercentageWithCapProofData {
-    pub context: PercentageWithCapProofContext,
-
-    pub proof: PodPercentageWithCapProof,
-}
-
-/// The context data needed to verify a percentage-with-cap proof.
-///
-/// We refer to [`ZK ElGamal proof`] for the formal details on how the percentage-with-cap proof is
-/// computed.
-///
-/// [`ZK ElGamal proof`]: https://docs.solanalabs.com/runtime/zk-token-proof
-#[derive(Clone, Copy, Pod, Zeroable)]
-#[repr(C)]
-pub struct PercentageWithCapProofContext {
-    /// The Pedersen commitment to the percentage amount.
-    pub percentage_commitment: PodPedersenCommitment,
-
-    /// The Pedersen commitment to the delta amount.
-    pub delta_commitment: PodPedersenCommitment,
-
-    /// The Pedersen commitment to the claimed amount.
-    pub claimed_commitment: PodPedersenCommitment,
-
-    /// The maximum cap bound.
-    pub max_value: PodU64,
+pub trait PercentageWithCapProofDataExt {
+    #[allow(clippy::too_many_arguments)]
+    fn new(
+        percentage_commitment: &PedersenCommitment,
+        percentage_opening: &PedersenOpening,
+        percentage_amount: u64,
+        delta_commitment: &PedersenCommitment,
+        delta_opening: &PedersenOpening,
+        delta_amount: u64,
+        claimed_commitment: &PedersenCommitment,
+        claimed_opening: &PedersenOpening,
+        max_value: u64,
+    ) -> Result<Self, ProofGenerationError>
+    where
+        Self: Sized;
 }
 
 #[cfg(not(target_os = "solana"))]
-impl PercentageWithCapProofData {
+impl PercentageWithCapProofDataExt for PercentageWithCapProofData {
     #[allow(clippy::too_many_arguments)]
-    pub fn new(
+    fn new(
         percentage_commitment: &PedersenCommitment,
         percentage_opening: &PedersenOpening,
         percentage_amount: u64,
@@ -139,7 +120,7 @@ impl ZkProofData<PercentageWithCapProofContext> for PercentageWithCapProofData {
 }
 
 #[cfg(not(target_os = "solana"))]
-impl PercentageWithCapProofContext {
+impl ProofContext for PercentageWithCapProofContext {
     fn new_transcript(&self) -> Transcript {
         let mut transcript = Transcript::new(b"percentage-with-cap-instruction");
         transcript.append_message(

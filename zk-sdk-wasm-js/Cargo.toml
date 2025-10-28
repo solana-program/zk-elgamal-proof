@@ -21,6 +21,7 @@ test-browser = []
 
 [dependencies]
 solana-zk-sdk = { workspace = true }
+solana-zk-sdk-pod = { workspace = true }
 bytemuck = { workspace = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

@@ -6,11 +6,12 @@
 //! used to generate the second ciphertext.
 
 use {
-    crate::zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
-    bytemuck_derive::{Pod, Zeroable},
+    crate::zk_elgamal_proof_program::proof_data::{ProofContext, ProofType, ZkProofData},
     solana_zk_sdk_pod::{
         encryption::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
-        sigma_proofs::PodCiphertextCiphertextEqualityProof,
+        proof_data::ciphertext_ciphertext_equality::{
+            CiphertextCiphertextEqualityProofContext, CiphertextCiphertextEqualityProofData,
+        },
     },
 };
 #[cfg(not(target_os = "solana"))]
@@ -28,35 +29,22 @@ use {
     std::convert::TryInto,
 };
 
-/// The instruction data that is needed for the
-/// `ProofInstruction::VerifyCiphertextCiphertextEquality` instruction.
-///
-/// It includes the cryptographic proof as well as the context data information needed to verify
-/// the proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
-#[repr(C)]
-pub struct CiphertextCiphertextEqualityProofData {
-    pub context: CiphertextCiphertextEqualityProofContext,
-
-    pub proof: PodCiphertextCiphertextEqualityProof,
-}
-
-/// The context data needed to verify a ciphertext-ciphertext equality proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
-#[repr(C)]
-pub struct CiphertextCiphertextEqualityProofContext {
-    pub first_pubkey: PodElGamalPubkey, // 32 bytes
-
-    pub second_pubkey: PodElGamalPubkey, // 32 bytes
-
-    pub first_ciphertext: PodElGamalCiphertext, // 64 bytes
-
-    pub second_ciphertext: PodElGamalCiphertext, // 64 bytes
+pub trait CiphertextCiphertextEqualityProofDataExt {
+    fn new(
+        first_keypair: &ElGamalKeypair,
+        second_pubkey: &ElGamalPubkey,
+        first_ciphertext: &ElGamalCiphertext,
+        second_ciphertext: &ElGamalCiphertext,
+        second_opening: &PedersenOpening,
+        amount: u64,
+    ) -> Result<Self, ProofGenerationError>
+    where
+        Self: Sized;
 }
 
 #[cfg(not(target_os = "solana"))]
-impl CiphertextCiphertextEqualityProofData {
-    pub fn new(
+impl CiphertextCiphertextEqualityProofDataExt for CiphertextCiphertextEqualityProofData {
+    fn new(
         first_keypair: &ElGamalKeypair,
         second_pubkey: &ElGamalPubkey,
         first_ciphertext: &ElGamalCiphertext,
@@ -125,7 +113,7 @@ impl ZkProofData<CiphertextCiphertextEqualityProofContext>
 
 #[allow(non_snake_case)]
 #[cfg(not(target_os = "solana"))]
-impl CiphertextCiphertextEqualityProofContext {
+impl ProofContext for CiphertextCiphertextEqualityProofContext {
     fn new_transcript(&self) -> Transcript {
         let mut transcript = Transcript::new(b"ciphertext-ciphertext-equality-instruction");
 

@@ -6,13 +6,13 @@
 //! grouped-ciphertext validity proofs.
 
 use {
-    crate::zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
-    bytemuck_derive::{Pod, Zeroable},
+    crate::zk_elgamal_proof_program::proof_data::{ProofContext, ProofType, ZkProofData},
     solana_zk_sdk_pod::{
-        encryption::{
-            elgamal::PodElGamalPubkey, grouped_elgamal::PodGroupedElGamalCiphertext3Handles,
+        encryption::elgamal::PodElGamalPubkey,
+        proof_data::batched_grouped_ciphertext_validity::{
+            BatchedGroupedCiphertext3HandlesValidityProofContext,
+            BatchedGroupedCiphertext3HandlesValidityProofData,
         },
-        sigma_proofs::PodBatchedGroupedCiphertext3HandlesValidityProof,
     },
 };
 #[cfg(not(target_os = "solana"))]
@@ -29,37 +29,29 @@ use {
     merlin::Transcript,
 };
 
-/// The instruction data that is needed for the
-/// `ProofInstruction::VerifyBatchedGroupedCiphertext3HandlesValidity` instruction.
-///
-/// It includes the cryptographic proof as well as the context data information needed to verify
-/// the proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
-#[repr(C)]
-pub struct BatchedGroupedCiphertext3HandlesValidityProofData {
-    pub context: BatchedGroupedCiphertext3HandlesValidityProofContext,
-
-    pub proof: PodBatchedGroupedCiphertext3HandlesValidityProof,
-}
-
-#[derive(Clone, Copy, Pod, Zeroable)]
-#[repr(C)]
-pub struct BatchedGroupedCiphertext3HandlesValidityProofContext {
-    pub first_pubkey: PodElGamalPubkey, // 32 bytes
-
-    pub second_pubkey: PodElGamalPubkey, // 32 bytes
-
-    pub third_pubkey: PodElGamalPubkey, // 32 bytes
-
-    pub grouped_ciphertext_lo: PodGroupedElGamalCiphertext3Handles, // 128 bytes
-
-    pub grouped_ciphertext_hi: PodGroupedElGamalCiphertext3Handles, // 128 bytes
+pub trait BatchedGroupedCiphertext3HandlesValidityProofDataExt {
+    #[allow(clippy::too_many_arguments)]
+    fn new(
+        first_pubkey: &ElGamalPubkey,
+        second_pubkey: &ElGamalPubkey,
+        third_pubkey: &ElGamalPubkey,
+        grouped_ciphertext_lo: &GroupedElGamalCiphertext<3>,
+        grouped_ciphertext_hi: &GroupedElGamalCiphertext<3>,
+        amount_lo: u64,
+        amount_hi: u64,
+        opening_lo: &PedersenOpening,
+        opening_hi: &PedersenOpening,
+    ) -> Result<Self, ProofGenerationError>
+    where
+        Self: Sized;
 }
 
 #[cfg(not(target_os = "solana"))]
-impl BatchedGroupedCiphertext3HandlesValidityProofData {
+impl BatchedGroupedCiphertext3HandlesValidityProofDataExt
+    for BatchedGroupedCiphertext3HandlesValidityProofData
+{
     #[allow(clippy::too_many_arguments)]
-    pub fn new(
+    fn new(
         first_pubkey: &ElGamalPubkey,
         second_pubkey: &ElGamalPubkey,
         third_pubkey: &ElGamalPubkey,
@@ -153,7 +145,7 @@ impl ZkProofData<BatchedGroupedCiphertext3HandlesValidityProofContext>
 }
 
 #[cfg(not(target_os = "solana"))]
-impl BatchedGroupedCiphertext3HandlesValidityProofContext {
+impl ProofContext for BatchedGroupedCiphertext3HandlesValidityProofContext {
     fn new_transcript(&self) -> Transcript {
         let mut transcript =
             Transcript::new(b"batched-grouped-ciphertext-validity-3-handles-instruction");

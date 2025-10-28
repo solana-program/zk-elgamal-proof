@@ -1,6 +1,8 @@
 pub mod encryption;
 pub mod errors;
 pub mod macros;
+pub mod num;
+pub mod proof_data;
 pub mod range_proof;
 pub mod sigma_proofs;
 
