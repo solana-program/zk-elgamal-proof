@@ -6,9 +6,9 @@
 
 use {
     crate::zk_elgamal_proof_program::proof_data::{ProofContext, ProofType, ZkProofData},
-    solana_zk_sdk_pod::encryption::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
-    solana_zk_sdk_pod::proof_data::zero_ciphertext::{
-        ZeroCiphertextProofContext, ZeroCiphertextProofData,
+    solana_zk_sdk_pod::{
+        encryption::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
+        proof_data::zero_ciphertext::{ZeroCiphertextProofContext, ZeroCiphertextProofData},
     },
 };
 #[cfg(not(target_os = "solana"))]

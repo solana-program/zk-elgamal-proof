@@ -32,7 +32,6 @@ pub use solana_zk_sdk_pod::sigma_proofs::{
     GROUPED_CIPHERTEXT_3_HANDLES_VALIDITY_PROOF_LEN, PERCENTAGE_WITH_CAP_PROOF_LEN,
     PUBKEY_VALIDITY_PROOF_LEN, ZERO_CIPHERTEXT_PROOF_LEN,
 };
-
 #[cfg(not(target_os = "solana"))]
 use {
     crate::{

@@ -30,6 +30,7 @@ use {
 };
 
 pub trait BatchedGroupedCiphertext2HandlesValidityProofDataExt {
+    #[allow(clippy::too_many_arguments)]
     fn new(
         first_pubkey: &ElGamalPubkey,
         second_pubkey: &ElGamalPubkey,
