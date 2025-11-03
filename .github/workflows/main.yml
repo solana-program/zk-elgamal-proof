@@ -136,6 +136,9 @@ jobs:
       - name: Test ZK SDK Wasm
         run: pnpm zk-sdk-wasm-js:test-wasm
 
+      - name: Run Integration Tests
+        run: pnpm zk-sdk-wasm-js:test-integration
+
   build_programs:
     name: Check ZK SDK SBF build
     runs-on: ubuntu-latest
