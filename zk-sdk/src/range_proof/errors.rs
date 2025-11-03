@@ -36,6 +36,8 @@ pub enum RangeProofVerificationError {
     MaximumGeneratorLengthExceeded,
     #[error("commitments and bit lengths vectors have different lengths")]
     VectorLengthMismatch,
+    #[error("L and R vectors in inner product proof have different lengths")]
+    LRVectorLengthMismatch,
 }
 
 #[cfg(not(target_os = "solana"))]
