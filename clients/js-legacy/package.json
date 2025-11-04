@@ -55,7 +55,7 @@
         "eslint-config-prettier": "^10.1.8",
         "eslint-plugin-prettier": "^5.5.4",
         "eslint-plugin-require-extensions": "^0.1.1",
-        "globals": "^16.4.0",
+        "globals": "^16.5.0",
         "mocha": "^11.7.4",
         "prettier": "^3.6.2",
         "shx": "^0.3.4",
