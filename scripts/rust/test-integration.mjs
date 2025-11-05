@@ -35,8 +35,8 @@ try {
   await $`pnpm test --dir ${path.join(examplesPath, "node-integration")}`;
   console.log(chalk.green("✅ Node.js integration test passed."));
 } catch (error) {
-  console.error(chalk.red("❌ Node.js integration test failed."));
-  process.exit(1);
+  console.error(chalk.red("❌ Node.js integration test failed."), error);
+  throw error;
 }
 
 console.log(
@@ -56,8 +56,8 @@ try {
   await $`pnpm exec playwright test --config ${path.join(examplesPath, "playwright.config.js")}`;
   console.log(chalk.green("✅ Browser integration tests passed."));
 } catch (error) {
-  console.error(chalk.red("❌ Browser integration tests failed."));
-  process.exit(1);
+  console.error(chalk.red("❌ Browser integration tests failed."), error);
+  throw error;
 }
 
 console.log(chalk.green("\n🎉 All integration tests passed!"));

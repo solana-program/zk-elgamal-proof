@@ -26,6 +26,7 @@
     }
   },
   "scripts": {
-    "build": "./compile-wasm.sh"
+    "build": "./compile-wasm.sh",
+    "prepublishOnly": "pnpm build"
   }
 }
