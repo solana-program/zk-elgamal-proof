@@ -47,6 +47,7 @@ jobs:
         uses: ./.github/actions/setup
         with:
           solana: true
+          wasm: true
           cargo-cache-key: cargo-js-test-publish-${{ inputs.package_path }}
           cargo-cache-fallback-key: cargo-js-test-publish
 
@@ -74,6 +75,8 @@ jobs:
 
       - name: Setup Environment
         uses: ./.github/actions/setup
+        with:
+          wasm: true
 
       - name: Ensure SOLANA_NPM_TOKEN variable is set
         env:
