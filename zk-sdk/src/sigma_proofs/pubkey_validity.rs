@@ -47,10 +47,6 @@ pub struct PubkeyValidityProof {
 impl PubkeyValidityProof {
     /// Creates a public key validity proof.
     ///
-    /// The function does *not* hash the public key into the transcript. For
-    /// security, the caller (the main protocol) should hash these public key components prior to
-    /// invoking this constructor.
-    ///
     /// This function is randomized. It uses `OsRng` internally to generate random scalars.
     ///
     /// This function panics if the provided keypair is not valid (i.e. secret key is not
@@ -60,6 +56,7 @@ impl PubkeyValidityProof {
     ///   proved
     /// * `transcript` - The transcript that does the bookkeeping for the Fiat-Shamir heuristic
     pub fn new(elgamal_keypair: &ElGamalKeypair, transcript: &mut Transcript) -> Self {
+        Self::hash_context_into_transcript(elgamal_keypair.pubkey(), transcript);
         transcript.pubkey_proof_domain_separator();
 
         // extract the relevant scalar and Ristretto points from the input
@@ -96,6 +93,7 @@ impl PubkeyValidityProof {
         elgamal_pubkey: &ElGamalPubkey,
         transcript: &mut Transcript,
     ) -> Result<(), PubkeyValidityProofVerificationError> {
+        Self::hash_context_into_transcript(elgamal_pubkey, transcript);
         transcript.pubkey_proof_domain_separator();
 
         // extract the relevant scalar and Ristretto points from the input
@@ -125,6 +123,13 @@ impl PubkeyValidityProof {
         } else {
             Err(SigmaProofVerificationError::AlgebraicRelation.into())
         }
+    }
+
+    fn hash_context_into_transcript(
+        pubkey: &ElGamalPubkey,
+        transcript: &mut Transcript,
+    ) {
+        transcript.append_message(b"pubkey", &pubkey.to_bytes());
     }
 
     pub fn to_bytes(&self) -> [u8; PUBKEY_VALIDITY_PROOF_LEN] {
@@ -190,11 +195,11 @@ mod test {
 
     #[test]
     fn test_pubkey_proof_str() {
-        let pubkey_str = "XKF3GnFDX4HBoBEj04yDTr6Lqx+0qp9pQyPzFjyVmXY=";
+        let pubkey_str = "1KM0Ld9q6NU69bINtfUCujhlNbzrhLumxLMfRVKMvFg=";
         let pod_pubkey = PodElGamalPubkey::from_str(pubkey_str).unwrap();
         let pubkey: ElGamalPubkey = pod_pubkey.try_into().unwrap();
 
-        let proof_str = "5hmM4uVtfJ2JfCcjWpo2dEbg22n4CdzHYQF4oBgWSGeYAh5d91z4emkjeXq9ihtmqAR+7BYCv44TqQWoMQrECA==";
+        let proof_str = "QKtYgQdnHJF/qwlynbdkS1veGp+hK3VTUh0bNJaHPTLslNRBX5eDo7z2N+wS9+yJwHHiOh47QmbgYwOJ/hZYDA==";
         let pod_proof = PodPubkeyValidityProof::from_str(proof_str).unwrap();
         let proof: PubkeyValidityProof = pod_proof.try_into().unwrap();
 

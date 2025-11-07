@@ -124,6 +124,13 @@ impl PercentageWithCapProof {
         max_value: u64,
         transcript: &mut Transcript,
     ) -> Self {
+        Self::hash_context_into_transcript(
+            percentage_commitment, 
+            delta_commitment, 
+            claimed_commitment, 
+            max_value,
+            transcript, 
+        );
         transcript.percentage_with_cap_proof_domain_separator();
 
         // clone the transcript twice for the two executions of the proof generation
@@ -314,7 +321,7 @@ impl PercentageWithCapProof {
     ) -> Self {
         // simulate max proof
         // 1. sample random values for the scalar components
-        // 2. solave for `Y_max_proof` value that will satisfy the algebraic verification relation
+        // 2. solve for `Y_max_proof` value that will satisfy the algebraic verification relation
         let m = Scalar::from(max_value);
         let C_percentage = percentage_commitment.get_point();
 
@@ -411,6 +418,13 @@ impl PercentageWithCapProof {
         max_value: u64,
         transcript: &mut Transcript,
     ) -> Result<(), PercentageWithCapProofVerificationError> {
+        Self::hash_context_into_transcript(
+            percentage_commitment, 
+            delta_commitment, 
+            claimed_commitment, 
+            max_value,
+            transcript,
+        );
         transcript.percentage_with_cap_proof_domain_separator();
 
         // extract the relevant scalar and Ristretto points from the input
@@ -496,6 +510,22 @@ impl PercentageWithCapProof {
         } else {
             Err(SigmaProofVerificationError::AlgebraicRelation.into())
         }
+    }
+
+    fn hash_context_into_transcript(
+        percentage_commitment: &PedersenCommitment,
+        delta_commitment: &PedersenCommitment,
+        claimed_commitment: &PedersenCommitment,
+        max_value: u64,
+        transcript: &mut Transcript,
+    ) {
+        transcript.append_message(
+            b"percentage-commitment",
+            &percentage_commitment.to_bytes(),
+        );
+        transcript.append_message(b"delta-commitment", &delta_commitment.to_bytes());
+        transcript.append_message(b"claimed-commitment", &claimed_commitment.to_bytes());
+        transcript.append_u64(b"max-value", max_value);
     }
 
     pub fn to_bytes(&self) -> [u8; PERCENTAGE_WITH_CAP_PROOF_LEN] {
@@ -642,23 +672,30 @@ mod test {
         let transfer_amount: u64 = 55;
         let max_value: u64 = 3;
         let percentage_rate: u16 = 555; // 5.55%. Calculated fee is 3.0525
-        let fee_amount: u64 = max_value; // fee amount is capped at 3
+        let percentage_amount: u64 = max_value; // percentage amount is capped at 3
 
         let (transfer_commitment, _transfer_opening) = Pedersen::new(transfer_amount);
-        let (fee_commitment, fee_opening) = Pedersen::new(fee_amount);
+        let (percentage_commitment, percentage_opening) = Pedersen::new(percentage_amount);
 
         let scalar_rate = Scalar::from(percentage_rate);
         let delta_commitment =
-            &fee_commitment * &Scalar::from(10000_u64) - &transfer_commitment * &scalar_rate;
+            &percentage_commitment * &Scalar::from(10000_u64) - &transfer_commitment * &scalar_rate;
 
         let (claimed_commitment, _claimed_opening) = Pedersen::new(0_u64);
 
         let mut prover_transcript = Transcript::new(b"test");
         let mut verifier_transcript = Transcript::new(b"test");
 
+        prover_transcript.append_message(
+            b"percentage-commitment",
+            &percentage_commitment.to_bytes(),
+        );
+        prover_transcript.append_message(b"delta-commitment", &delta_commitment.to_bytes());
+        prover_transcript.append_message(b"claimed-commitment", &claimed_commitment.to_bytes());
+        prover_transcript.append_u64(b"max-value", max_value);
         prover_transcript.percentage_with_cap_proof_domain_separator();
         let proof = PercentageWithCapProof::create_proof_percentage_above_max(
-            &fee_opening,
+            &percentage_opening,
             &delta_commitment,
             &claimed_commitment,
             &mut prover_transcript,
@@ -666,7 +703,7 @@ mod test {
 
         assert!(proof
             .verify(
-                &fee_commitment,
+                &percentage_commitment,
                 &delta_commitment,
                 &claimed_commitment,
                 max_value,
@@ -698,6 +735,13 @@ mod test {
         let mut prover_transcript = Transcript::new(b"test");
         let mut verifier_transcript = Transcript::new(b"test");
 
+        prover_transcript.append_message(
+            b"percentage-commitment",
+            &percentage_commitment.to_bytes(),
+        );
+        prover_transcript.append_message(b"delta-commitment", &delta_commitment.to_bytes());
+        prover_transcript.append_message(b"claimed-commitment", &claimed_commitment.to_bytes());
+        prover_transcript.append_u64(b"max-value", max_value);
         prover_transcript.percentage_with_cap_proof_domain_separator();
         let proof = PercentageWithCapProof::create_proof_percentage_below_max(
             &percentage_commitment,
@@ -879,22 +923,22 @@ mod test {
     fn test_percentage_with_cap_proof_string() {
         let max_value: u64 = 3;
 
-        let percentage_commitment_str = "JGuzRjhmp3d8PWshbrN3Q7kg027OdPn7IU26ISTiz3c=";
+        let percentage_commitment_str = "0E3JSrvPEjVf2QST6m8tJ9huEwRSbb8D/phD4UG8cnU=";
         let pod_percentage_commitment =
             PodPedersenCommitment::from_str(percentage_commitment_str).unwrap();
         let percentage_commitment: PedersenCommitment =
             pod_percentage_commitment.try_into().unwrap();
 
-        let delta_commitment_str = "3mwfK4u0J0UqCVznbxyCjlGEgMrI+XHdW7g00YVjSVA=";
+        let delta_commitment_str = "nHYaTODvZ1gSz6l6X1/Sr8zdgMx4jsVaG2D/bN6HvA4=";
         let pod_delta_commitment = PodPedersenCommitment::from_str(delta_commitment_str).unwrap();
         let delta_commitment: PedersenCommitment = pod_delta_commitment.try_into().unwrap();
 
-        let claimed_commitment_str = "/t9n3yJa7p9wJV5P2cclnUiirKU5oNUv/gQMe27WMT4=";
+        let claimed_commitment_str = "JpWpWZXGgQ6KU2n0HXYkc4bQIirq82OKAPQx+lN5B0Q=";
         let pod_claimed_commitment =
             PodPedersenCommitment::from_str(claimed_commitment_str).unwrap();
         let claimed_commitment: PedersenCommitment = pod_claimed_commitment.try_into().unwrap();
 
-        let proof_str = "SpmzL7hrLLp7P/Cz+2kBh22QKq3mWb0v28Er6lO9aRfBer77VY03i9VSEd4uHYMXdaf/MBPUsDVjUxNjoauwBmw6OrAcq6tq9o1Z+NS8lkukVh6sqSrSh9dy9ipq6JcIePAVmGwDNk07ACgPE/ynrenwSPJ7ZHDGZszGkw95h25gTKPyoaMbvZoXGLtkuHmvXJ7KBBJmK2eTzELb6UF2HOUg9cGFgomL8Xa3l14LBDMwLAokJK4n2d6eTkk1O0ECddmTDwoG6lmt0fHXYm37Z+k4yrQkhUgKwph2nLWG3Q7zvRM2qVFxFUGfLWJq5Sm7l7segOm+hQpRaH+q7OHNBg==";
+        let proof_str = "FFlTOVj/0m96Bh27AVGay+EQiKLkPJTwLpVCYV7JCAGUMa8+gvW9Q5tiSbOldI7pNKLEDXINDGGsNhqm02NDDpuyV+ub5G0A8tMcSTHc3IdmI6sSMO/ThgdXtuFP0LcHpmQzXFM/jLRTR2Ey0s30fJ5u+uWLG8ntyQDHQ9PHc0qOULenzw2ibTSi9BpAw+mieyp+lTQ+JEK9wgDbZyI+EgC7x8s6Ff1vnR4GTS8FoQeGieAb8k/Zp1xttxhRk/sEshiG106FkFOQOjWr+fjYDyMyL1H+TAFxp8dGcuovCArmIP84n67PENWSeN81M90llIuV2OsdCK2eCvSYPJVcDA==";
         let pod_proof = PodPercentageWithCapProof::from_str(proof_str).unwrap();
         let proof: PercentageWithCapProof = pod_proof.try_into().unwrap();
 

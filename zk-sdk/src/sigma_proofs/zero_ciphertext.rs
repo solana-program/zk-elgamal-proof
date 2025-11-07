@@ -49,10 +49,6 @@ pub struct ZeroCiphertextProof {
 impl ZeroCiphertextProof {
     /// Creates a zero-ciphertext proof.
     ///
-    /// The function does *not* hash the public key and ciphertext into the transcript. For
-    /// security, the caller (the main protocol) should hash these public components prior to
-    /// invoking this constructor.
-    ///
     /// This function is randomized. It uses `OsRng` internally to generate random scalars.
     ///
     /// * `elgamal_keypair` - The ElGamal keypair associated with the ciphertext to be proved
@@ -63,6 +59,7 @@ impl ZeroCiphertextProof {
         ciphertext: &ElGamalCiphertext,
         transcript: &mut Transcript,
     ) -> Self {
+        Self::hash_context_into_transcript(elgamal_keypair.pubkey(), ciphertext, transcript);
         transcript.zero_ciphertext_proof_domain_separator();
 
         // extract the relevant scalar and Ristretto points from the input
@@ -104,6 +101,7 @@ impl ZeroCiphertextProof {
         ciphertext: &ElGamalCiphertext,
         transcript: &mut Transcript,
     ) -> Result<(), ZeroCiphertextProofVerificationError> {
+        Self::hash_context_into_transcript(elgamal_pubkey, ciphertext, transcript);
         transcript.zero_ciphertext_proof_domain_separator();
 
         // extract the relevant scalar and Ristretto points from the input
@@ -157,6 +155,15 @@ impl ZeroCiphertextProof {
         } else {
             Err(SigmaProofVerificationError::AlgebraicRelation.into())
         }
+    }
+
+    fn hash_context_into_transcript(
+        pubkey: &ElGamalPubkey,
+        ciphertext: &ElGamalCiphertext,
+        transcript: &mut Transcript,
+    ) {
+        transcript.append_message(b"pubkey", &pubkey.to_bytes());
+        transcript.append_message(b"ciphertext", &ciphertext.to_bytes());
     }
 
     pub fn to_bytes(&self) -> [u8; ZERO_CIPHERTEXT_PROOF_LEN] {
@@ -295,15 +302,15 @@ mod test {
 
     #[test]
     fn test_zero_ciphertext_proof_string() {
-        let pubkey_str = "Vlx+Fr61KnreO27JDg5MsBN8NgbICGa3fIech8oZ4hQ=";
+        let pubkey_str = "ghXlevXjXYxZ5EfCUA/GkuXutYszDIhR4HQQQtQZrUM=";
         let pod_pubkey = PodElGamalPubkey::from_str(pubkey_str).unwrap();
         let pubkey: ElGamalPubkey = pod_pubkey.try_into().unwrap();
 
-        let ciphertext_str = "wps5X1mou5PUdPD+llxiJ+aoX4YWrR/S6/U2MUC2LjLS7wDu6S9nOG92VMnlngQaP4irBY0OqlsGdXS4j8DROg==";
+        let ciphertext_str = "BuN6mUznNwepi3DLPpmwAUl2JsnUO7KG6vsqfHjvxnOcB+lk/z6uod6VJdwjfb59g0+1ZdGErttsUHn0nU1qPQ==";
         let pod_ciphertext = PodElGamalCiphertext::from_str(ciphertext_str).unwrap();
         let ciphertext: ElGamalCiphertext = pod_ciphertext.try_into().unwrap();
 
-        let proof_str = "qMDiQ5zPcTYFhchYBZzRS81UGIt2QRNce2/ULEqDBXBQEnGRI0u0G1HzRJfpIbOWCHBwMaNgsT1jTZwTOTWyMBE/2UjHI4x9IFpAM6ccGuexo/HjSECPDgL+85zrfA8L";
+        let proof_str = "WgkuFTQDH9aQkdk76xAK9YpfxZmqWS56jBN/ic73yhv6YMS3+bz8HrO4G7DangnI8D0sFL2LPBC5ocwycbQvLAUZ671RZsTXGLzCyytpbdLFTL8d+Y2xkibnJ9AA6MkM";
         let pod_proof = PodZeroCiphertextProof::from_str(proof_str).unwrap();
         let proof: ZeroCiphertextProof = pod_proof.try_into().unwrap();
 

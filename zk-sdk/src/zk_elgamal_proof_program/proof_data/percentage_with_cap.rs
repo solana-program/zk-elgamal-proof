@@ -13,7 +13,6 @@ use {
         sigma_proofs::percentage_with_cap::PercentageWithCapProof,
         zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
     },
-    bytemuck::bytes_of,
     merlin::Transcript,
     std::convert::TryInto,
 };
@@ -88,7 +87,7 @@ impl PercentageWithCapProofData {
             max_value: pod_max_value,
         };
 
-        let mut transcript = context.new_transcript();
+        let mut transcript = Transcript::new(b"percentage-with-cap-instruction");
 
         let proof = PercentageWithCapProof::new(
             percentage_commitment,
@@ -117,7 +116,7 @@ impl ZkProofData<PercentageWithCapProofContext> for PercentageWithCapProofData {
 
     #[cfg(not(target_os = "solana"))]
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
-        let mut transcript = self.context.new_transcript();
+        let mut transcript = Transcript::new(b"percentage-with-cap-instruction");
 
         let percentage_commitment = self.context.percentage_commitment.try_into()?;
         let delta_commitment = self.context.delta_commitment.try_into()?;
@@ -134,21 +133,6 @@ impl ZkProofData<PercentageWithCapProofContext> for PercentageWithCapProofData {
                 &mut transcript,
             )
             .map_err(|e| e.into())
-    }
-}
-
-#[cfg(not(target_os = "solana"))]
-impl PercentageWithCapProofContext {
-    fn new_transcript(&self) -> Transcript {
-        let mut transcript = Transcript::new(b"percentage-with-cap-instruction");
-        transcript.append_message(
-            b"percentage-commitment",
-            bytes_of(&self.percentage_commitment),
-        );
-        transcript.append_message(b"delta-commitment", bytes_of(&self.delta_commitment));
-        transcript.append_message(b"claimed-commitment", bytes_of(&self.claimed_commitment));
-        transcript.append_u64(b"max-value", self.max_value.into());
-        transcript
     }
 }
 

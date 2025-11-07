@@ -11,7 +11,6 @@ use {
         sigma_proofs::zero_ciphertext::ZeroCiphertextProof,
         zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
     },
-    bytemuck::bytes_of,
     merlin::Transcript,
     std::convert::TryInto,
 };
@@ -63,7 +62,7 @@ impl ZeroCiphertextProofData {
             ciphertext: pod_ciphertext,
         };
 
-        let mut transcript = context.new_transcript();
+        let mut transcript = Transcript::new(b"zero-ciphertext-instruction");
         let proof = ZeroCiphertextProof::new(keypair, ciphertext, &mut transcript).into();
 
         Ok(ZeroCiphertextProofData { context, proof })
@@ -79,26 +78,13 @@ impl ZkProofData<ZeroCiphertextProofContext> for ZeroCiphertextProofData {
 
     #[cfg(not(target_os = "solana"))]
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
-        let mut transcript = self.context.new_transcript();
+        let mut transcript = Transcript::new(b"zero-ciphertext-instruction");
         let pubkey = self.context.pubkey.try_into()?;
         let ciphertext = self.context.ciphertext.try_into()?;
         let proof: ZeroCiphertextProof = self.proof.try_into()?;
         proof
             .verify(&pubkey, &ciphertext, &mut transcript)
             .map_err(|e| e.into())
-    }
-}
-
-#[allow(non_snake_case)]
-#[cfg(not(target_os = "solana"))]
-impl ZeroCiphertextProofContext {
-    fn new_transcript(&self) -> Transcript {
-        let mut transcript = Transcript::new(b"zero-ciphertext-instruction");
-
-        transcript.append_message(b"pubkey", bytes_of(&self.pubkey));
-        transcript.append_message(b"ciphertext", bytes_of(&self.ciphertext));
-
-        transcript
     }
 }
 
