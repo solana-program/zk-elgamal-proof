@@ -125,11 +125,11 @@ impl PercentageWithCapProof {
         transcript: &mut Transcript,
     ) -> Self {
         Self::hash_context_into_transcript(
-            percentage_commitment, 
-            delta_commitment, 
-            claimed_commitment, 
+            percentage_commitment,
+            delta_commitment,
+            claimed_commitment,
             max_value,
-            transcript, 
+            transcript,
         );
         transcript.percentage_with_cap_proof_domain_separator();
 
@@ -419,9 +419,9 @@ impl PercentageWithCapProof {
         transcript: &mut Transcript,
     ) -> Result<(), PercentageWithCapProofVerificationError> {
         Self::hash_context_into_transcript(
-            percentage_commitment, 
-            delta_commitment, 
-            claimed_commitment, 
+            percentage_commitment,
+            delta_commitment,
+            claimed_commitment,
             max_value,
             transcript,
         );
@@ -519,10 +519,7 @@ impl PercentageWithCapProof {
         max_value: u64,
         transcript: &mut Transcript,
     ) {
-        transcript.append_message(
-            b"percentage-commitment",
-            &percentage_commitment.to_bytes(),
-        );
+        transcript.append_message(b"percentage-commitment", &percentage_commitment.to_bytes());
         transcript.append_message(b"delta-commitment", &delta_commitment.to_bytes());
         transcript.append_message(b"claimed-commitment", &claimed_commitment.to_bytes());
         transcript.append_u64(b"max-value", max_value);
@@ -686,10 +683,8 @@ mod test {
         let mut prover_transcript = Transcript::new(b"test");
         let mut verifier_transcript = Transcript::new(b"test");
 
-        prover_transcript.append_message(
-            b"percentage-commitment",
-            &percentage_commitment.to_bytes(),
-        );
+        prover_transcript
+            .append_message(b"percentage-commitment", &percentage_commitment.to_bytes());
         prover_transcript.append_message(b"delta-commitment", &delta_commitment.to_bytes());
         prover_transcript.append_message(b"claimed-commitment", &claimed_commitment.to_bytes());
         prover_transcript.append_u64(b"max-value", max_value);
@@ -735,10 +730,8 @@ mod test {
         let mut prover_transcript = Transcript::new(b"test");
         let mut verifier_transcript = Transcript::new(b"test");
 
-        prover_transcript.append_message(
-            b"percentage-commitment",
-            &percentage_commitment.to_bytes(),
-        );
+        prover_transcript
+            .append_message(b"percentage-commitment", &percentage_commitment.to_bytes());
         prover_transcript.append_message(b"delta-commitment", &delta_commitment.to_bytes());
         prover_transcript.append_message(b"claimed-commitment", &claimed_commitment.to_bytes());
         prover_transcript.append_u64(b"max-value", max_value);

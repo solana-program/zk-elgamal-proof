@@ -125,10 +125,7 @@ impl PubkeyValidityProof {
         }
     }
 
-    fn hash_context_into_transcript(
-        pubkey: &ElGamalPubkey,
-        transcript: &mut Transcript,
-    ) {
+    fn hash_context_into_transcript(pubkey: &ElGamalPubkey, transcript: &mut Transcript) {
         transcript.append_message(b"pubkey", &pubkey.to_bytes());
     }
 
