@@ -58,18 +58,12 @@ pub struct GroupedCiphertext3HandlesValidityProof {
 impl GroupedCiphertext3HandlesValidityProof {
     /// Creates a grouped ciphertext with 3 handles validity proof.
     ///
-    /// The function does *not* hash the public keys, commitment, or decryption handles into the
-    /// transcript. For security, the caller (the main protocol) should hash these public
-    /// components prior to invoking this constructor.
-    ///
     /// This function is randomized. It uses `OsRng` internally to generate random scalars.
-    ///
-    /// Note that the proof constructor does not take the actual Pedersen commitment or decryption
-    /// handles as input; it only takes the associated Pedersen opening instead.
     ///
     /// * `first_pubkey` - The first ElGamal public key
     /// * `second_pubkey` - The second ElGamal public key
     /// * `third_pubkey` - The third ElGamal public key
+    /// * `grouped_ciphertext` - The ciphertext containing the commitment and 3 handles
     /// * `amount` - The committed message in the commitment
     /// * `opening` - The opening associated with the Pedersen commitment
     /// * `transcript` - The transcript that does the bookkeeping for the Fiat-Shamir heuristic
@@ -160,13 +154,10 @@ impl GroupedCiphertext3HandlesValidityProof {
 
     /// Verifies a grouped ciphertext with 3 handles validity proof.
     ///
-    /// * `commitment` - The Pedersen commitment
     /// * `first_pubkey` - The first ElGamal public key
     /// * `second_pubkey` - The second ElGamal public key
     /// * `third_pubkey` - The third ElGamal public key
-    /// * `first_handle` - The first decryption handle
-    /// * `second_handle` - The second decryption handle
-    /// * `third_handle` - The third decryption handle
+    /// * `grouped_ciphertext` - The ciphertext containing the commitment and 3 handles
     /// * `transcript` - The transcript that does the bookkeeping for the Fiat-Shamir heuristic
     #[allow(clippy::too_many_arguments)]
     pub fn verify(

@@ -57,10 +57,6 @@ pub struct CiphertextCommitmentEqualityProof {
 impl CiphertextCommitmentEqualityProof {
     /// Creates a ciphertext-commitment equality proof.
     ///
-    /// The function does *not* hash the public key, ciphertext, or commitment into the transcript.
-    /// For security, the caller (the main protocol) should hash these public components prior to
-    /// invoking this constructor.
-    ///
     /// This function is randomized. It uses `OsRng` internally to generate random scalars.
     ///
     /// Note that the proof constructor does not take the actual Pedersen commitment as input; it
@@ -68,6 +64,7 @@ impl CiphertextCommitmentEqualityProof {
     ///
     /// * `keypair` - The ElGamal keypair associated with the first to be proved
     /// * `ciphertext` - The main ElGamal ciphertext to be proved
+    /// * `commitment` - The Pedersen commitment to be proved
     /// * `opening` - The opening associated with the main Pedersen commitment to be proved
     /// * `amount` - The message associated with the ElGamal ciphertext and Pedersen commitment
     /// * `transcript` - The transcript that does the bookkeeping for the Fiat-Shamir heuristic

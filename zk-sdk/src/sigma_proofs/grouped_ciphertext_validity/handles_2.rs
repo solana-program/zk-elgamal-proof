@@ -57,17 +57,11 @@ pub struct GroupedCiphertext2HandlesValidityProof {
 impl GroupedCiphertext2HandlesValidityProof {
     /// Creates a grouped ciphertext validity proof for 2 handles.
     ///
-    /// The function does *not* hash the public keys, commitment, or decryption handles into the
-    /// transcript. For security, the caller (the main protocol) should hash these public
-    /// components prior to invoking this constructor.
-    ///
     /// This function is randomized. It uses `OsRng` internally to generate random scalars.
-    ///
-    /// Note that the proof constructor does not take the actual Pedersen commitment or decryption
-    /// handles as input; it only takes the associated Pedersen opening instead.
     ///
     /// * `first_pubkey` - The first ElGamal public key
     /// * `second_pubkey` - The second ElGamal public key
+    /// * `grouped_ciphertext` - The ciphertext containing the commitment and 2 handles
     /// * `amount` - The committed message in the commitment
     /// * `opening` - The opening associated with the Pedersen commitment
     /// * `transcript` - The transcript that does the bookkeeping for the Fiat-Shamir heuristic
@@ -144,11 +138,9 @@ impl GroupedCiphertext2HandlesValidityProof {
 
     /// Verifies a grouped ciphertext validity proof for 2 handles.
     ///
-    /// * `commitment` - The Pedersen commitment
     /// * `first_pubkey` - The first ElGamal public key
     /// * `second_pubkey` - The second ElGamal public key
-    /// * `first_handle` - The first decryption handle
-    /// * `second_handle` - The second decryption handle
+    /// * `grouped_ciphertext` - The ciphertext containing the commitment and 2 handles
     /// * `transcript` - The transcript that does the bookkeeping for the Fiat-Shamir heuristic
     pub fn verify(
         self,

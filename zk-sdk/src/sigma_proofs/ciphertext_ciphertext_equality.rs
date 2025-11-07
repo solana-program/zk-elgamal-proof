@@ -53,16 +53,14 @@ pub struct CiphertextCiphertextEqualityProof {
 impl CiphertextCiphertextEqualityProof {
     /// Creates a ciphertext-ciphertext equality proof.
     ///
-    /// The function does *not* hash the public keys, first ciphertext, or second ciphertext into the transcript.
-    /// For security, the caller (the main protocol) should hash these public components prior to
-    /// invoking this constructor.
-    ///
     /// This function is randomized. It uses `OsRng` internally to generate random scalars.
     ///
     /// * `first_keypair` - The ElGamal keypair associated with the first ciphertext to be proved
     /// * `second_pubkey` - The ElGamal pubkey associated with the second ElGamal ciphertext
     /// * `first_ciphertext` - The first ElGamal ciphertext for which the prover knows a
     ///   decryption key for
+    /// * `second_ciphertext` - The second ElGamal ciphertext for which the prover knows an opening
+    ///   for
     /// * `second_opening` - The opening (randomness) associated with the second ElGamal ciphertext
     /// * `amount` - The message associated with the ElGamal ciphertext and Pedersen commitment
     /// * `transcript` - The transcript that does the bookkeeping for the Fiat-Shamir heuristic
