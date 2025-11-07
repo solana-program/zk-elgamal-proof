@@ -108,6 +108,10 @@ impl RangeProof {
     /// respective ranges, creating one proof that is much smaller than the sum of
     /// individual proofs.
     ///
+    /// WARNING: This function does *not* hash the public statement for the proof. For security,
+    /// the caller (the main protocol) must hash these public statement prior to invoking this
+    /// constructor.
+    ///
     /// # Panics
     /// This function will panic if the `openings` vector does not contain the same number
     /// of elements as the `amounts` and `bit_lengths` vectors.
