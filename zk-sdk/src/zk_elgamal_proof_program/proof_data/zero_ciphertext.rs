@@ -4,54 +4,41 @@
 //! certifies that a given ciphertext encrypts the message 0 in the field (`Scalar::zero()`). To
 //! generate the proof, a prover must provide the decryption key for the ciphertext.
 
+use {
+    crate::zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
+    solana_zk_sdk_pod::proof_data::zero_ciphertext::{
+        ZeroCiphertextProofContext, ZeroCiphertextProofData,
+    },
+};
 #[cfg(not(target_os = "solana"))]
 use {
     crate::{
         encryption::elgamal::{ElGamalCiphertext, ElGamalKeypair},
         sigma_proofs::zero_ciphertext::ZeroCiphertextProof,
-        zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
+        zk_elgamal_proof_program::{
+            errors::{ProofGenerationError, ProofVerificationError},
+            proof_data::ProofContext,
+        },
     },
     bytemuck::bytes_of,
     merlin::Transcript,
+    solana_zk_sdk_pod::encryption::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
     std::convert::TryInto,
 };
-use {
-    crate::{
-        encryption::pod::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
-        sigma_proofs::pod::PodZeroCiphertextProof,
-        zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
-    },
-    bytemuck_derive::{Pod, Zeroable},
-};
 
-/// The instruction data that is needed for the `ProofInstruction::VerifyZeroCiphertext` instruction.
-///
-/// It includes the cryptographic proof as well as the context data information needed to verify
-/// the proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
-#[repr(C)]
-pub struct ZeroCiphertextProofData {
-    /// The context data for the zero-ciphertext proof
-    pub context: ZeroCiphertextProofContext, // 96 bytes
-
-    /// Proof that the ciphertext is zero
-    pub proof: PodZeroCiphertextProof, // 96 bytes
-}
-
-/// The context data needed to verify a zero-ciphertext proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
-#[repr(C)]
-pub struct ZeroCiphertextProofContext {
-    /// The ElGamal pubkey associated with the ElGamal ciphertext
-    pub pubkey: PodElGamalPubkey, // 32 bytes
-
-    /// The ElGamal ciphertext that encrypts zero
-    pub ciphertext: PodElGamalCiphertext, // 64 bytes
+#[cfg(not(target_os = "solana"))]
+pub trait ZeroCiphertextProofDataExt {
+    fn new(
+        keypair: &ElGamalKeypair,
+        ciphertext: &ElGamalCiphertext,
+    ) -> Result<Self, ProofGenerationError>
+    where
+        Self: Sized;
 }
 
 #[cfg(not(target_os = "solana"))]
-impl ZeroCiphertextProofData {
-    pub fn new(
+impl ZeroCiphertextProofDataExt for ZeroCiphertextProofData {
+    fn new(
         keypair: &ElGamalKeypair,
         ciphertext: &ElGamalCiphertext,
     ) -> Result<Self, ProofGenerationError> {
@@ -91,7 +78,7 @@ impl ZkProofData<ZeroCiphertextProofContext> for ZeroCiphertextProofData {
 
 #[allow(non_snake_case)]
 #[cfg(not(target_os = "solana"))]
-impl ZeroCiphertextProofContext {
+impl ProofContext for ZeroCiphertextProofContext {
     fn new_transcript(&self) -> Transcript {
         let mut transcript = Transcript::new(b"zero-ciphertext-instruction");
 

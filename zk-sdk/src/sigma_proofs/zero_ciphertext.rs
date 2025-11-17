@@ -15,6 +15,7 @@ use {
     },
     curve25519_dalek::traits::MultiscalarMul,
     rand::rngs::OsRng,
+    solana_zk_sdk_pod::sigma_proofs::PodZeroCiphertextProof,
     zeroize::Zeroize,
 };
 use {
@@ -177,18 +178,31 @@ impl ZeroCiphertextProof {
     }
 }
 
+#[cfg(not(target_os = "solana"))]
+impl From<ZeroCiphertextProof> for PodZeroCiphertextProof {
+    fn from(decoded_proof: ZeroCiphertextProof) -> Self {
+        Self(decoded_proof.to_bytes())
+    }
+}
+
+#[cfg(not(target_os = "solana"))]
+impl TryFrom<PodZeroCiphertextProof> for ZeroCiphertextProof {
+    type Error = ZeroCiphertextProofVerificationError;
+
+    fn try_from(pod_proof: PodZeroCiphertextProof) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_proof.0)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use {
         super::*,
-        crate::{
-            encryption::{
-                elgamal::{DecryptHandle, ElGamalKeypair},
-                pedersen::{Pedersen, PedersenCommitment, PedersenOpening},
-                pod::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
-            },
-            sigma_proofs::pod::PodZeroCiphertextProof,
+        crate::encryption::{
+            elgamal::{DecryptHandle, ElGamalKeypair},
+            pedersen::{Pedersen, PedersenCommitment, PedersenOpening},
         },
+        solana_zk_sdk_pod::encryption::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
         std::str::FromStr,
     };
 
