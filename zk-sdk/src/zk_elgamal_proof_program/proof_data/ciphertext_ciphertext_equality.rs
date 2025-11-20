@@ -23,7 +23,6 @@ use {
         sigma_proofs::ciphertext_ciphertext_equality::CiphertextCiphertextEqualityProof,
         zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
     },
-    bytemuck::bytes_of,
     merlin::Transcript,
     std::convert::TryInto,
 };
@@ -76,12 +75,13 @@ impl CiphertextCiphertextEqualityProofData {
             second_ciphertext: pod_second_ciphertext,
         };
 
-        let mut transcript = context.new_transcript();
+        let mut transcript = Transcript::new(b"ciphertext-ciphertext-equality-instruction");
 
         let proof = CiphertextCiphertextEqualityProof::new(
             first_keypair,
             second_pubkey,
             first_ciphertext,
+            second_ciphertext,
             second_opening,
             amount,
             &mut transcript,
@@ -103,7 +103,7 @@ impl ZkProofData<CiphertextCiphertextEqualityProofContext>
 
     #[cfg(not(target_os = "solana"))]
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
-        let mut transcript = self.context.new_transcript();
+        let mut transcript = Transcript::new(b"ciphertext-ciphertext-equality-instruction");
 
         let first_pubkey = self.context.first_pubkey.try_into()?;
         let second_pubkey = self.context.second_pubkey.try_into()?;
@@ -120,21 +120,6 @@ impl ZkProofData<CiphertextCiphertextEqualityProofContext>
                 &mut transcript,
             )
             .map_err(|e| e.into())
-    }
-}
-
-#[allow(non_snake_case)]
-#[cfg(not(target_os = "solana"))]
-impl CiphertextCiphertextEqualityProofContext {
-    fn new_transcript(&self) -> Transcript {
-        let mut transcript = Transcript::new(b"ciphertext-ciphertext-equality-instruction");
-
-        transcript.append_message(b"first-pubkey", bytes_of(&self.first_pubkey));
-        transcript.append_message(b"second-pubkey", bytes_of(&self.second_pubkey));
-        transcript.append_message(b"first-ciphertext", bytes_of(&self.first_ciphertext));
-        transcript.append_message(b"second-ciphertext", bytes_of(&self.second_ciphertext));
-
-        transcript
     }
 }
 

@@ -25,7 +25,6 @@ use {
         sigma_proofs::batched_grouped_ciphertext_validity::BatchedGroupedCiphertext2HandlesValidityProof,
         zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
     },
-    bytemuck::bytes_of,
     merlin::Transcript,
 };
 
@@ -79,11 +78,14 @@ impl BatchedGroupedCiphertext2HandlesValidityProofData {
             grouped_ciphertext_hi: pod_grouped_ciphertext_hi,
         };
 
-        let mut transcript = context.new_transcript();
+        let mut transcript =
+            Transcript::new(b"batched-grouped-ciphertext-validity-2-handles-instruction");
 
         let proof = BatchedGroupedCiphertext2HandlesValidityProof::new(
             first_pubkey,
             second_pubkey,
+            grouped_ciphertext_lo,
+            grouped_ciphertext_hi,
             amount_lo,
             amount_hi,
             opening_lo,
@@ -107,7 +109,8 @@ impl ZkProofData<BatchedGroupedCiphertext2HandlesValidityProofContext>
 
     #[cfg(not(target_os = "solana"))]
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
-        let mut transcript = self.context.new_transcript();
+        let mut transcript =
+            Transcript::new(b"batched-grouped-ciphertext-validity-2-handles-instruction");
 
         let first_pubkey = self.context.first_pubkey.try_into()?;
         let second_pubkey = self.context.second_pubkey.try_into()?;
@@ -116,48 +119,17 @@ impl ZkProofData<BatchedGroupedCiphertext2HandlesValidityProofContext>
         let grouped_ciphertext_hi: GroupedElGamalCiphertext<2> =
             self.context.grouped_ciphertext_hi.try_into()?;
 
-        let first_handle_lo = grouped_ciphertext_lo.handles.first().unwrap();
-        let second_handle_lo = grouped_ciphertext_lo.handles.get(1).unwrap();
-
-        let first_handle_hi = grouped_ciphertext_hi.handles.first().unwrap();
-        let second_handle_hi = grouped_ciphertext_hi.handles.get(1).unwrap();
-
         let proof: BatchedGroupedCiphertext2HandlesValidityProof = self.proof.try_into()?;
 
         proof
             .verify(
                 &first_pubkey,
                 &second_pubkey,
-                &grouped_ciphertext_lo.commitment,
-                &grouped_ciphertext_hi.commitment,
-                first_handle_lo,
-                first_handle_hi,
-                second_handle_lo,
-                second_handle_hi,
+                &grouped_ciphertext_lo,
+                &grouped_ciphertext_hi,
                 &mut transcript,
             )
             .map_err(|e| e.into())
-    }
-}
-
-#[cfg(not(target_os = "solana"))]
-impl BatchedGroupedCiphertext2HandlesValidityProofContext {
-    fn new_transcript(&self) -> Transcript {
-        let mut transcript =
-            Transcript::new(b"batched-grouped-ciphertext-validity-2-handles-instruction");
-
-        transcript.append_message(b"first-pubkey", bytes_of(&self.first_pubkey));
-        transcript.append_message(b"second-pubkey", bytes_of(&self.second_pubkey));
-        transcript.append_message(
-            b"grouped-ciphertext-lo",
-            bytes_of(&self.grouped_ciphertext_lo),
-        );
-        transcript.append_message(
-            b"grouped-ciphertext-hi",
-            bytes_of(&self.grouped_ciphertext_hi),
-        );
-
-        transcript
     }
 }
 

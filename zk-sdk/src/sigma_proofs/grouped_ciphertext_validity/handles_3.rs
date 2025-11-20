@@ -13,6 +13,7 @@ use {
     crate::{
         encryption::{
             elgamal::{DecryptHandle, ElGamalPubkey},
+            grouped_elgamal::GroupedElGamalCiphertext,
             pedersen::{PedersenCommitment, PedersenOpening, G, H},
         },
         sigma_proofs::{canonical_scalar_from_optional_slice, ristretto_point_from_optional_slice},
@@ -57,22 +58,42 @@ pub struct GroupedCiphertext3HandlesValidityProof {
 impl GroupedCiphertext3HandlesValidityProof {
     /// Creates a grouped ciphertext with 3 handles validity proof.
     ///
-    /// The function does *not* hash the public keys, commitment, or decryption handles into the
-    /// transcript. For security, the caller (the main protocol) should hash these public
-    /// components prior to invoking this constructor.
-    ///
     /// This function is randomized. It uses `OsRng` internally to generate random scalars.
-    ///
-    /// Note that the proof constructor does not take the actual Pedersen commitment or decryption
-    /// handles as input; it only takes the associated Pedersen opening instead.
     ///
     /// * `first_pubkey` - The first ElGamal public key
     /// * `second_pubkey` - The second ElGamal public key
     /// * `third_pubkey` - The third ElGamal public key
+    /// * `grouped_ciphertext` - The ciphertext containing the commitment and 3 handles
     /// * `amount` - The committed message in the commitment
     /// * `opening` - The opening associated with the Pedersen commitment
     /// * `transcript` - The transcript that does the bookkeeping for the Fiat-Shamir heuristic
     pub fn new<T: Into<Scalar>>(
+        first_pubkey: &ElGamalPubkey,
+        second_pubkey: &ElGamalPubkey,
+        third_pubkey: &ElGamalPubkey,
+        grouped_ciphertext: &GroupedElGamalCiphertext<3>,
+        amount: T,
+        opening: &PedersenOpening,
+        transcript: &mut Transcript,
+    ) -> Self {
+        Self::hash_context_into_transcript(
+            first_pubkey,
+            second_pubkey,
+            third_pubkey,
+            grouped_ciphertext,
+            transcript,
+        );
+        Self::new_direct(
+            first_pubkey,
+            second_pubkey,
+            third_pubkey,
+            amount,
+            opening,
+            transcript,
+        )
+    }
+
+    pub(crate) fn new_direct<T: Into<Scalar>>(
         first_pubkey: &ElGamalPubkey,
         second_pubkey: &ElGamalPubkey,
         third_pubkey: &ElGamalPubkey,
@@ -133,24 +154,43 @@ impl GroupedCiphertext3HandlesValidityProof {
 
     /// Verifies a grouped ciphertext with 3 handles validity proof.
     ///
-    /// * `commitment` - The Pedersen commitment
     /// * `first_pubkey` - The first ElGamal public key
     /// * `second_pubkey` - The second ElGamal public key
     /// * `third_pubkey` - The third ElGamal public key
-    /// * `first_handle` - The first decryption handle
-    /// * `second_handle` - The second decryption handle
-    /// * `third_handle` - The third decryption handle
+    /// * `grouped_ciphertext` - The ciphertext containing the commitment and 3 handles
     /// * `transcript` - The transcript that does the bookkeeping for the Fiat-Shamir heuristic
     #[allow(clippy::too_many_arguments)]
     pub fn verify(
         self,
-        commitment: &PedersenCommitment,
         first_pubkey: &ElGamalPubkey,
         second_pubkey: &ElGamalPubkey,
         third_pubkey: &ElGamalPubkey,
-        first_handle: &DecryptHandle,
-        second_handle: &DecryptHandle,
-        third_handle: &DecryptHandle,
+        grouped_ciphertext: &GroupedElGamalCiphertext<3>,
+        transcript: &mut Transcript,
+    ) -> Result<(), ValidityProofVerificationError> {
+        Self::hash_context_into_transcript(
+            first_pubkey,
+            second_pubkey,
+            third_pubkey,
+            grouped_ciphertext,
+            transcript,
+        );
+        self.verify_direct(
+            first_pubkey,
+            second_pubkey,
+            third_pubkey,
+            grouped_ciphertext,
+            transcript,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn verify_direct(
+        self,
+        first_pubkey: &ElGamalPubkey,
+        second_pubkey: &ElGamalPubkey,
+        third_pubkey: &ElGamalPubkey,
+        grouped_ciphertext: &GroupedElGamalCiphertext<3>,
         transcript: &mut Transcript,
     ) -> Result<(), ValidityProofVerificationError> {
         transcript.grouped_ciphertext_validity_proof_domain_separator(3);
@@ -197,7 +237,11 @@ impl GroupedCiphertext3HandlesValidityProof {
         let P_second = second_pubkey.get_point();
         let P_third = third_pubkey.get_point();
 
-        let C = commitment.get_point();
+        let first_handle = grouped_ciphertext.handles.first().unwrap();
+        let second_handle = grouped_ciphertext.handles.get(1).unwrap();
+        let third_handle = grouped_ciphertext.handles.get(2).unwrap();
+
+        let C = grouped_ciphertext.commitment.get_point();
         let D_first = first_handle.get_point();
         let D_second = second_handle.get_point();
         let D_third = third_handle.get_point();
@@ -242,6 +286,19 @@ impl GroupedCiphertext3HandlesValidityProof {
         }
     }
 
+    fn hash_context_into_transcript(
+        first_pubkey: &ElGamalPubkey,
+        second_pubkey: &ElGamalPubkey,
+        third_pubkey: &ElGamalPubkey,
+        grouped_ciphertext: &GroupedElGamalCiphertext<3>,
+        transcript: &mut Transcript,
+    ) {
+        transcript.append_message(b"first-pubkey", &first_pubkey.to_bytes());
+        transcript.append_message(b"second-pubkey", &second_pubkey.to_bytes());
+        transcript.append_message(b"third-pubkey", &third_pubkey.to_bytes());
+        transcript.append_message(b"grouped-ciphertext", &grouped_ciphertext.to_bytes());
+    }
+
     pub fn to_bytes(&self) -> [u8; GROUPED_CIPHERTEXT_3_HANDLES_VALIDITY_PROOF_LEN] {
         let mut buf = [0_u8; GROUPED_CIPHERTEXT_3_HANDLES_VALIDITY_PROOF_LEN];
         let mut chunks = buf.chunks_mut(UNIT_LEN);
@@ -284,6 +341,7 @@ mod test {
                 pedersen::Pedersen,
                 pod::{
                     elgamal::{PodDecryptHandle, PodElGamalCiphertext, PodElGamalPubkey},
+                    grouped_elgamal::PodGroupedElGamalCiphertext3Handles,
                     pedersen::PodPedersenCommitment,
                 },
             },
@@ -310,6 +368,11 @@ mod test {
         let second_handle = second_pubkey.decrypt_handle(&opening);
         let third_handle = third_pubkey.decrypt_handle(&opening);
 
+        let grouped_ciphertext = GroupedElGamalCiphertext {
+            commitment,
+            handles: [first_handle, second_handle, third_handle],
+        };
+
         let mut prover_transcript = Transcript::new(b"Test");
         let mut verifier_transcript = Transcript::new(b"Test");
 
@@ -317,6 +380,7 @@ mod test {
             first_pubkey,
             second_pubkey,
             third_pubkey,
+            &grouped_ciphertext,
             amount,
             &opening,
             &mut prover_transcript,
@@ -324,13 +388,10 @@ mod test {
 
         proof
             .verify(
-                &commitment,
                 first_pubkey,
                 second_pubkey,
                 third_pubkey,
-                &first_handle,
-                &second_handle,
-                &third_handle,
+                &grouped_ciphertext,
                 &mut verifier_transcript,
             )
             .unwrap();
@@ -352,6 +413,11 @@ mod test {
         let second_handle = second_pubkey.decrypt_handle(&opening);
         let third_handle = third_pubkey.decrypt_handle(&opening);
 
+        let grouped_ciphertext = GroupedElGamalCiphertext {
+            commitment,
+            handles: [first_handle, second_handle, third_handle],
+        };
+
         let mut prover_transcript = Transcript::new(b"Test");
         let mut verifier_transcript = Transcript::new(b"Test");
 
@@ -359,6 +425,7 @@ mod test {
             &first_pubkey,
             &second_pubkey,
             third_pubkey,
+            &grouped_ciphertext,
             amount,
             &opening,
             &mut prover_transcript,
@@ -366,13 +433,10 @@ mod test {
 
         assert!(proof
             .verify(
-                &commitment,
                 &first_pubkey,
                 &second_pubkey,
                 third_pubkey,
-                &first_handle,
-                &second_handle,
-                &third_handle,
+                &grouped_ciphertext,
                 &mut verifier_transcript,
             )
             .is_err());
@@ -395,6 +459,11 @@ mod test {
         let second_handle = second_pubkey.decrypt_handle(&opening);
         let third_handle = third_pubkey.decrypt_handle(&opening);
 
+        let grouped_ciphertext = GroupedElGamalCiphertext {
+            commitment,
+            handles: [first_handle, second_handle, third_handle],
+        };
+
         let mut prover_transcript = Transcript::new(b"Test");
         let mut verifier_transcript = Transcript::new(b"Test");
 
@@ -402,6 +471,7 @@ mod test {
             first_pubkey,
             second_pubkey,
             third_pubkey,
+            &grouped_ciphertext,
             amount,
             &opening,
             &mut prover_transcript,
@@ -409,13 +479,10 @@ mod test {
 
         proof
             .verify(
-                &commitment,
                 first_pubkey,
                 second_pubkey,
                 third_pubkey,
-                &first_handle,
-                &second_handle,
-                &third_handle,
+                &grouped_ciphertext,
                 &mut verifier_transcript,
             )
             .unwrap();
@@ -439,6 +506,11 @@ mod test {
         let second_handle = second_pubkey.decrypt_handle(&zeroed_opening);
         let third_handle = third_pubkey.decrypt_handle(&zeroed_opening);
 
+        let grouped_ciphertext = GroupedElGamalCiphertext {
+            commitment,
+            handles: [first_handle, second_handle, third_handle],
+        };
+
         let mut prover_transcript = Transcript::new(b"Test");
         let mut verifier_transcript = Transcript::new(b"Test");
 
@@ -446,6 +518,7 @@ mod test {
             first_pubkey,
             second_pubkey,
             third_pubkey,
+            &grouped_ciphertext,
             amount,
             &opening,
             &mut prover_transcript,
@@ -453,13 +526,10 @@ mod test {
 
         proof
             .verify(
-                &commitment,
                 first_pubkey,
                 second_pubkey,
                 third_pubkey,
-                &first_handle,
-                &second_handle,
-                &third_handle,
+                &grouped_ciphertext,
                 &mut verifier_transcript,
             )
             .unwrap();
@@ -472,35 +542,25 @@ mod test {
 
     #[test]
     fn test_grouped_ciphertext_3_handles_validity_proof_string() {
-        let commitment_str = "DDSCVZLH+eqC9gX+ZeP3HQQxigojAOgda3YwVChR5W4=";
-        let pod_commitment = PodPedersenCommitment::from_str(commitment_str).unwrap();
-        let commitment: PedersenCommitment = pod_commitment.try_into().unwrap();
-
-        let first_pubkey_str = "yGGJnLUs8B744So/Ua3n2wNm+8u9ey/6KrDdHx4ySwk=";
+        let first_pubkey_str = "ZFS3qCHSduL3Ec05YRo2YWPxRxybflL0Gt1isV8RZX4=";
         let pod_first_pubkey = PodElGamalPubkey::from_str(first_pubkey_str).unwrap();
         let first_pubkey: ElGamalPubkey = pod_first_pubkey.try_into().unwrap();
 
-        let second_pubkey_str = "ZFETe85sZdWpxLAo177kwiOxZCpsXGeyZEnzern7tAk=";
+        let second_pubkey_str = "qMK9fLd04eXzFZxpSsFqNkOzv8+9EPsVgWZ7AiJRol0=";
         let pod_second_pubkey = PodElGamalPubkey::from_str(second_pubkey_str).unwrap();
         let second_pubkey: ElGamalPubkey = pod_second_pubkey.try_into().unwrap();
 
-        let third_pubkey_str = "duUYiBx0l0jRRPsTLCoCD8PIKFczPdrxl+2f4eCflhQ=";
+        let third_pubkey_str = "7O10JYXXxLdxns7KQQl375Cmka27/kcT2Fvg/wUFpFA=";
         let pod_third_pubkey = PodElGamalPubkey::from_str(third_pubkey_str).unwrap();
         let third_pubkey: ElGamalPubkey = pod_third_pubkey.try_into().unwrap();
 
-        let first_handle_str = "Asor2klomf847EmJZmXn3qoi0SGE3cBXCkKttbJa+lE=";
-        let pod_first_handle_str = PodDecryptHandle::from_str(first_handle_str).unwrap();
-        let first_handle: DecryptHandle = pod_first_handle_str.try_into().unwrap();
+        let grouped_ciphertext_str = "eBidpsDaf5HlsgHorK/Tevqckk5S3u2GUSl1n4ruqhZ2Cos1br6FttkrDKj3to1XCQ2Gyh8mFclskivxVWrGHa4NZGozBndinSrhPWSSMyVydeX2veMn6yUhGLtZkcFgeEq+j4FKrgeBIvXksHZsf8A+gEo+C/HspWSB5viDPBs=";
+        let pod_grouped_ciphertext =
+            PodGroupedElGamalCiphertext3Handles::from_str(grouped_ciphertext_str).unwrap();
+        let grouped_ciphertext: GroupedElGamalCiphertext<3> =
+            pod_grouped_ciphertext.try_into().unwrap();
 
-        let second_handle_str = "kJ0GYHDVeB1Kgvqp+MY/my3BYZvqsC5Mv0gQLJHnNBQ=";
-        let pod_second_handle_str = PodDecryptHandle::from_str(second_handle_str).unwrap();
-        let second_handle: DecryptHandle = pod_second_handle_str.try_into().unwrap();
-
-        let third_handle_str = "Jnd5jZLNDOMMt+kbgQWCQqTytbwHx3Bz5vwtfDLhRn0=";
-        let pod_third_handle_str = PodDecryptHandle::from_str(third_handle_str).unwrap();
-        let third_handle: DecryptHandle = pod_third_handle_str.try_into().unwrap();
-
-        let proof_str = "8NoqOM40+fvPY2aHzO0SdWZM6lvSoaqI7KpaFuE4wQUaqewILtQV8IMHeHmpevxt/GTErJsdcV8kY3HDZ1GHbMoDujYpstUhyubX1voJh/DstYAL1SQqlRpNLG+kWEUZYvCudTur7i5R+zqZQY3sRMEAxW458V+1GmyCWbWP3FZEz5gX/Pa28/ZNLBvmSPpJBZapXRI5Ra0dKPskFmQ0CH0gBWo6pxj/PH9sgNEkLrbVZB7jpVtdmNzivwgFeb4M";
+        let proof_str = "BiHICmQCsllZqb/4prAlQbxJy0nC7/7zvfp295vw3HGyyytGcXgQMOtWJrLsJBrMe4Qs0YCwI7R3igIV52bPH0aHtWSY5LdDnNNZRdKJIxmtMRGfOuD6fF/c8XejIt5JlgSozH+paMJb7/AE6ZtcpOSvSVsItudbOw0B8rc7ZX/HtkrCx1gm5uLK45JaDr/osnij3fjXGUw9lfC1odBfDu/9Co/FHlZz+7NU4gQ4Uf0iMtPutw31b6mSVNrvE6gN";
         let pod_proof = PodGroupedCiphertext3HandlesValidityProof::from_str(proof_str).unwrap();
         let proof: GroupedCiphertext3HandlesValidityProof = pod_proof.try_into().unwrap();
 
@@ -508,13 +568,10 @@ mod test {
 
         proof
             .verify(
-                &commitment,
                 &first_pubkey,
                 &second_pubkey,
                 &third_pubkey,
-                &first_handle,
-                &second_handle,
-                &third_handle,
+                &grouped_ciphertext,
                 &mut verifier_transcript,
             )
             .unwrap();
