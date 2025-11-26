@@ -1,2 +1,2 @@
-export * from './verify';
+export * from './verifyZeroCiphertext';
 export * from './close';
