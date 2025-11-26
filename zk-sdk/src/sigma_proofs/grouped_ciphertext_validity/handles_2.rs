@@ -20,6 +20,7 @@ use {
     },
     curve25519_dalek::traits::MultiscalarMul,
     rand::rngs::OsRng,
+    solana_zk_sdk_pod::sigma_proofs::PodGroupedCiphertext2HandlesValidityProof,
     zeroize::Zeroize,
 };
 use {
@@ -243,20 +244,30 @@ impl GroupedCiphertext2HandlesValidityProof {
     }
 }
 
+#[cfg(not(target_os = "solana"))]
+impl From<GroupedCiphertext2HandlesValidityProof> for PodGroupedCiphertext2HandlesValidityProof {
+    fn from(decoded_proof: GroupedCiphertext2HandlesValidityProof) -> Self {
+        Self(decoded_proof.to_bytes())
+    }
+}
+
+#[cfg(not(target_os = "solana"))]
+impl TryFrom<PodGroupedCiphertext2HandlesValidityProof> for GroupedCiphertext2HandlesValidityProof {
+    type Error = ValidityProofVerificationError;
+
+    fn try_from(pod_proof: PodGroupedCiphertext2HandlesValidityProof) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_proof.0)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use {
         super::*,
-        crate::{
-            encryption::{
-                elgamal::ElGamalKeypair,
-                pedersen::Pedersen,
-                pod::{
-                    elgamal::{PodDecryptHandle, PodElGamalPubkey},
-                    pedersen::PodPedersenCommitment,
-                },
-            },
-            sigma_proofs::pod::PodGroupedCiphertext2HandlesValidityProof,
+        crate::encryption::{elgamal::ElGamalKeypair, pedersen::Pedersen},
+        solana_zk_sdk_pod::encryption::{
+            elgamal::{PodDecryptHandle, PodElGamalPubkey},
+            pedersen::PodPedersenCommitment,
         },
         std::str::FromStr,
     };

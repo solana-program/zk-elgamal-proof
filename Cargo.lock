@@ -951,10 +951,21 @@ dependencies = [
  "solana-seed-phrase",
  "solana-signature",
  "solana-signer",
+ "solana-zk-sdk-pod",
  "subtle",
  "thiserror 2.0.17",
  "tiny-bip39",
  "zeroize",
+]
+
+[[package]]
+name = "solana-zk-sdk-pod"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "bytemuck",
+ "bytemuck_derive",
+ "thiserror 2.0.17",
 ]
 
 [[package]]
@@ -965,6 +976,7 @@ dependencies = [
  "getrandom",
  "js-sys",
  "solana-zk-sdk",
+ "solana-zk-sdk-pod",
  "wasm-bindgen",
  "wasm-bindgen-test",
 ]

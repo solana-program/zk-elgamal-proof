@@ -27,6 +27,7 @@ use {
         elgamal::{DecryptHandle, ElGamalPubkey},
         pedersen::{PedersenCommitment, PedersenOpening},
     },
+    solana_zk_sdk_pod::sigma_proofs::PodBatchedGroupedCiphertext3HandlesValidityProof,
     zeroize::Zeroize,
 };
 use {
@@ -153,20 +154,36 @@ impl BatchedGroupedCiphertext3HandlesValidityProof {
     }
 }
 
+#[cfg(not(target_os = "solana"))]
+impl From<BatchedGroupedCiphertext3HandlesValidityProof>
+    for PodBatchedGroupedCiphertext3HandlesValidityProof
+{
+    fn from(decoded_proof: BatchedGroupedCiphertext3HandlesValidityProof) -> Self {
+        Self(decoded_proof.to_bytes())
+    }
+}
+
+#[cfg(not(target_os = "solana"))]
+impl TryFrom<PodBatchedGroupedCiphertext3HandlesValidityProof>
+    for BatchedGroupedCiphertext3HandlesValidityProof
+{
+    type Error = ValidityProofVerificationError;
+
+    fn try_from(
+        pod_proof: PodBatchedGroupedCiphertext3HandlesValidityProof,
+    ) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_proof.0)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use {
         super::*,
-        crate::{
-            encryption::{
-                elgamal::ElGamalKeypair,
-                pedersen::Pedersen,
-                pod::{
-                    elgamal::{PodDecryptHandle, PodElGamalPubkey},
-                    pedersen::PodPedersenCommitment,
-                },
-            },
-            sigma_proofs::pod::PodBatchedGroupedCiphertext3HandlesValidityProof,
+        crate::encryption::{elgamal::ElGamalKeypair, pedersen::Pedersen},
+        solana_zk_sdk_pod::encryption::{
+            elgamal::{PodDecryptHandle, PodElGamalPubkey},
+            pedersen::PodPedersenCommitment,
         },
         std::str::FromStr,
     };
