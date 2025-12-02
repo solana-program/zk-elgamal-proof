@@ -14,9 +14,7 @@ import {
   type InstructionWithAccounts,
   type InstructionWithData,
   type ReadonlyAccount,
-  type ReadonlySignerAccount,
   type ReadonlyUint8Array,
-  type TransactionSigner,
   type WritableAccount,
 } from '@solana/kit';
 import { ZK_ELGAMAL_PROOF_PROGRAM_ADDRESS } from '../programs';
@@ -121,33 +119,38 @@ export type VerifyProofInstruction<
   InstructionWithData<ReadonlyUint8Array> &
   InstructionWithAccounts<
     [
-      TAccountContextState extends string
-        ? WritableAccount<TAccountContextState>
-        : TAccountContextState,
-      TAccountContextStateAuthority extends string
-        ? ReadonlySignerAccount<TAccountContextStateAuthority> &
-            AccountSignerMeta<TAccountContextStateAuthority>
-        : TAccountContextStateAuthority,
+      // 1. Proof Account (First, if present)
       TAccountProofAccount extends string
         ? ReadonlyAccount<TAccountProofAccount>
         : TAccountProofAccount,
+      // 2. Context State
+      TAccountContextState extends string
+        ? WritableAccount<TAccountContextState>
+        : TAccountContextState,
+      // 3. Context State Authority
+      TAccountContextStateAuthority extends string
+        ? ReadonlyAccount<TAccountContextStateAuthority> &
+            AccountSignerMeta<TAccountContextStateAuthority>
+        : TAccountContextStateAuthority,
       ...TRemainingAccounts,
     ]
   >;
 
 export interface VerifyProofInput<
+  TAccountProofAccount extends string = string,
   TAccountContextState extends string = string,
   TAccountContextStateAuthority extends string = string,
-  TAccountProofAccount extends string = string,
 > {
   discriminator: number;
 
+  // Proof Account (Optional)
+  proofAccount?: Address<TAccountProofAccount>;
+
   // Context State Accounts (Optional)
   contextState?: Address<TAccountContextState>;
-  contextStateAuthority?: TransactionSigner<TAccountContextStateAuthority>;
+  contextStateAuthority?: Address<TAccountContextStateAuthority>;
 
   // Proof Source (Mutually Exclusive)
-  proofAccount?: Address<TAccountProofAccount>;
   offset?: number;
   proofData?: ReadonlyUint8Array;
 }
