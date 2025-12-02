@@ -82,6 +82,7 @@ export function getVerifyProofInstructionDataDecoder(): Decoder<VerifyProofInstr
     offset = offsetAfterDisc;
 
     // If exactly 5 bytes total (1 disc + 4 offset), treat as offset mode.
+    // All ZK proofs in the program are required to be at least 32 bytes.
     if (bytes.length === 5) {
       const [offsetValue, newOffset] = getU32Decoder().read(bytes, offset);
       return [{ discriminator, offset: offsetValue }, newOffset];
