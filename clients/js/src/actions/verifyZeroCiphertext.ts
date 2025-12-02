@@ -13,7 +13,7 @@ import { ZERO_CIPHERTEXT_CONTEXT_ACCOUNT_SIZE } from '../constants';
 
 export interface ContextStateArgs {
   contextAccount: KeyPairSigner;
-  authority: TransactionSigner;
+  authority: TransactionSigner | Address;
 }
 
 export interface VerifyZeroCiphertextArgs {
