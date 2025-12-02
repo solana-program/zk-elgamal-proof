@@ -8,7 +8,7 @@ import { generateKeyPairSigner } from '@solana/kit';
 import { verifyZeroCiphertext, closeContextStateProof } from '../src';
 import { ElGamalKeypair, ZeroCiphertextProofData } from '@solana/zk-sdk/node';
 
-test('closeContextState: can close a verified proof context', async (t) => {
+test('closeContextState: can close a verified proof context', async t => {
   const client = createDefaultSolanaClient();
   const payer = await generateKeyPairSignerWithSol(client);
   const contextAccount = await generateKeyPairSigner();
@@ -18,17 +18,15 @@ test('closeContextState: can close a verified proof context', async (t) => {
   const ciphertext = keypair.pubkey().encryptU64(0n);
   const proof = new ZeroCiphertextProofData(keypair, ciphertext);
 
-  const { ixs: verifyIxs, signers: verifySigners } = await verifyZeroCiphertext(
-    {
-      rpc: client.rpc,
-      payer,
-      proofData: proof.toBytes(),
-      contextState: {
-        contextAccount,
-        authority: payer,
-      },
-    }
-  );
+  const { ixs: verifyIxs, signers: verifySigners } = await verifyZeroCiphertext({
+    rpc: client.rpc,
+    payer,
+    proofData: proof.toBytes(),
+    contextState: {
+      contextAccount,
+      authority: payer,
+    },
+  });
   await sendAndConfirmInstructions(client, payer, verifyIxs, verifySigners);
 
   // Verify existence

@@ -8,10 +8,7 @@ import {
 } from '@solana/kit';
 import { getCreateAccountInstruction } from '@solana-program/system';
 import { getVerifyProofInstruction } from '../generic/instructions';
-import {
-  ZK_ELGAMAL_PROOF_PROGRAM_ADDRESS,
-  ZkElGamalProofInstruction,
-} from '../generic/programs';
+import { ZK_ELGAMAL_PROOF_PROGRAM_ADDRESS, ZkElGamalProofInstruction } from '../generic/programs';
 import { ZERO_CIPHERTEXT_CONTEXT_ACCOUNT_SIZE } from '../constants';
 
 export interface ContextStateArgs {
@@ -55,7 +52,7 @@ export async function verifyZeroCiphertext({
         lamports,
         space,
         programAddress: programId,
-      })
+      }),
     );
 
     signers.push(contextState.contextAccount);
@@ -78,7 +75,7 @@ export async function verifyZeroCiphertext({
       contextState: contextState?.contextAccount.address,
       contextStateAuthority: contextState?.authority,
     },
-    { programAddress: programId }
+    { programAddress: programId },
   );
 
   ixs.push(verifyIx);
