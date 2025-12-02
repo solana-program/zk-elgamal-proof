@@ -21,6 +21,6 @@ export function closeContextStateProof({
       authority,
       destination,
     },
-    { programAddress: programId }
+    { programAddress: programId },
   );
 }

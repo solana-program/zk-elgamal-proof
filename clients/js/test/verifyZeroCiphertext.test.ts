@@ -8,7 +8,7 @@ import { generateKeyPairSigner } from '@solana/kit';
 import { verifyZeroCiphertext } from '../src';
 import { ElGamalKeypair, ZeroCiphertextProofData } from '@solana/zk-sdk/node';
 
-test('verifyZeroCiphertext: success with valid proof (no context state)', async (t) => {
+test('verifyZeroCiphertext: success with valid proof (no context state)', async t => {
   const client = createDefaultSolanaClient();
   const payer = await generateKeyPairSignerWithSol(client);
 
@@ -37,7 +37,7 @@ test('verifyZeroCiphertext: success with valid proof (no context state)', async 
   t.pass('Ephemeral verification succeeded');
 });
 
-test('verifyZeroCiphertext: handles invalid proof data gracefully', async (t) => {
+test('verifyZeroCiphertext: handles invalid proof data gracefully', async t => {
   const client = createDefaultSolanaClient();
   const payer = await generateKeyPairSignerWithSol(client);
   const contextAccount = await generateKeyPairSigner();
@@ -61,7 +61,7 @@ test('verifyZeroCiphertext: handles invalid proof data gracefully', async (t) =>
   t.pass('Transaction was rejected as expected');
 });
 
-test('verifyZeroCiphertext: success with valid proof (context state)', async (t) => {
+test('verifyZeroCiphertext: success with valid proof (context state)', async t => {
   const client = createDefaultSolanaClient();
   const payer = await generateKeyPairSignerWithSol(client);
   const contextAccount = await generateKeyPairSigner();

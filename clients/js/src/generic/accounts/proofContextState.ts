@@ -46,14 +46,8 @@ export interface ProofContextState {
  * It reads the fixed header (33 bytes) and captures the remaining bytes as context.
  */
 export function getProofContextStateDecoder(): Decoder<ProofContextState> {
-  const read = (
-    bytes: ReadonlyUint8Array,
-    offset = 0
-  ): [ProofContextState, number] => {
-    const [contextStateAuthority, offsetAuth] = getAddressDecoder().read(
-      bytes,
-      offset
-    );
+  const read = (bytes: ReadonlyUint8Array, offset = 0): [ProofContextState, number] => {
+    const [contextStateAuthority, offsetAuth] = getAddressDecoder().read(bytes, offset);
 
     const [proofTypeRaw, offsetType] = getU8Decoder().read(bytes, offsetAuth);
     const proofContext = bytes.slice(offsetType);
@@ -75,26 +69,24 @@ export function getProofContextStateDecoder(): Decoder<ProofContextState> {
 }
 
 export function decodeProofContextState<TAddress extends string = string>(
-  encodedAccount: EncodedAccount<TAddress>
+  encodedAccount: EncodedAccount<TAddress>,
 ): Account<ProofContextState, TAddress>;
 export function decodeProofContextState<TAddress extends string = string>(
-  encodedAccount: MaybeEncodedAccount<TAddress>
+  encodedAccount: MaybeEncodedAccount<TAddress>,
 ): MaybeAccount<ProofContextState, TAddress>;
 export function decodeProofContextState<TAddress extends string = string>(
-  encodedAccount: EncodedAccount<TAddress> | MaybeEncodedAccount<TAddress>
-):
-  | Account<ProofContextState, TAddress>
-  | MaybeAccount<ProofContextState, TAddress> {
+  encodedAccount: EncodedAccount<TAddress> | MaybeEncodedAccount<TAddress>,
+): Account<ProofContextState, TAddress> | MaybeAccount<ProofContextState, TAddress> {
   return decodeAccount(
     encodedAccount as MaybeEncodedAccount<TAddress>,
-    getProofContextStateDecoder()
+    getProofContextStateDecoder(),
   );
 }
 
 export async function fetchProofContextState<TAddress extends string = string>(
   rpc: Parameters<typeof fetchEncodedAccount>[0],
   address: Address<TAddress>,
-  config?: FetchAccountConfig
+  config?: FetchAccountConfig,
 ): Promise<Account<ProofContextState, TAddress>> {
   const maybeAccount = await fetchEncodedAccount(rpc, address, config);
   const account = decodeProofContextState(maybeAccount);
@@ -102,12 +94,10 @@ export async function fetchProofContextState<TAddress extends string = string>(
   return account;
 }
 
-export async function fetchMaybeProofContextState<
-  TAddress extends string = string,
->(
+export async function fetchMaybeProofContextState<TAddress extends string = string>(
   rpc: Parameters<typeof fetchEncodedAccount>[0],
   address: Address<TAddress>,
-  config?: FetchAccountConfig
+  config?: FetchAccountConfig,
 ): Promise<MaybeAccount<ProofContextState, TAddress>> {
   const maybeAccount = await fetchEncodedAccount(rpc, address, config);
   return decodeProofContextState(maybeAccount);
