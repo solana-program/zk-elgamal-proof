@@ -22,9 +22,7 @@ export type ZkElGamalProofError =
   | typeof ZK_ELGAMAL_PROOF_ERROR__ILLEGAL_COMMITMENT_LENGTH
   | typeof ZK_ELGAMAL_PROOF_ERROR__ILLEGAL_AMOUNT_BIT_LENGTH;
 
-let zkElgamalProofErrorMessages:
-  | Record<ZkElGamalProofError, string>
-  | undefined;
+let zkElgamalProofErrorMessages: Record<ZkElGamalProofError, string> | undefined;
 
 if (process.env.NODE_ENV !== 'production') {
   zkElgamalProofErrorMessages = {
@@ -37,32 +35,26 @@ if (process.env.NODE_ENV !== 'production') {
   };
 }
 
-export function getZkElgamalProofErrorMessage(
-  code: ZkElGamalProofError
-): string {
+export function getZkElgamalProofErrorMessage(code: ZkElGamalProofError): string {
   if (process.env.NODE_ENV !== 'production') {
-    return (zkElgamalProofErrorMessages as Record<ZkElGamalProofError, string>)[
-      code
-    ];
+    return zkElgamalProofErrorMessages?.[code] ?? 'Unknown error';
   }
 
   return 'Error message not available in production bundles.';
 }
 
-export function isZkElgamalProofError<
-  TProgramErrorCode extends ZkElGamalProofError,
->(
+export function isZkElgamalProofError<TProgramErrorCode extends ZkElGamalProofError>(
   error: unknown,
   transactionMessage: {
     instructions: Record<number, { programAddress: Address }>;
   },
-  code?: TProgramErrorCode
+  code?: TProgramErrorCode,
 ): error is SolanaError<typeof SOLANA_ERROR__INSTRUCTION_ERROR__CUSTOM> &
   Readonly<{ context: Readonly<{ code: TProgramErrorCode }> }> {
   return isProgramError<TProgramErrorCode>(
     error,
     transactionMessage,
     ZK_ELGAMAL_PROOF_PROGRAM_ADDRESS,
-    code
+    code,
   );
 }
