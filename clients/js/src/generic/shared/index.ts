@@ -12,7 +12,7 @@ import {
 /**
  * Defines an instruction account to resolve.
  */
-export type ResolvedAccount<
+export interface ResolvedAccount<
   T extends string = string,
   U extends
     | Address<T>
@@ -23,10 +23,10 @@ export type ResolvedAccount<
     | ProgramDerivedAddress<T>
     | TransactionSigner<T>
     | null,
-> = {
+> {
   isWritable: boolean;
   value: U;
-};
+}
 
 /**
  * Get account metas and signers from resolved accounts.

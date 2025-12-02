@@ -34,12 +34,12 @@ export enum ProofType {
   BatchedGroupedCiphertext3HandlesValidity = 12,
 }
 
-export type ProofContextState = {
+export interface ProofContextState {
   contextStateAuthority: Address;
   proofType: ProofType;
   /** The raw bytes of the proof context. Can be decoded further based on proofType. */
   proofContext: ReadonlyUint8Array;
-};
+}
 
 /**
  * Custom decoder for ProofContextState.

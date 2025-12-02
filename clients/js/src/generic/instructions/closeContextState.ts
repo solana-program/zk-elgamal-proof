@@ -30,10 +30,10 @@ export function getCloseContextStateDiscriminatorBytes() {
 
 export type CloseContextStateInstruction<
   TProgram extends string = typeof ZK_ELGAMAL_PROOF_PROGRAM_ADDRESS,
-  TAccountContextState extends string | AccountMeta<string> = string,
-  TAccountDestination extends string | AccountMeta<string> = string,
-  TAccountAuthority extends string | AccountMeta<string> = string,
-  TRemainingAccounts extends readonly AccountMeta<string>[] = [],
+  TAccountContextState extends string | AccountMeta = string,
+  TAccountDestination extends string | AccountMeta = string,
+  TAccountAuthority extends string | AccountMeta = string,
+  TRemainingAccounts extends readonly AccountMeta[] = [],
 > = Instruction<TProgram> &
   InstructionWithData<ReadonlyUint8Array> &
   InstructionWithAccounts<
@@ -45,25 +45,24 @@ export type CloseContextStateInstruction<
         ? WritableAccount<TAccountDestination>
         : TAccountDestination,
       TAccountAuthority extends string
-        ? ReadonlySignerAccount<TAccountAuthority> &
-            AccountSignerMeta<TAccountAuthority>
+        ? ReadonlySignerAccount<TAccountAuthority> & AccountSignerMeta<TAccountAuthority>
         : TAccountAuthority,
       ...TRemainingAccounts,
     ]
   >;
 
-export type CloseContextStateInstructionData = { discriminator: number };
+export interface CloseContextStateInstructionData {
+  discriminator: number;
+}
 
-export type CloseContextStateInstructionDataArgs = {};
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface CloseContextStateInstructionDataArgs {}
 
 export function getCloseContextStateInstructionDataEncoder(): FixedSizeEncoder<CloseContextStateInstructionDataArgs> {
-  return transformEncoder(
-    getStructEncoder([['discriminator', getU8Encoder()]]),
-    (value) => ({
-      ...value,
-      discriminator: CLOSE_CONTEXT_STATE_DISCRIMINATOR,
-    })
-  );
+  return transformEncoder(getStructEncoder([['discriminator', getU8Encoder()]]), value => ({
+    ...value,
+    discriminator: CLOSE_CONTEXT_STATE_DISCRIMINATOR,
+  }));
 }
 
 export function getCloseContextStateInstructionDataDecoder(): FixedSizeDecoder<CloseContextStateInstructionData> {
@@ -76,19 +75,19 @@ export function getCloseContextStateInstructionDataCodec(): FixedSizeCodec<
 > {
   return combineCodec(
     getCloseContextStateInstructionDataEncoder(),
-    getCloseContextStateInstructionDataDecoder()
+    getCloseContextStateInstructionDataDecoder(),
   );
 }
 
-export type CloseContextStateInput<
+export interface CloseContextStateInput<
   TAccountContextState extends string = string,
   TAccountDestination extends string = string,
   TAccountAuthority extends string = string,
-> = {
+> {
   contextState: Address<TAccountContextState>;
   destination: Address<TAccountDestination>;
   authority: TransactionSigner<TAccountAuthority>;
-};
+}
 
 export function getCloseContextStateInstruction<
   TAccountContextState extends string,
@@ -96,12 +95,8 @@ export function getCloseContextStateInstruction<
   TAccountAuthority extends string,
   TProgramAddress extends Address = typeof ZK_ELGAMAL_PROOF_PROGRAM_ADDRESS,
 >(
-  input: CloseContextStateInput<
-    TAccountContextState,
-    TAccountDestination,
-    TAccountAuthority
-  >,
-  config?: { programAddress?: TProgramAddress }
+  input: CloseContextStateInput<TAccountContextState, TAccountDestination, TAccountAuthority>,
+  config?: { programAddress?: TProgramAddress },
 ): CloseContextStateInstruction<
   TProgramAddress,
   TAccountContextState,
@@ -109,19 +104,15 @@ export function getCloseContextStateInstruction<
   TAccountAuthority
 > {
   // Program address.
-  const programAddress =
-    config?.programAddress ?? ZK_ELGAMAL_PROOF_PROGRAM_ADDRESS;
+  const programAddress = config?.programAddress ?? ZK_ELGAMAL_PROOF_PROGRAM_ADDRESS;
 
   // Original accounts.
   const originalAccounts = {
-    contextState: { value: input.contextState ?? null, isWritable: true },
-    destination: { value: input.destination ?? null, isWritable: true },
-    authority: { value: input.authority ?? null, isWritable: false },
+    contextState: { value: input.contextState, isWritable: true },
+    destination: { value: input.destination, isWritable: true },
+    authority: { value: input.authority, isWritable: false },
   };
-  const accounts = originalAccounts as Record<
-    keyof typeof originalAccounts,
-    ResolvedAccount
-  >;
+  const accounts = originalAccounts as Record<keyof typeof originalAccounts, ResolvedAccount>;
 
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   return Object.freeze({
@@ -140,10 +131,10 @@ export function getCloseContextStateInstruction<
   >);
 }
 
-export type ParsedCloseContextStateInstruction<
+export interface ParsedCloseContextStateInstruction<
   TProgram extends string = typeof ZK_ELGAMAL_PROOF_PROGRAM_ADDRESS,
   TAccountMetas extends readonly AccountMeta[] = readonly AccountMeta[],
-> = {
+> {
   programAddress: Address<TProgram>;
   accounts: {
     contextState: TAccountMetas[0];
@@ -151,7 +142,7 @@ export type ParsedCloseContextStateInstruction<
     authority: TAccountMetas[2];
   };
   data: CloseContextStateInstructionData;
-};
+}
 
 export function parseCloseContextStateInstruction<
   TProgram extends string,
@@ -159,14 +150,14 @@ export function parseCloseContextStateInstruction<
 >(
   instruction: Instruction<TProgram> &
     InstructionWithAccounts<TAccountMetas> &
-    InstructionWithData<ReadonlyUint8Array>
+    InstructionWithData<ReadonlyUint8Array>,
 ): ParsedCloseContextStateInstruction<TProgram, TAccountMetas> {
   if (instruction.accounts.length < 3) {
     throw new Error('Not enough accounts');
   }
   let accountIndex = 0;
   const getNextAccount = () => {
-    const accountMeta = (instruction.accounts as TAccountMetas)[accountIndex]!;
+    const accountMeta = (instruction.accounts as TAccountMetas)[accountIndex];
     accountIndex += 1;
     return accountMeta;
   };

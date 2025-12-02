@@ -64,7 +64,8 @@
     "rimraf": "^6.0.1",
     "tsup": "^8.1.2",
     "typedoc": "^0.28.0",
-    "typescript": "^5.5.3"
+    "typescript": "^5.5.3",
+    "typescript-eslint": "^8.37.0"
   },
   "ava": {
     "nodeArguments": [
