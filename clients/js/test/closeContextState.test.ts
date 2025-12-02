@@ -18,7 +18,7 @@ test('closeContextState: can close a verified proof context', async t => {
   const ciphertext = keypair.pubkey().encryptU64(0n);
   const proof = new ZeroCiphertextProofData(keypair, ciphertext);
 
-  const { ixs: verifyIxs, signers: verifySigners } = await verifyZeroCiphertext({
+  const verifyIxs = await verifyZeroCiphertext({
     rpc: client.rpc,
     payer,
     proofData: proof.toBytes(),
@@ -27,7 +27,7 @@ test('closeContextState: can close a verified proof context', async t => {
       authority: payer,
     },
   });
-  await sendAndConfirmInstructions(client, payer, verifyIxs, verifySigners);
+  await sendAndConfirmInstructions(client, payer, verifyIxs);
 
   // Verify existence
   let accountInfo = await client.rpc

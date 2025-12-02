@@ -20,7 +20,7 @@ test('verifyZeroCiphertext: success with valid proof (no context state)', async 
 
   // Verify WITHOUT Context
   // This verifies the proof ephemerally (just for this transaction) and discards it.
-  const { ixs, signers } = await verifyZeroCiphertext({
+  const ixs = await verifyZeroCiphertext({
     rpc: client.rpc,
     payer,
     proofData,
@@ -31,7 +31,7 @@ test('verifyZeroCiphertext: success with valid proof (no context state)', async 
   // If the proof was invalid, this would throw.
   // If the logic was wrong (e.g. sending accounts when none expected), this would throw.
   await t.notThrowsAsync(async () => {
-    await sendAndConfirmInstructions(client, payer, ixs, signers);
+    await sendAndConfirmInstructions(client, payer, ixs);
   });
 
   t.pass('Ephemeral verification succeeded');
@@ -45,7 +45,7 @@ test('verifyZeroCiphertext: handles invalid proof data gracefully', async t => {
   const dummyProofData = new Uint8Array(192).fill(0);
 
   await t.throwsAsync(async () => {
-    const { ixs, signers } = await verifyZeroCiphertext({
+    const ixs = await verifyZeroCiphertext({
       rpc: client.rpc,
       payer,
       proofData: dummyProofData,
@@ -55,7 +55,7 @@ test('verifyZeroCiphertext: handles invalid proof data gracefully', async t => {
       },
     });
 
-    await sendAndConfirmInstructions(client, payer, ixs, signers);
+    await sendAndConfirmInstructions(client, payer, ixs);
   });
 
   t.pass('Transaction was rejected as expected');
@@ -71,7 +71,7 @@ test('verifyZeroCiphertext: success with valid proof (context state)', async t =
   const proof = new ZeroCiphertextProofData(keypair, ciphertext);
   const proofData = proof.toBytes(); // Get the byte array
 
-  const { ixs, signers } = await verifyZeroCiphertext({
+  const ixs = await verifyZeroCiphertext({
     rpc: client.rpc,
     payer,
     proofData,
@@ -81,7 +81,7 @@ test('verifyZeroCiphertext: success with valid proof (context state)', async t =
     },
   });
 
-  await sendAndConfirmInstructions(client, payer, ixs, signers);
+  await sendAndConfirmInstructions(client, payer, ixs);
 
   // Context State Account should exist
   const account = await client.rpc

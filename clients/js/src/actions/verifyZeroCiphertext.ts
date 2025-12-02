@@ -18,16 +18,11 @@ export interface ContextStateArgs {
 
 export interface VerifyZeroCiphertextArgs {
   rpc: Rpc<GetMinimumBalanceForRentExemptionApi>;
-  payer: KeyPairSigner;
+  payer: TransactionSigner;
   proofData: Uint8Array;
   // Optional: If provided, we create a context account to store the proof
   contextState?: ContextStateArgs;
   programId?: Address;
-}
-
-export interface VerifyResult {
-  ixs: Instruction[];
-  signers: TransactionSigner[];
 }
 
 export async function verifyZeroCiphertext({
@@ -36,9 +31,8 @@ export async function verifyZeroCiphertext({
   proofData,
   contextState,
   programId = ZK_ELGAMAL_PROOF_PROGRAM_ADDRESS,
-}: VerifyZeroCiphertextArgs): Promise<VerifyResult> {
+}: VerifyZeroCiphertextArgs): Promise<Instruction[]> {
   const ixs: Instruction[] = [];
-  const signers: TransactionSigner[] = [payer];
 
   // Handle Context State Creation (if requested)
   if (contextState) {
@@ -54,8 +48,6 @@ export async function verifyZeroCiphertext({
         programAddress: programId,
       }),
     );
-
-    signers.push(contextState.contextAccount);
   }
 
   // Create Verification Instruction
@@ -72,5 +64,5 @@ export async function verifyZeroCiphertext({
 
   ixs.push(verifyIx);
 
-  return { ixs, signers };
+  return ixs;
 }
