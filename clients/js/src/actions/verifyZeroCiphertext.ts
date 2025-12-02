@@ -56,14 +56,6 @@ export async function verifyZeroCiphertext({
     );
 
     signers.push(contextState.contextAccount);
-    // The authority is usually the payer or another signer,
-    // ensure it's in the signer list if it's not the context account itself
-    if (
-      contextState.authority.address !== contextState.contextAccount.address &&
-      contextState.authority.address !== payer.address
-    ) {
-      signers.push(contextState.authority);
-    }
   }
 
   // Create Verification Instruction
