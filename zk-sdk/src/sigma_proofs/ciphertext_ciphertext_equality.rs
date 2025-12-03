@@ -53,16 +53,14 @@ pub struct CiphertextCiphertextEqualityProof {
 impl CiphertextCiphertextEqualityProof {
     /// Creates a ciphertext-ciphertext equality proof.
     ///
-    /// The function does *not* hash the public keys, first ciphertext, or second ciphertext into the transcript.
-    /// For security, the caller (the main protocol) should hash these public components prior to
-    /// invoking this constructor.
-    ///
     /// This function is randomized. It uses `OsRng` internally to generate random scalars.
     ///
     /// * `first_keypair` - The ElGamal keypair associated with the first ciphertext to be proved
     /// * `second_pubkey` - The ElGamal pubkey associated with the second ElGamal ciphertext
     /// * `first_ciphertext` - The first ElGamal ciphertext for which the prover knows a
     ///   decryption key for
+    /// * `second_ciphertext` - The second ElGamal ciphertext for which the prover knows an opening
+    ///   for
     /// * `second_opening` - The opening (randomness) associated with the second ElGamal ciphertext
     /// * `amount` - The message associated with the ElGamal ciphertext and Pedersen commitment
     /// * `transcript` - The transcript that does the bookkeeping for the Fiat-Shamir heuristic
@@ -70,10 +68,18 @@ impl CiphertextCiphertextEqualityProof {
         first_keypair: &ElGamalKeypair,
         second_pubkey: &ElGamalPubkey,
         first_ciphertext: &ElGamalCiphertext,
+        second_ciphertext: &ElGamalCiphertext,
         second_opening: &PedersenOpening,
         amount: u64,
         transcript: &mut Transcript,
     ) -> Self {
+        Self::hash_context_into_transcript(
+            first_keypair.pubkey(),
+            second_pubkey,
+            first_ciphertext,
+            second_ciphertext,
+            transcript,
+        );
         transcript.ciphertext_ciphertext_equality_proof_domain_separator();
 
         // extract the relevant scalar and Ristretto points from the inputs
@@ -146,6 +152,13 @@ impl CiphertextCiphertextEqualityProof {
         second_ciphertext: &ElGamalCiphertext,
         transcript: &mut Transcript,
     ) -> Result<(), EqualityProofVerificationError> {
+        Self::hash_context_into_transcript(
+            first_pubkey,
+            second_pubkey,
+            first_ciphertext,
+            second_ciphertext,
+            transcript,
+        );
         transcript.ciphertext_ciphertext_equality_proof_domain_separator();
 
         // extract the relevant scalar and Ristretto points from the inputs
@@ -236,6 +249,19 @@ impl CiphertextCiphertextEqualityProof {
         }
     }
 
+    fn hash_context_into_transcript(
+        first_pubkey: &ElGamalPubkey,
+        second_pubkey: &ElGamalPubkey,
+        first_ciphertext: &ElGamalCiphertext,
+        second_ciphertext: &ElGamalCiphertext,
+        transcript: &mut Transcript,
+    ) {
+        transcript.append_message(b"first-pubkey", &first_pubkey.to_bytes());
+        transcript.append_message(b"second-pubkey", &second_pubkey.to_bytes());
+        transcript.append_message(b"first-ciphertext", &first_ciphertext.to_bytes());
+        transcript.append_message(b"second-ciphertext", &second_ciphertext.to_bytes());
+    }
+
     pub fn to_bytes(&self) -> [u8; CIPHERTEXT_CIPHERTEXT_EQUALITY_PROOF_LEN] {
         let mut buf = [0_u8; CIPHERTEXT_CIPHERTEXT_EQUALITY_PROOF_LEN];
         let mut chunks = buf.chunks_mut(UNIT_LEN);
@@ -306,6 +332,7 @@ mod test {
             &first_keypair,
             second_keypair.pubkey(),
             &first_ciphertext,
+            &second_ciphertext,
             &second_opening,
             message,
             &mut prover_transcript,
@@ -339,6 +366,7 @@ mod test {
             &first_keypair,
             second_keypair.pubkey(),
             &first_ciphertext,
+            &second_ciphertext,
             &second_opening,
             message,
             &mut prover_transcript,
@@ -362,23 +390,23 @@ mod test {
 
     #[test]
     fn test_ciphertext_ciphertext_equality_proof_string() {
-        let first_pubkey_str = "VOPKaqo4nsX4XnbgGjCKHkLkR6JG1jX9D5G/e0EuYmM=";
+        let first_pubkey_str = "XKhsxbC3XUsUTSUHeGYtPhT1pKzh+6d+Pg0uZdR3Ywo=";
         let pod_first_pubkey = PodElGamalPubkey::from_str(first_pubkey_str).unwrap();
         let first_pubkey: ElGamalPubkey = pod_first_pubkey.try_into().unwrap();
 
-        let second_pubkey_str = "JnVhtKo9B7g9c8Obo/5/EqvA59i3TvtuOcQWf17T7SU=";
+        let second_pubkey_str = "+pWhNz5/aD4ilMW51l/+pRky8quQp3LOwLidNG0sbw0=";
         let pod_second_pubkey = PodElGamalPubkey::from_str(second_pubkey_str).unwrap();
         let second_pubkey: ElGamalPubkey = pod_second_pubkey.try_into().unwrap();
 
-        let first_ciphertext_str = "oKv6zxN051MXdk2cISD+CUsH2+FINoH1iB4WZyuy6nNkE7Q+eLiY9JB8itJhgKHJEA/1sAzDvpnRlLL06OXvIg==";
+        let first_ciphertext_str = "rFxGWbBfME9OPMbbM0+Rva6fHR36QSk7HBpaRigT/y+wQiuDcdvox90nDXBB6JItVzCz+1CcOJS8yGL0LEiuIg==";
         let pod_first_ciphertext = PodElGamalCiphertext::from_str(first_ciphertext_str).unwrap();
         let first_ciphertext: ElGamalCiphertext = pod_first_ciphertext.try_into().unwrap();
 
-        let second_ciphertext_str = "ooSA2cQDqutgyCBoMiQktM1Cu4NDNEbphF010gjG4iF0iMK1N+u/Qxqk0wwO/+w+5S6RiicwPs4mEKRJpFiHEw==";
+        let second_ciphertext_str = "ZCfDdEUJpdGkoDKL6ykMAhR42HZldHXHs7CFS4mBiRFc4vGZr2I833MqKA+QBmoD/A+qZEQn/E7oTcHhUtywXA==";
         let pod_second_ciphertext = PodElGamalCiphertext::from_str(second_ciphertext_str).unwrap();
         let second_ciphertext: ElGamalCiphertext = pod_second_ciphertext.try_into().unwrap();
 
-        let proof_str = "MlfRDO4sBPbpciEXci3QfVSLVABAJ0s8wMZ/Uz3AyETmGJ1BUE961fHIiNQXPD0j1uu1Josj//E8loPD1w+4E3bfDBJ3Mp2YqeOv41Bdec02YXlAotTGjq/UfncGdUhyampkuXUmSvnmkf5BIp4nr3X18cR9KHTAzBrKv6erjAxIckyRnACaZGEx+ZboEb3FBEXqTklytT1nrebbwkjvDUWbcpZrE+xxBWYek3qeq1x1debzxVhtS2yx44cvR5UIGLzGYa2ec/xh7wvyNEbnX80rZju2dztr4bN5f2vrTgk=";
+        let proof_str = "vGlON1XF9o0HGm6RKTiwzdcqv+Z9TloHeJdFHZfC7EZkk4b+BuoLckiYmKN8AirgrO3Lq2fStuXToPW1l9PbMB71G61bA2lM1jI2NdBc3N2cHgjPhsZh6Z2sUH9vg1cbtIquvawYevRFb4+cssT3HmNRW3bc2Tfrf0DpPIM/1g87+QrwziKG3OUqDVw+GK/p/SncS7b4aLOXMPVBhP5CCO3R/KVaeTzNz0WHljfUp7LPial2zTpRbic2dbUC1PgPAsqvnZzSEQQ3NM3IVCt5cEIF5xq/S4aDrolvKAjCZwM=";
         let pod_proof = PodCiphertextCiphertextEqualityProof::from_str(proof_str).unwrap();
         let proof: CiphertextCiphertextEqualityProof = pod_proof.try_into().unwrap();
 
