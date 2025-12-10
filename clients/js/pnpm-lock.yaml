@@ -19,8 +19,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(ws@8.18.3)
       '@solana/zk-sdk':
-        specifier: file:../../zk-sdk-wasm-js
-        version: file:../../zk-sdk-wasm-js
+        specifier: 0.2.0
+        version: 0.2.0
       '@types/node':
         specifier: ^24
         version: 24.10.1
@@ -994,8 +994,8 @@ packages:
     peerDependencies:
       typescript: '>=5.3.3'
 
-  '@solana/zk-sdk@file:../../zk-sdk-wasm-js':
-    resolution: {directory: ../../zk-sdk-wasm-js, type: directory}
+  '@solana/zk-sdk@0.2.0':
+    resolution: {integrity: sha512-0hxBCu27Z6uziiCv69bN7SePkKdJ5tGzC1CoGG7wnyPeYrgBjHfq+nohF6aTj78ZIGa9DBbmOW4BhCltbtAxng==}
 
   '@tybys/wasm-util@0.10.1':
     resolution: {integrity: sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==}
@@ -4001,7 +4001,7 @@ snapshots:
     transitivePeerDependencies:
       - fastestsmallesttextencoderdecoder
 
-  '@solana/zk-sdk@file:../../zk-sdk-wasm-js': {}
+  '@solana/zk-sdk@0.2.0': {}
 
   '@tybys/wasm-util@0.10.1':
     dependencies:

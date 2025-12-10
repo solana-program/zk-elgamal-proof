@@ -21,7 +21,7 @@
   "scripts": {
     "build": "rimraf dist && tsup && tsc -p ./tsconfig.declarations.json",
     "build:docs": "typedoc",
-    "test": "ava --serial --timeout=2m",
+    "test": "tsc --noEmit && ava --serial --timeout=2m",
     "lint": "eslint src",
     "lint:fix": "eslint --fix src",
     "format": "prettier --check src test",
@@ -50,7 +50,7 @@
   "devDependencies": {
     "@ava/typescript": "^6.0.0",
     "@solana/kit": "^5.0.0",
-    "@solana/zk-sdk": "file:../../zk-sdk-wasm-js",
+    "@solana/zk-sdk": "0.2.0",
     "@types/node": "^24",
     "@typescript-eslint/eslint-plugin": "^8.48.0",
     "@typescript-eslint/parser": "^8.48.0",
