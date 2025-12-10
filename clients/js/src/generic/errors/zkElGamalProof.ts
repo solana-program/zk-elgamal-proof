@@ -24,7 +24,9 @@ export type ZkElGamalProofError =
 
 let zkElgamalProofErrorMessages: Record<ZkElGamalProofError, string> | undefined;
 
-if (process.env.NODE_ENV !== 'production') {
+const isProd = typeof process !== 'undefined' && process?.env?.NODE_ENV == 'production';
+
+if (!isProd) {
   zkElgamalProofErrorMessages = {
     [ZK_ELGAMAL_PROOF_ERROR__RANGE_PROOF_VERIFICATION_FAILED]: `Range proof verification failed`,
     [ZK_ELGAMAL_PROOF_ERROR__SIGMA_PROOF_VERIFICATION_FAILED]: `Sigma proof verification failed`,
@@ -36,7 +38,7 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 export function getZkElgamalProofErrorMessage(code: ZkElGamalProofError): string {
-  if (process.env.NODE_ENV !== 'production') {
+  if (!isProd) {
     return zkElgamalProofErrorMessages?.[code] ?? 'Unknown error';
   }
 

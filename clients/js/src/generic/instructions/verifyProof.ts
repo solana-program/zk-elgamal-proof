@@ -15,10 +15,11 @@ import {
   type InstructionWithData,
   type ReadonlyAccount,
   type ReadonlyUint8Array,
+  type TransactionSigner,
   type WritableAccount,
 } from '@solana/kit';
 import { ZK_ELGAMAL_PROOF_PROGRAM_ADDRESS } from '../programs';
-import { getAccountMetaFactory } from '../shared';
+import { getAccountMetaFactory, expectAddress } from '../shared';
 
 // --- Data Management ---
 
@@ -129,8 +130,7 @@ export type VerifyProofInstruction<
         : TAccountContextState,
       // 3. Context State Authority
       TAccountContextStateAuthority extends string
-        ? ReadonlyAccount<TAccountContextStateAuthority> &
-            AccountSignerMeta<TAccountContextStateAuthority>
+        ? ReadonlyAccount<TAccountContextStateAuthority>
         : TAccountContextStateAuthority,
       ...TRemainingAccounts,
     ]
@@ -148,7 +148,9 @@ export interface VerifyProofInput<
 
   // Context State Accounts (Optional)
   contextState?: Address<TAccountContextState>;
-  contextStateAuthority?: Address<TAccountContextStateAuthority>;
+  contextStateAuthority?:
+    | Address<TAccountContextStateAuthority>
+    | TransactionSigner<TAccountContextStateAuthority>;
 
   // Proof Source (Mutually Exclusive)
   offset?: number;
@@ -174,18 +176,21 @@ export function getVerifyProofInstruction<
   TAccountProofAccount
 > {
   const programAddress = config?.programAddress ?? ZK_ELGAMAL_PROOF_PROGRAM_ADDRESS;
+  const authorityAddress = input.contextStateAuthority
+    ? expectAddress(input.contextStateAuthority)
+    : null;
 
   const originalAccounts = {
+    proofAccount: {
+      value: input.proofAccount ?? null,
+      isWritable: false,
+    },
     contextState: {
       value: input.contextState ?? null,
       isWritable: true,
     },
     contextStateAuthority: {
-      value: input.contextStateAuthority ?? null,
-      isWritable: false,
-    },
-    proofAccount: {
-      value: input.proofAccount ?? null,
+      value: authorityAddress,
       isWritable: false,
     },
   };
