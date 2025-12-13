@@ -22,7 +22,10 @@
     "rust:publish": "zx ./scripts/rust/publish.mjs",
     "clients:js-legacy:format": "zx ./scripts/js/format.mjs clients/js-legacy",
     "clients:js-legacy:lint": "zx ./scripts/js/lint.mjs clients/js-legacy",
-    "clients:js-legacy:test": "zx ./scripts/js/test.mjs clients/js-legacy"
+    "clients:js-legacy:test": "zx ./scripts/js/test.mjs clients/js-legacy",
+    "clients:js:format": "zx ./scripts/js/format.mjs clients/js",
+    "clients:js:lint": "zx ./scripts/js/lint.mjs clients/js",
+    "clients:js:test": "zx ./scripts/js/test.mjs clients/js"
   },
   "devDependencies": {
     "@iarna/toml": "^2.2.5",
