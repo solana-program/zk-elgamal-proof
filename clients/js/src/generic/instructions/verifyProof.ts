@@ -23,19 +23,11 @@ import { getAccountMetaFactory, expectAddress } from '../shared';
 
 // --- Data Management ---
 
-export interface VerifyProofInstructionData {
-  discriminator: number;
-  // If proof is in an account, this is the offset.
-  // If proof is in instruction data, this is undefined (and we use proofData).
-  offset?: number;
-  proofData?: ReadonlyUint8Array;
-}
+export type VerifyProofInstructionData =
+  | { discriminator: number; offset: number; proofData?: never }
+  | { discriminator: number; proofData: ReadonlyUint8Array; offset?: never };
 
-export interface VerifyProofInstructionDataArgs {
-  discriminator: number;
-  offset?: number;
-  proofData?: ReadonlyUint8Array;
-}
+export type VerifyProofInstructionDataArgs = VerifyProofInstructionData;
 
 /**
  * Universal encoder for all verification instructions.
@@ -198,6 +190,8 @@ export function getVerifyProofInstruction<
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const accounts: (AccountMeta | AccountSignerMeta)[] = [];
 
+  let args: VerifyProofInstructionDataArgs;
+
   if (input.proofAccount) {
     // Case A: Proof in Account
     // Accounts: [ProofAccount, (Context, Auth)?]
@@ -212,6 +206,11 @@ export function getVerifyProofInstruction<
       if (ctxMeta) accounts.push(ctxMeta);
       if (authMeta) accounts.push(authMeta);
     }
+
+    args = {
+      discriminator: input.discriminator,
+      offset: input.offset ?? 0,
+    };
   } else {
     // Case B: Proof in Instruction Data
     // Accounts: [(Context, Auth)?]
@@ -222,19 +221,15 @@ export function getVerifyProofInstruction<
       if (ctxMeta) accounts.push(ctxMeta);
       if (authMeta) accounts.push(authMeta);
     }
-  }
 
-  const args: VerifyProofInstructionDataArgs = {
-    discriminator: input.discriminator,
-  };
-
-  if (input.proofAccount) {
-    args.offset = input.offset ?? 0;
-  } else {
     if (!input.proofData) {
       throw new Error('proofData is required when proofAccount is not provided');
     }
-    args.proofData = input.proofData;
+
+    args = {
+      discriminator: input.discriminator,
+      proofData: input.proofData,
+    };
   }
 
   return {
