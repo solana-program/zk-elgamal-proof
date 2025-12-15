@@ -38,7 +38,7 @@
         "test:exports": "node ./test/exports/module.mjs && node ./test/exports/commonjs.cjs"
     },
     "dependencies": {
-        "@solana/codecs-numbers": "^5.0.0",
+        "@solana/codecs-numbers": "^5.1.0",
         "@solana/web3.js": "^1.98.4",
         "@solana/zk-sdk": "0.1.2"
     },
