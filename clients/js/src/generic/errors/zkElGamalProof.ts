@@ -24,7 +24,7 @@ export type ZkElGamalProofError =
 
 let zkElgamalProofErrorMessages: Record<ZkElGamalProofError, string> | undefined;
 
-const isProd = typeof process !== 'undefined' && process?.env?.NODE_ENV == 'production';
+const isProd = typeof process !== 'undefined' && process.env.NODE_ENV == 'production';
 
 if (!isProd) {
   zkElgamalProofErrorMessages = {

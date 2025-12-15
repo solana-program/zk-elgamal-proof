@@ -38,14 +38,14 @@ export function getVerifyProofInstructionDataEncoder(): Encoder<VerifyProofInstr
     if (value.offset !== undefined) {
       return 1 + 4; // discriminator(u8) + offset(u32)
     }
-    return 1 + (value.proofData?.length ?? 0);
+    return 1 + value.proofData.length;
   };
 
   const write = (value: VerifyProofInstructionDataArgs, bytes: Uint8Array, offset: number) => {
     offset = getU8Encoder().write(value.discriminator, bytes, offset);
     if (value.offset !== undefined) {
       offset = getU32Encoder().write(value.offset, bytes, offset);
-    } else if (value.proofData !== undefined) {
+    } else {
       bytes.set(value.proofData, offset);
       offset += value.proofData.length;
     }
