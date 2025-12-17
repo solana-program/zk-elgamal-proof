@@ -21,7 +21,7 @@ export interface VerifyZeroCiphertextArgs {
 }
 
 /**
- * Verifies that two ElGamal ciphertexts encrypt the same message.
+ * Verifies that an ElGamal ciphertext encrypt encrypts zero.
  *
  * This function creates a transaction that:
  * 1. Optionally creates a context state account if `contextState` is provided.
