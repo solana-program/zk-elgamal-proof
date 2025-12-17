@@ -8,10 +8,10 @@ import {
 import { getCreateAccountInstruction } from '@solana-program/system';
 import { getVerifyProofInstruction } from '../generic/instructions';
 import { ZK_ELGAMAL_PROOF_PROGRAM_ADDRESS, ZkElGamalProofInstruction } from '../generic/programs';
-import { ZERO_CIPHERTEXT_CONTEXT_ACCOUNT_SIZE } from '../constants';
+import { PUBKEY_VALIDITY_CONTEXT_ACCOUNT_SIZE } from '../constants';
 import { ContextStateArgs } from './shared';
 
-export interface VerifyZeroCiphertextArgs {
+export interface VerifyPubkeyValidityArgs {
   rpc: Rpc<GetMinimumBalanceForRentExemptionApi>;
   payer: TransactionSigner;
   proofData: Uint8Array;
@@ -21,24 +21,24 @@ export interface VerifyZeroCiphertextArgs {
 }
 
 /**
- * Verifies that an ElGamal ciphertext encrypt encrypts zero.
+ * Verifies that an ElGamal public key is valid (i.e., the prover knows the corresponding secret key).
  *
  * This function creates a transaction that:
  * 1. Optionally creates a context state account if `contextState` is provided.
- * 2. Calls the `VerifyZeroCiphertext` instruction on the ZK ElGamal Proof program.
+ * 2. Calls the `VerifyPubkeyValidity` instruction on the ZK ElGamal Proof program.
  */
-export async function verifyZeroCiphertext({
+export async function verifyPubkeyValidity({
   rpc,
   payer,
   proofData,
   contextState,
   programId = ZK_ELGAMAL_PROOF_PROGRAM_ADDRESS,
-}: VerifyZeroCiphertextArgs): Promise<Instruction[]> {
+}: VerifyPubkeyValidityArgs): Promise<Instruction[]> {
   const ixs: Instruction[] = [];
 
   // Handle Context State Creation (if requested)
   if (contextState) {
-    const space = BigInt(ZERO_CIPHERTEXT_CONTEXT_ACCOUNT_SIZE);
+    const space = BigInt(PUBKEY_VALIDITY_CONTEXT_ACCOUNT_SIZE);
     const lamports = await rpc.getMinimumBalanceForRentExemption(space).send();
 
     ixs.push(
@@ -55,7 +55,7 @@ export async function verifyZeroCiphertext({
   // Create Verification Instruction
   const verifyIx = getVerifyProofInstruction(
     {
-      discriminator: ZkElGamalProofInstruction.VerifyZeroCiphertext,
+      discriminator: ZkElGamalProofInstruction.VerifyPubkeyValidity, // Discriminator 4
       proofData,
       // If contextState exists, map it to the instruction inputs
       contextState: contextState?.contextAccount.address,

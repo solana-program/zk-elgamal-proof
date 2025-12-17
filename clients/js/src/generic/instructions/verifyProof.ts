@@ -23,37 +23,27 @@ import { getAccountMetaFactory, expectAddress } from '../shared';
 
 // --- Data Management ---
 
-export interface VerifyProofInstructionData {
-  discriminator: number;
-  // If proof is in an account, this is the offset.
-  // If proof is in instruction data, this is undefined (and we use proofData).
-  offset?: number;
-  proofData?: ReadonlyUint8Array;
-}
-
-export interface VerifyProofInstructionDataArgs {
-  discriminator: number;
-  offset?: number;
-  proofData?: ReadonlyUint8Array;
-}
+export type VerifyProofInstructionData =
+  | { discriminator: number; offset: number; proofData?: never }
+  | { discriminator: number; proofData: ReadonlyUint8Array; offset?: never };
 
 /**
  * Universal encoder for all verification instructions.
  * Encodes: [discriminator, u32 offset] OR [discriminator, ...proofBytes]
  */
-export function getVerifyProofInstructionDataEncoder(): Encoder<VerifyProofInstructionDataArgs> {
-  const getSizeFromValue = (value: VerifyProofInstructionDataArgs) => {
+export function getVerifyProofInstructionDataEncoder(): Encoder<VerifyProofInstructionData> {
+  const getSizeFromValue = (value: VerifyProofInstructionData) => {
     if (value.offset !== undefined) {
       return 1 + 4; // discriminator(u8) + offset(u32)
     }
-    return 1 + (value.proofData?.length ?? 0);
+    return 1 + value.proofData.length;
   };
 
-  const write = (value: VerifyProofInstructionDataArgs, bytes: Uint8Array, offset: number) => {
+  const write = (value: VerifyProofInstructionData, bytes: Uint8Array, offset: number) => {
     offset = getU8Encoder().write(value.discriminator, bytes, offset);
     if (value.offset !== undefined) {
       offset = getU32Encoder().write(value.offset, bytes, offset);
-    } else if (value.proofData !== undefined) {
+    } else {
       bytes.set(value.proofData, offset);
       offset += value.proofData.length;
     }
@@ -63,7 +53,7 @@ export function getVerifyProofInstructionDataEncoder(): Encoder<VerifyProofInstr
   return {
     getSizeFromValue,
     write,
-    encode: (value: VerifyProofInstructionDataArgs) => {
+    encode: (value: VerifyProofInstructionData) => {
       const size = getSizeFromValue(value);
       const bytes = new Uint8Array(size);
       write(value, bytes, 0);
@@ -101,7 +91,7 @@ export function getVerifyProofInstructionDataDecoder(): Decoder<VerifyProofInstr
 }
 
 export function getVerifyProofInstructionDataCodec(): Codec<
-  VerifyProofInstructionDataArgs,
+  VerifyProofInstructionData,
   VerifyProofInstructionData
 > {
   return combineCodec(
@@ -198,6 +188,8 @@ export function getVerifyProofInstruction<
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const accounts: (AccountMeta | AccountSignerMeta)[] = [];
 
+  let args: VerifyProofInstructionData;
+
   if (input.proofAccount) {
     // Case A: Proof in Account
     // Accounts: [ProofAccount, (Context, Auth)?]
@@ -212,6 +204,11 @@ export function getVerifyProofInstruction<
       if (ctxMeta) accounts.push(ctxMeta);
       if (authMeta) accounts.push(authMeta);
     }
+
+    args = {
+      discriminator: input.discriminator,
+      offset: input.offset ?? 0,
+    };
   } else {
     // Case B: Proof in Instruction Data
     // Accounts: [(Context, Auth)?]
@@ -222,19 +219,15 @@ export function getVerifyProofInstruction<
       if (ctxMeta) accounts.push(ctxMeta);
       if (authMeta) accounts.push(authMeta);
     }
-  }
 
-  const args: VerifyProofInstructionDataArgs = {
-    discriminator: input.discriminator,
-  };
-
-  if (input.proofAccount) {
-    args.offset = input.offset ?? 0;
-  } else {
     if (!input.proofData) {
       throw new Error('proofData is required when proofAccount is not provided');
     }
-    args.proofData = input.proofData;
+
+    args = {
+      discriminator: input.discriminator,
+      proofData: input.proofData,
+    };
   }
 
   return {
