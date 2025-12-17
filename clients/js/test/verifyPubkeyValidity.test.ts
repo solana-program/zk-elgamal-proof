@@ -51,7 +51,7 @@ test('verifyPubkeyValidity: success with valid proof (context state)', async t =
     proofData,
     contextState: {
       contextAccount,
-      authority: payer,
+      authority: payer.address,
     },
   });
 

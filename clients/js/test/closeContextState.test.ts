@@ -24,7 +24,7 @@ test('closeContextState: can close a verified proof context', async t => {
     proofData: proof.toBytes(),
     contextState: {
       contextAccount,
-      authority: payer,
+      authority: payer.address,
     },
   });
   await sendAndConfirmInstructions(client, payer, verifyIxs);

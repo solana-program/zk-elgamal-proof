@@ -93,7 +93,7 @@ test('verifyPercentageWithCap: success with valid proof (context state)', async 
     proofData: proof.toBytes(),
     contextState: {
       contextAccount,
-      authority: payer,
+      authority: payer.address,
     },
   });
 

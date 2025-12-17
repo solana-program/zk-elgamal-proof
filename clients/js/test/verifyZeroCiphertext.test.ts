@@ -51,7 +51,7 @@ test('verifyZeroCiphertext: handles invalid proof data gracefully', async t => {
       proofData: dummyProofData,
       contextState: {
         contextAccount,
-        authority: payer,
+        authority: payer.address,
       },
     });
 
@@ -77,7 +77,7 @@ test('verifyZeroCiphertext: success with valid proof (context state)', async t =
     proofData,
     contextState: {
       contextAccount,
-      authority: payer,
+      authority: payer.address,
     },
   });
 
