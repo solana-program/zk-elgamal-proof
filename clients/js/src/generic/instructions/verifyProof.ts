@@ -27,21 +27,19 @@ export type VerifyProofInstructionData =
   | { discriminator: number; offset: number; proofData?: never }
   | { discriminator: number; proofData: ReadonlyUint8Array; offset?: never };
 
-export type VerifyProofInstructionDataArgs = VerifyProofInstructionData;
-
 /**
  * Universal encoder for all verification instructions.
  * Encodes: [discriminator, u32 offset] OR [discriminator, ...proofBytes]
  */
-export function getVerifyProofInstructionDataEncoder(): Encoder<VerifyProofInstructionDataArgs> {
-  const getSizeFromValue = (value: VerifyProofInstructionDataArgs) => {
+export function getVerifyProofInstructionDataEncoder(): Encoder<VerifyProofInstructionData> {
+  const getSizeFromValue = (value: VerifyProofInstructionData) => {
     if (value.offset !== undefined) {
       return 1 + 4; // discriminator(u8) + offset(u32)
     }
     return 1 + value.proofData.length;
   };
 
-  const write = (value: VerifyProofInstructionDataArgs, bytes: Uint8Array, offset: number) => {
+  const write = (value: VerifyProofInstructionData, bytes: Uint8Array, offset: number) => {
     offset = getU8Encoder().write(value.discriminator, bytes, offset);
     if (value.offset !== undefined) {
       offset = getU32Encoder().write(value.offset, bytes, offset);
@@ -55,7 +53,7 @@ export function getVerifyProofInstructionDataEncoder(): Encoder<VerifyProofInstr
   return {
     getSizeFromValue,
     write,
-    encode: (value: VerifyProofInstructionDataArgs) => {
+    encode: (value: VerifyProofInstructionData) => {
       const size = getSizeFromValue(value);
       const bytes = new Uint8Array(size);
       write(value, bytes, 0);
@@ -93,7 +91,7 @@ export function getVerifyProofInstructionDataDecoder(): Decoder<VerifyProofInstr
 }
 
 export function getVerifyProofInstructionDataCodec(): Codec<
-  VerifyProofInstructionDataArgs,
+  VerifyProofInstructionData,
   VerifyProofInstructionData
 > {
   return combineCodec(
@@ -190,7 +188,7 @@ export function getVerifyProofInstruction<
   const getAccountMeta = getAccountMetaFactory(programAddress, 'programId');
   const accounts: (AccountMeta | AccountSignerMeta)[] = [];
 
-  let args: VerifyProofInstructionDataArgs;
+  let args: VerifyProofInstructionData;
 
   if (input.proofAccount) {
     // Case A: Proof in Account
