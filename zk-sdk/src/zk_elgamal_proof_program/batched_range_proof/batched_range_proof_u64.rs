@@ -12,17 +12,26 @@ use {
         },
     },
     solana_zk_elgamal_proof_interface::proof_data::BatchedRangeProofU64Data,
-    std::convert::TryInto,
+    std::{borrow::Borrow, convert::TryInto},
 };
 
-pub fn build_batched_range_proof_u64_data(
-    commitments: Vec<&PedersenCommitment>,
-    amounts: Vec<u64>,
-    bit_lengths: Vec<usize>,
-    openings: Vec<&PedersenOpening>,
-) -> Result<BatchedRangeProofU64Data, ProofGenerationError> {
+pub fn build_batched_range_proof_u64_data<C, PC, A, B, O, PO>(
+    commitments: C,
+    amounts: A,
+    bit_lengths: B,
+    openings: O,
+) -> Result<BatchedRangeProofU64Data, ProofGenerationError>
+where
+    C: AsRef<[PC]>,
+    PC: Borrow<PedersenCommitment>,
+    A: AsRef<[u64]>,
+    B: AsRef<[usize]>,
+    O: AsRef<[PO]>,
+    PO: Borrow<PedersenOpening>,
+{
     // the sum of the bit lengths must be 64
     let batched_bit_length = bit_lengths
+        .as_ref()
         .iter()
         .try_fold(0_usize, |acc, &x| acc.checked_add(x))
         .ok_or(ProofGenerationError::IllegalAmountBitLength)?;
@@ -36,7 +45,7 @@ pub fn build_batched_range_proof_u64_data(
     }
 
     let context =
-        build_batched_range_proof_context(&commitments, &amounts, &bit_lengths, &openings)?;
+        build_batched_range_proof_context(commitments, &amounts, &bit_lengths, &openings)?;
 
     let mut transcript = batched_range_proof_transcript(&context);
     let proof = RangeProof::new(amounts, bit_lengths, openings, &mut transcript)?
@@ -69,7 +78,7 @@ impl VerifyZkProof for BatchedRangeProofU64Data {
         let proof: RangeProof = self.proof.try_into()?;
 
         proof
-            .verify(commitments.iter().collect(), bit_lengths, &mut transcript)
+            .verify(commitments, bit_lengths, &mut transcript)
             .map_err(|e| e.into())
     }
 }
@@ -105,7 +114,7 @@ mod test {
         let (commitment_8, opening_8) = Pedersen::new(amount_8);
 
         let proof_data = build_batched_range_proof_u64_data(
-            vec![
+            &[
                 &commitment_1,
                 &commitment_2,
                 &commitment_3,
@@ -115,11 +124,11 @@ mod test {
                 &commitment_7,
                 &commitment_8,
             ],
-            vec![
+            &[
                 amount_1, amount_2, amount_3, amount_4, amount_5, amount_6, amount_7, amount_8,
             ],
-            vec![8, 8, 8, 8, 8, 8, 8, 8],
-            vec![
+            &[8, 8, 8, 8, 8, 8, 8, 8],
+            &[
                 &opening_1, &opening_2, &opening_3, &opening_4, &opening_5, &opening_6, &opening_7,
                 &opening_8,
             ],
@@ -147,7 +156,7 @@ mod test {
         let (commitment_8, opening_8) = Pedersen::new(amount_8);
 
         let proof_data = build_batched_range_proof_u64_data(
-            vec![
+            &[
                 &commitment_1,
                 &commitment_2,
                 &commitment_3,
@@ -157,11 +166,11 @@ mod test {
                 &commitment_7,
                 &commitment_8,
             ],
-            vec![
+            &[
                 amount_1, amount_2, amount_3, amount_4, amount_5, amount_6, amount_7, amount_8,
             ],
-            vec![8, 8, 8, 8, 8, 8, 8, 8],
-            vec![
+            &[8, 8, 8, 8, 8, 8, 8, 8],
+            &[
                 &opening_1, &opening_2, &opening_3, &opening_4, &opening_5, &opening_6, &opening_7,
                 &opening_8,
             ],
