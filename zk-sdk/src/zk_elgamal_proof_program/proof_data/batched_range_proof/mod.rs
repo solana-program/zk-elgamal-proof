@@ -31,7 +31,7 @@ use {
     bytemuck::{bytes_of, Zeroable},
     curve25519_dalek::traits::IsIdentity,
     merlin::Transcript,
-    std::convert::TryInto,
+    std::{borrow::Borrow, convert::TryInto},
 };
 
 /// The maximum number of Pedersen commitments that can be processed in a single batched range proof.
@@ -66,12 +66,25 @@ impl BatchedRangeProofContext {
         transcript
     }
 
-    fn new(
-        commitments: &[&PedersenCommitment],
-        amounts: &[u64],
-        bit_lengths: &[usize],
-        openings: &[&PedersenOpening],
-    ) -> Result<Self, ProofGenerationError> {
+    fn new<C, PC, A, B, O, PO>(
+        commitments: C,
+        amounts: A,
+        bit_lengths: B,
+        openings: O,
+    ) -> Result<Self, ProofGenerationError>
+    where
+        C: AsRef<[PC]>,
+        PC: Borrow<PedersenCommitment>,
+        A: AsRef<[u64]>,
+        B: AsRef<[usize]>,
+        O: AsRef<[PO]>,
+        PO: Borrow<PedersenOpening>,
+    {
+        let commitments = commitments.as_ref();
+        let amounts = amounts.as_ref();
+        let bit_lengths = bit_lengths.as_ref();
+        let openings = openings.as_ref();
+
         // the number of commitments is capped at 8
         let num_commitments = commitments.len();
         if num_commitments > MAX_COMMITMENTS
@@ -84,6 +97,7 @@ impl BatchedRangeProofContext {
 
         let mut pod_commitments = [PodPedersenCommitment::zeroed(); MAX_COMMITMENTS];
         for (i, commitment) in commitments.iter().enumerate() {
+            let commitment = commitment.borrow();
             // all-zero commitment is invalid
             //
             // this check only exists in the prover logic to enforce safe practice
