@@ -374,6 +374,10 @@ impl ElGamalPubkey {
     pub fn decrypt_handle(self, opening: &PedersenOpening) -> DecryptHandle {
         DecryptHandle::new(&self, opening)
     }
+
+    pub fn to_bytes(&self) -> [u8; ELGAMAL_PUBKEY_LEN] {
+        self.into()
+    }
 }
 
 impl ElGamalPubkey {

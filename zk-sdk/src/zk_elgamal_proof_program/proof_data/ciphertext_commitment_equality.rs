@@ -26,7 +26,6 @@ use {
         sigma_proofs::ciphertext_commitment_equality::CiphertextCommitmentEqualityProof,
         zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
     },
-    bytemuck::bytes_of,
     merlin::Transcript,
     std::convert::TryInto,
 };
@@ -70,10 +69,11 @@ impl CiphertextCommitmentEqualityProofData {
             ciphertext: PodElGamalCiphertext(ciphertext.to_bytes()),
             commitment: PodPedersenCommitment(commitment.to_bytes()),
         };
-        let mut transcript = context.new_transcript();
+        let mut transcript = Transcript::new(b"ciphertext-commitment-equality-instruction");
         let proof = CiphertextCommitmentEqualityProof::new(
             keypair,
             ciphertext,
+            commitment,
             opening,
             amount,
             &mut transcript,
@@ -96,7 +96,7 @@ impl ZkProofData<CiphertextCommitmentEqualityProofContext>
 
     #[cfg(not(target_os = "solana"))]
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
-        let mut transcript = self.context.new_transcript();
+        let mut transcript = Transcript::new(b"ciphertext-commitment-equality-instruction");
 
         let pubkey = self.context.pubkey.try_into()?;
         let ciphertext = self.context.ciphertext.try_into()?;
@@ -106,18 +106,6 @@ impl ZkProofData<CiphertextCommitmentEqualityProofContext>
         proof
             .verify(&pubkey, &ciphertext, &commitment, &mut transcript)
             .map_err(|e| e.into())
-    }
-}
-
-#[allow(non_snake_case)]
-#[cfg(not(target_os = "solana"))]
-impl CiphertextCommitmentEqualityProofContext {
-    fn new_transcript(&self) -> Transcript {
-        let mut transcript = Transcript::new(b"ciphertext-commitment-equality-instruction");
-        transcript.append_message(b"pubkey", bytes_of(&self.pubkey));
-        transcript.append_message(b"ciphertext", bytes_of(&self.ciphertext));
-        transcript.append_message(b"commitment", bytes_of(&self.commitment));
-        transcript
     }
 }
 

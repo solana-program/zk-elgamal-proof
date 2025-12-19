@@ -12,7 +12,6 @@ use {
         sigma_proofs::pubkey_validity::PubkeyValidityProof,
         zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
     },
-    bytemuck::bytes_of,
     merlin::Transcript,
     std::convert::TryInto,
 };
@@ -55,7 +54,7 @@ impl PubkeyValidityProofData {
 
         let context = PubkeyValidityProofContext { pubkey: pod_pubkey };
 
-        let mut transcript = context.new_transcript();
+        let mut transcript = Transcript::new(b"pubkey-validity-instruction");
         let proof = PubkeyValidityProof::new(keypair, &mut transcript).into();
 
         Ok(PubkeyValidityProofData { context, proof })
@@ -71,20 +70,10 @@ impl ZkProofData<PubkeyValidityProofContext> for PubkeyValidityProofData {
 
     #[cfg(not(target_os = "solana"))]
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
-        let mut transcript = self.context.new_transcript();
+        let mut transcript = Transcript::new(b"pubkey-validity-instruction");
         let pubkey = self.context.pubkey.try_into()?;
         let proof: PubkeyValidityProof = self.proof.try_into()?;
         proof.verify(&pubkey, &mut transcript).map_err(|e| e.into())
-    }
-}
-
-#[allow(non_snake_case)]
-#[cfg(not(target_os = "solana"))]
-impl PubkeyValidityProofContext {
-    fn new_transcript(&self) -> Transcript {
-        let mut transcript = Transcript::new(b"pubkey-validity-instruction");
-        transcript.append_message(b"pubkey", bytes_of(&self.pubkey));
-        transcript
     }
 }
 
