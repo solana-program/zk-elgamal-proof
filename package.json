@@ -9,6 +9,7 @@
     "zk-sdk-wasm-js:format": "zx ./scripts/rust/format.mjs zk-sdk-wasm-js",
     "zk-sdk-wasm-js:lint": "zx ./scripts/rust/lint.mjs zk-sdk-wasm-js",
     "zk-sdk-wasm-js:test-wasm": "zx ./scripts/rust/test-wasm.mjs zk-sdk-wasm-js",
+    "zk-sdk-wasm-js:test-integration": "zx ./scripts/rust/test-integration.mjs zk-sdk-wasm-js",
     "solana:check": "zx ./scripts/check-solana-version.mjs",
     "solana:link": "zx ./scripts/link-solana-version.mjs",
     "validator:start": "zx ./scripts/start-validator.mjs",
@@ -21,12 +22,16 @@
     "rust:publish": "zx ./scripts/rust/publish.mjs",
     "clients:js-legacy:format": "zx ./scripts/js/format.mjs clients/js-legacy",
     "clients:js-legacy:lint": "zx ./scripts/js/lint.mjs clients/js-legacy",
-    "clients:js-legacy:test": "zx ./scripts/js/test.mjs clients/js-legacy"
+    "clients:js-legacy:test": "zx ./scripts/js/test.mjs clients/js-legacy",
+    "clients:js:format": "zx ./scripts/js/format.mjs clients/js",
+    "clients:js:lint": "zx ./scripts/js/lint.mjs clients/js",
+    "clients:js:test": "zx ./scripts/js/test.mjs clients/js"
   },
   "devDependencies": {
     "@iarna/toml": "^2.2.5",
+    "@playwright/test": "^1.57.0",
     "typescript": "^5.9.3",
-    "zx": "^8.8.4"
+    "zx": "^8.8.5"
   },
   "engines": {
     "node": ">=v20.0.0"

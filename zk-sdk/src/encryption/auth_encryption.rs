@@ -26,7 +26,7 @@ use {
         io::{Read, Write},
     },
     subtle::ConstantTimeEq,
-    zeroize::Zeroize,
+    zeroize::{Zeroize, Zeroizing},
 };
 
 /// Byte length of an authenticated encryption nonce component
@@ -47,15 +47,13 @@ impl AuthenticatedEncryption {
     /// On input of an authenticated encryption key and an amount, the function returns a
     /// corresponding authenticated encryption ciphertext.
     fn encrypt(key: &AeKey, balance: u64) -> AeCiphertext {
-        let mut plaintext = balance.to_le_bytes();
+        let plaintext = Zeroizing::new(balance.to_le_bytes());
         let nonce: Nonce = OsRng.gen::<[u8; NONCE_LEN]>();
 
         // The balance and the nonce have fixed length and therefore, encryption should not fail.
         let ciphertext = Aes128GcmSiv::new(&key.0.into())
             .encrypt(&nonce.into(), plaintext.as_ref())
             .expect("authenticated encryption");
-
-        plaintext.zeroize();
 
         AeCiphertext {
             nonce,
@@ -66,19 +64,28 @@ impl AuthenticatedEncryption {
     /// On input of an authenticated encryption key and a ciphertext, the function returns the
     /// originally encrypted amount.
     fn decrypt(key: &AeKey, ciphertext: &AeCiphertext) -> Option<u64> {
-        let plaintext = Aes128GcmSiv::new(&key.0.into())
+        let plaintext_result = Aes128GcmSiv::new(&key.0.into())
             .decrypt(&ciphertext.nonce.into(), ciphertext.ciphertext.as_ref());
 
-        if let Ok(plaintext) = plaintext {
-            let amount_bytes: [u8; 8] = plaintext.try_into().unwrap();
-            Some(u64::from_le_bytes(amount_bytes))
+        if let Ok(plaintext_vec) = plaintext_result {
+            let plaintext = Zeroizing::new(plaintext_vec);
+            if plaintext.len() == 8 {
+                let mut amount_bytes = Zeroizing::new([0u8; 8]);
+                amount_bytes.copy_from_slice(&plaintext);
+
+                let amount = u64::from_le_bytes(*amount_bytes);
+                Some(amount)
+            } else {
+                None
+            }
         } else {
             None
         }
     }
 }
 
-#[derive(Clone, Debug, Zeroize, Eq, PartialEq)]
+#[derive(Clone, Zeroize, Eq, PartialEq)]
+#[zeroize(drop)]
 pub struct AeKey([u8; AE_KEY_LEN]);
 
 impl AeKey {
@@ -146,6 +153,12 @@ impl AeKey {
 
     pub fn decrypt(&self, ciphertext: &AeCiphertext) -> Option<u64> {
         AuthenticatedEncryption::decrypt(self, ciphertext)
+    }
+}
+
+impl fmt::Debug for AeKey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("AeKey").field(&"[REDACTED]").finish()
     }
 }
 

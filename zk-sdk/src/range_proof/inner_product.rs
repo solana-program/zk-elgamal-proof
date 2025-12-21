@@ -24,6 +24,7 @@ use {
     },
     merlin::Transcript,
     std::borrow::Borrow,
+    zeroize::Zeroize,
 };
 
 /// An inner-product proof.
@@ -223,12 +224,17 @@ impl InnerProductProof {
             H = H_L;
         }
 
-        Ok(InnerProductProof {
+        let proof = InnerProductProof {
             L_vec,
             R_vec,
             a: a[0],
             b: b[0],
-        })
+        };
+
+        a_vec.zeroize();
+        b_vec.zeroize();
+
+        Ok(proof)
     }
 
     /// Computes the verification scalars for a single inner product proof.
@@ -243,6 +249,9 @@ impl InnerProductProof {
         transcript: &mut Transcript,
     ) -> Result<(Vec<Scalar>, Vec<Scalar>, Vec<Scalar>), RangeProofVerificationError> {
         let lg_n = self.L_vec.len();
+        if lg_n != self.R_vec.len() {
+            return Err(RangeProofVerificationError::LRVectorLengthMismatch);
+        }
         if lg_n == 0 || lg_n >= 32 {
             // 4 billion multiplications should be enough for anyone
             // and this check prevents overflow in 1<<lg_n below.

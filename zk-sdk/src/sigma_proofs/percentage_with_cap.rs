@@ -15,6 +15,24 @@
 //! The protocol guarantees computational soundness (by the hardness of discrete log) and perfect
 //! zero-knowledge in the random oracle model.
 //!
+//! # Security Warning: Standalone Usage
+//!
+//! This module implements a specific zero-knowledge argument (an OR-composition) and
+//! is intended as a low-level building block.
+//!
+//! By itself, this proof **does not** guarantee that the `percentage_commitment` (the fee)
+//! is a valid, positive integer within a sensible range. It only verifies the
+//! algebraic relationship `(fee * 10000) - (amount * bp) = delta` using scalar
+//! field arithmetic.
+//!
+//! A malicious prover could exploit this by using a `delta` value that causes the `fee`
+//! to "wrap around" the field modulus, creating a proof for a `percentage_commitment`
+//! that does not represent a valid fee.
+//!
+//! **Any protocol using this module MUST also enforce a separate `RangeProof`** on the
+//! `percentage_commitment` (e.g., proving `fee` is in `[0, 2^64)`). This forces the
+//! fee equation to hold in the integers, not just the scalar field.
+//!
 //! [`ZK ElGamal proof program`]: https://docs.anza.xyz/runtime/zk-elgamal-proof
 //! [`specification`](https://github.com/anza-xyz/agave/blob/master/docs/src/runtime/zk-docs/percentage_with_cap.pdf).
 

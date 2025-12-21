@@ -526,12 +526,12 @@ impl ProofInstruction {
     ) -> Instruction {
         let accounts = if let Some(context_state_info) = context_state_info {
             vec![
-                AccountMeta::new(*proof_account, false),
+                AccountMeta::new_readonly(*proof_account, false),
                 AccountMeta::new(*context_state_info.context_state_account, false),
                 AccountMeta::new_readonly(*context_state_info.context_state_authority, false),
             ]
         } else {
-            vec![AccountMeta::new(*proof_account, false)]
+            vec![AccountMeta::new_readonly(*proof_account, false)]
         };
 
         let mut data = vec![ToPrimitive::to_u8(self).unwrap()];

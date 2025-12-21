@@ -1,7 +1,15 @@
-#![allow(unused_imports, unused_macros, dead_code)]
 #![cfg(target_arch = "wasm32")]
 
 pub mod encryption;
+pub mod proof_data;
+
+// Conditional Test Configuration
+// This block is only active when running tests (cfg(test)) on Wasm architecture.
+#[cfg(all(test, feature = "test-browser"))]
+mod wasm_test_config {
+    use wasm_bindgen_test::*;
+    wasm_bindgen_test_configure!(run_in_browser);
+}
 
 /// Simple macro for implementing conversion functions between wrapper types and
 /// wrapped types.

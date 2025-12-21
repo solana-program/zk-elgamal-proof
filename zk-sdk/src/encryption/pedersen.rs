@@ -12,7 +12,7 @@ use {
     rand::rngs::OsRng,
     serde::{Deserialize, Serialize},
     sha3::Sha3_512,
-    std::convert::TryInto,
+    std::{convert::TryInto, fmt},
     subtle::{Choice, ConstantTimeEq},
     zeroize::Zeroize,
 };
@@ -54,6 +54,19 @@ impl Pedersen {
     /// as the opening.
     ///
     /// This function is deterministic.
+    ///
+    /// # Warning
+    ///
+    /// This function produces a deterministic commitment by using a fixed, zero-value opening.
+    /// This is **not** a hiding commitment. If the committed value is small, it may be
+    /// vulnerable to a dictionary attack (pre-computation of common values).
+    ///
+    /// This method should only be used in contexts where the committed value does not need to
+    /// be confidential. For a standard hiding commitment, use `Pedersen::new()`.
+    #[deprecated(
+        since = "4.1.0",
+        note = "This function is intended for internal use and will be removed from the public API in a future version."
+    )]
     pub fn encode<T: Into<Scalar>>(amount: T) -> PedersenCommitment {
         PedersenCommitment(amount.into() * &G)
     }
@@ -62,7 +75,7 @@ impl Pedersen {
 /// Pedersen opening type.
 ///
 /// Instances of Pedersen openings are zeroized on drop.
-#[derive(Clone, Debug, Default, Serialize, Deserialize, Zeroize)]
+#[derive(Clone, Default, Zeroize)]
 #[zeroize(drop)]
 pub struct PedersenOpening(Scalar);
 
@@ -107,6 +120,14 @@ impl PartialEq for PedersenOpening {
 impl ConstantTimeEq for PedersenOpening {
     fn ct_eq(&self, other: &Self) -> Choice {
         self.0.ct_eq(&other.0)
+    }
+}
+
+impl fmt::Debug for PedersenOpening {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("PedersenOpening")
+            .field(&"[REDACTED]")
+            .finish()
     }
 }
 
@@ -339,16 +360,6 @@ mod tests {
     }
 
     #[test]
-    fn test_serde_pedersen_opening() {
-        let opening = PedersenOpening(Scalar::random(&mut OsRng));
-
-        let encoded = bincode::serialize(&opening).unwrap();
-        let decoded: PedersenOpening = bincode::deserialize(&encoded).unwrap();
-
-        assert_eq!(opening, decoded);
-    }
-
-    #[test]
     fn test_homomorphic_addition_with_zero() {
         let amount: u64 = 77;
         let (commitment_0, opening_0) = Pedersen::new(amount);
@@ -368,6 +379,7 @@ mod tests {
         let commitment_with_zero = Pedersen::with(amount, &zero_opening);
 
         // Compare with the encode function
+        #[allow(deprecated)]
         let encoded_commitment = Pedersen::encode(amount);
 
         assert_eq!(encoded_commitment, commitment_with_zero);

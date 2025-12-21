@@ -83,7 +83,17 @@ impl ZkProofData<BatchedRangeProofContext> for BatchedRangeProofU64Data {
         let (commitments, bit_lengths) = self.context.try_into()?;
         let num_commitments = commitments.len();
 
-        if num_commitments > MAX_COMMITMENTS || num_commitments != bit_lengths.len() {
+        if num_commitments > MAX_COMMITMENTS {
+            return Err(ProofVerificationError::IllegalCommitmentLength);
+        }
+
+        let batched_bit_length = bit_lengths
+            .iter()
+            .try_fold(0_usize, |acc, &x| acc.checked_add(x))
+            .ok_or(ProofVerificationError::ProofContext)?;
+
+        let expected_bit_length = usize::try_from(u64::BITS).unwrap();
+        if batched_bit_length != expected_bit_length {
             return Err(ProofVerificationError::IllegalCommitmentLength);
         }
 
