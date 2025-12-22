@@ -15,6 +15,7 @@ use {
     },
     curve25519_dalek::traits::MultiscalarMul,
     rand::rngs::OsRng,
+    solana_zk_sdk_pod::sigma_proofs::PodCiphertextCiphertextEqualityProof,
     zeroize::Zeroize,
 };
 use {
@@ -274,14 +275,27 @@ impl CiphertextCiphertextEqualityProof {
     }
 }
 
+#[cfg(not(target_os = "solana"))]
+impl From<CiphertextCiphertextEqualityProof> for PodCiphertextCiphertextEqualityProof {
+    fn from(decoded_proof: CiphertextCiphertextEqualityProof) -> Self {
+        Self(decoded_proof.to_bytes())
+    }
+}
+
+#[cfg(not(target_os = "solana"))]
+impl TryFrom<PodCiphertextCiphertextEqualityProof> for CiphertextCiphertextEqualityProof {
+    type Error = EqualityProofVerificationError;
+
+    fn try_from(pod_proof: PodCiphertextCiphertextEqualityProof) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_proof.0)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use {
         super::*,
-        crate::{
-            encryption::pod::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
-            sigma_proofs::pod::PodCiphertextCiphertextEqualityProof,
-        },
+        solana_zk_sdk_pod::encryption::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
         std::str::FromStr,
     };
 

@@ -5,8 +5,9 @@ use {
     },
     js_sys::Uint8Array,
     solana_zk_sdk::zk_elgamal_proof_program::proof_data::{
-        grouped_ciphertext_validity, ZkProofData,
+        GroupedCiphertext3HandlesValidityProofDataExt, ZkProofData,
     },
+    solana_zk_sdk_pod::proof_data::grouped_ciphertext_validity,
     wasm_bindgen::prelude::*,
 };
 

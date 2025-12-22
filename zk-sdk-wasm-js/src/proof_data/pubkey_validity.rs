@@ -1,7 +1,10 @@
 use {
     crate::encryption::elgamal::ElGamalKeypair,
     js_sys::Uint8Array,
-    solana_zk_sdk::zk_elgamal_proof_program::proof_data::{pubkey_validity, ZkProofData},
+    solana_zk_sdk::zk_elgamal_proof_program::proof_data::{
+        PubkeyValidityProofDataExt, ZkProofData,
+    },
+    solana_zk_sdk_pod::proof_data::pubkey_validity,
     wasm_bindgen::prelude::*,
 };
 

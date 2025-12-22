@@ -1,7 +1,10 @@
 use {
     crate::encryption::elgamal::{ElGamalCiphertext, ElGamalKeypair},
     js_sys::Uint8Array,
-    solana_zk_sdk::zk_elgamal_proof_program::proof_data::{zero_ciphertext, ZkProofData},
+    solana_zk_sdk::zk_elgamal_proof_program::proof_data::{
+        ZeroCiphertextProofDataExt, ZkProofData,
+    },
+    solana_zk_sdk_pod::proof_data::zero_ciphertext,
     wasm_bindgen::prelude::*,
 };
 

@@ -5,8 +5,9 @@ use {
     },
     js_sys::Uint8Array,
     solana_zk_sdk::zk_elgamal_proof_program::proof_data::{
-        ciphertext_ciphertext_equality, ZkProofData,
+        CiphertextCiphertextEqualityProofDataExt, ZkProofData,
     },
+    solana_zk_sdk_pod::proof_data::ciphertext_ciphertext_equality,
     wasm_bindgen::prelude::*,
 };
 

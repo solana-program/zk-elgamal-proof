@@ -1,5 +1,11 @@
 //! The 256-bit batched range proof instruction.
 
+use {
+    crate::zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
+    solana_zk_sdk_pod::proof_data::batched_range_proof::{
+        BatchedRangeProofContext, BatchedRangeProofU256Data,
+    },
+};
 #[cfg(not(target_os = "solana"))]
 use {
     crate::{
@@ -7,42 +13,35 @@ use {
         range_proof::RangeProof,
         zk_elgamal_proof_program::{
             errors::{ProofGenerationError, ProofVerificationError},
-            proof_data::batched_range_proof::{MAX_COMMITMENTS, MAX_SINGLE_BIT_LENGTH},
+            proof_data::{
+                batched_range_proof::{
+                    BatchedRangeProofContextExt, MAX_COMMITMENTS, MAX_SINGLE_BIT_LENGTH,
+                },
+                ProofContext,
+            },
         },
     },
     std::convert::TryInto,
-};
-use {
-    crate::{
-        range_proof::pod::PodRangeProofU256,
-        zk_elgamal_proof_program::proof_data::{
-            batched_range_proof::BatchedRangeProofContext, ProofType, ZkProofData,
-        },
-    },
-    bytemuck_derive::{Pod, Zeroable},
 };
 
 #[cfg(not(target_os = "solana"))]
 const BATCHED_RANGE_PROOF_U256_BIT_LENGTH: usize = 256;
 
-/// The instruction data that is needed for the
-/// `ProofInstruction::BatchedRangeProofU256Data` instruction.
-///
-/// It includes the cryptographic proof as well as the context data information needed to verify
-/// the proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
-#[repr(C)]
-pub struct BatchedRangeProofU256Data {
-    /// The context data for a batched range proof
-    pub context: BatchedRangeProofContext,
-
-    /// The batched range proof
-    pub proof: PodRangeProofU256,
+#[cfg(not(target_os = "solana"))]
+pub trait BatchedRangeProofU256DataExt {
+    fn new(
+        commitments: Vec<&PedersenCommitment>,
+        amounts: Vec<u64>,
+        bit_lengths: Vec<usize>,
+        openings: Vec<&PedersenOpening>,
+    ) -> Result<Self, ProofGenerationError>
+    where
+        Self: Sized;
 }
 
 #[cfg(not(target_os = "solana"))]
-impl BatchedRangeProofU256Data {
-    pub fn new(
+impl BatchedRangeProofU256DataExt for BatchedRangeProofU256Data {
+    fn new(
         commitments: Vec<&PedersenCommitment>,
         amounts: Vec<u64>,
         bit_lengths: Vec<usize>,
@@ -88,7 +87,7 @@ impl ZkProofData<BatchedRangeProofContext> for BatchedRangeProofU256Data {
 
     #[cfg(not(target_os = "solana"))]
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
-        let (commitments, bit_lengths) = self.context.try_into()?;
+        let (commitments, bit_lengths) = self.context.try_into_commitment_bit_lengths_vec()?;
         let num_commitments = commitments.len();
 
         // This check is unique to the 256-bit proof. For 64-bit and 128-bit proofs,

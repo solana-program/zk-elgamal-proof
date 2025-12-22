@@ -5,52 +5,38 @@
 //! corresponding secret key). To generate the proof, a prover must provide the secret key for the
 //! public key.
 
+use {
+    crate::zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
+    solana_zk_sdk_pod::proof_data::pubkey_validity::{
+        PubkeyValidityProofContext, PubkeyValidityProofData,
+    },
+};
 #[cfg(not(target_os = "solana"))]
 use {
     crate::{
         encryption::elgamal::ElGamalKeypair,
         sigma_proofs::pubkey_validity::PubkeyValidityProof,
-        zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
+        zk_elgamal_proof_program::{
+            errors::{ProofGenerationError, ProofVerificationError},
+            proof_data::ProofContext,
+        },
     },
     bytemuck::bytes_of,
     merlin::Transcript,
+    solana_zk_sdk_pod::encryption::elgamal::PodElGamalPubkey,
     std::convert::TryInto,
 };
-use {
-    crate::{
-        encryption::pod::elgamal::PodElGamalPubkey,
-        sigma_proofs::pod::PodPubkeyValidityProof,
-        zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
-    },
-    bytemuck_derive::{Pod, Zeroable},
-};
 
-/// The instruction data that is needed for the `ProofInstruction::VerifyPubkeyValidity`
-/// instruction.
-///
-/// It includes the cryptographic proof as well as the context data information needed to verify
-/// the proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
-#[repr(C)]
-pub struct PubkeyValidityProofData {
-    /// The context data for the public key validity proof
-    pub context: PubkeyValidityProofContext, // 32 bytes
-
-    /// Proof that the public key is well-formed
-    pub proof: PodPubkeyValidityProof, // 64 bytes
-}
-
-/// The context data needed to verify a pubkey validity proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
-#[repr(C)]
-pub struct PubkeyValidityProofContext {
-    /// The public key to be proved
-    pub pubkey: PodElGamalPubkey, // 32 bytes
+#[cfg(not(target_os = "solana"))]
+pub trait PubkeyValidityProofDataExt {
+    fn new(keypair: &ElGamalKeypair) -> Result<Self, ProofGenerationError>
+    where
+        Self: Sized;
 }
 
 #[cfg(not(target_os = "solana"))]
-impl PubkeyValidityProofData {
-    pub fn new(keypair: &ElGamalKeypair) -> Result<Self, ProofGenerationError> {
+impl PubkeyValidityProofDataExt for PubkeyValidityProofData {
+    fn new(keypair: &ElGamalKeypair) -> Result<Self, ProofGenerationError> {
         let pod_pubkey = PodElGamalPubkey(keypair.pubkey().into());
 
         let context = PubkeyValidityProofContext { pubkey: pod_pubkey };
@@ -80,7 +66,7 @@ impl ZkProofData<PubkeyValidityProofContext> for PubkeyValidityProofData {
 
 #[allow(non_snake_case)]
 #[cfg(not(target_os = "solana"))]
-impl PubkeyValidityProofContext {
+impl ProofContext for PubkeyValidityProofContext {
     fn new_transcript(&self) -> Transcript {
         let mut transcript = Transcript::new(b"pubkey-validity-instruction");
         transcript.append_message(b"pubkey", bytes_of(&self.pubkey));
