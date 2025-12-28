@@ -9,9 +9,7 @@ import { getCreateAccountInstruction } from '@solana-program/system';
 import { getVerifyProofInstruction, VerifyProofInput } from '../generic/instructions';
 import { ZK_ELGAMAL_PROOF_PROGRAM_ADDRESS, ZkElGamalProofInstruction } from '../generic/programs';
 import { PUBKEY_VALIDITY_CONTEXT_ACCOUNT_SIZE } from '../constants';
-import { ContextStateArgs } from './shared';
-
-export type ProofDataInput = Uint8Array | { account: Address; offset: number };
+import { ContextStateArgs, ProofDataInput } from './shared';
 
 export interface VerifyPubkeyValidityArgs {
   rpc: Rpc<GetMinimumBalanceForRentExemptionApi>;

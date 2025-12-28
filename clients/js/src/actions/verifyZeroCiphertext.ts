@@ -6,15 +6,15 @@ import {
   TransactionSigner,
 } from '@solana/kit';
 import { getCreateAccountInstruction } from '@solana-program/system';
-import { getVerifyProofInstruction } from '../generic/instructions';
+import { getVerifyProofInstruction, VerifyProofInput } from '../generic/instructions';
 import { ZK_ELGAMAL_PROOF_PROGRAM_ADDRESS, ZkElGamalProofInstruction } from '../generic/programs';
 import { ZERO_CIPHERTEXT_CONTEXT_ACCOUNT_SIZE } from '../constants';
-import { ContextStateArgs } from './shared';
+import { ContextStateArgs, ProofDataInput } from './shared';
 
 export interface VerifyZeroCiphertextArgs {
   rpc: Rpc<GetMinimumBalanceForRentExemptionApi>;
   payer: TransactionSigner;
-  proofData: Uint8Array;
+  proofData: ProofDataInput;
   // Optional: If provided, we create a context account to store the proof
   contextState?: ContextStateArgs;
   programId?: Address;
@@ -52,17 +52,23 @@ export async function verifyZeroCiphertext({
     );
   }
 
+  const instructionInput: VerifyProofInput = {
+    discriminator: ZkElGamalProofInstruction.VerifyZeroCiphertext,
+    contextState: contextState?.contextAccount.address,
+    contextStateAuthority: contextState?.authority,
+  };
+
+  if (ArrayBuffer.isView(proofData)) {
+    // Proof is raw bytes
+    instructionInput.proofData = proofData;
+  } else {
+    // Proof is in a record account
+    instructionInput.proofAccount = proofData.account;
+    instructionInput.offset = proofData.offset;
+  }
+
   // Create Verification Instruction
-  const verifyIx = getVerifyProofInstruction(
-    {
-      discriminator: ZkElGamalProofInstruction.VerifyZeroCiphertext,
-      proofData,
-      // If contextState exists, map it to the instruction inputs
-      contextState: contextState?.contextAccount.address,
-      contextStateAuthority: contextState?.authority,
-    },
-    { programAddress: programId },
-  );
+  const verifyIx = getVerifyProofInstruction(instructionInput, { programAddress: programId });
 
   ixs.push(verifyIx);
 
