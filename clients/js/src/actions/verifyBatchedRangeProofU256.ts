@@ -6,15 +6,15 @@ import {
   TransactionSigner,
 } from '@solana/kit';
 import { getCreateAccountInstruction } from '@solana-program/system';
-import { getVerifyProofInstruction } from '../generic/instructions';
+import { getVerifyProofInstruction, VerifyProofInput } from '../generic/instructions';
 import { ZK_ELGAMAL_PROOF_PROGRAM_ADDRESS, ZkElGamalProofInstruction } from '../generic/programs';
 import { BATCHED_RANGE_PROOF_CONTEXT_ACCOUNT_SIZE } from '../constants';
-import { ContextStateArgs } from './shared';
+import { ContextStateArgs, ProofDataInput } from './shared';
 
 export interface VerifyBatchedRangeProofU256Args {
   rpc: Rpc<GetMinimumBalanceForRentExemptionApi>;
   payer: TransactionSigner;
-  proofData: Uint8Array;
+  proofData: ProofDataInput;
   contextState?: ContextStateArgs;
   programId?: Address;
 }
@@ -43,15 +43,20 @@ export async function verifyBatchedRangeProofU256({
     );
   }
 
-  const verifyIx = getVerifyProofInstruction(
-    {
-      discriminator: ZkElGamalProofInstruction.VerifyBatchedRangeProofU256,
-      proofData,
-      contextState: contextState?.contextAccount.address,
-      contextStateAuthority: contextState?.authority,
-    },
-    { programAddress: programId },
-  );
+  const instructionInput: VerifyProofInput = {
+    discriminator: ZkElGamalProofInstruction.VerifyBatchedRangeProofU256,
+    contextState: contextState?.contextAccount.address,
+    contextStateAuthority: contextState?.authority,
+  };
+
+  if (ArrayBuffer.isView(proofData)) {
+    instructionInput.proofData = proofData;
+  } else {
+    instructionInput.proofAccount = proofData.account;
+    instructionInput.offset = proofData.offset;
+  }
+
+  const verifyIx = getVerifyProofInstruction(instructionInput, { programAddress: programId });
 
   ixs.push(verifyIx);
 
