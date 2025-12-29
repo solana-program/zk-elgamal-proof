@@ -160,12 +160,9 @@ mod tests {
 
         let first_ciphertext = first_keypair.pubkey().encrypt_u64(amount);
         let second_opening = PedersenOpening::new_rand();
-        let second_ciphertext = ElGamalCiphertext {
-            inner: second_keypair
-                .pubkey()
-                .inner
-                .encrypt_with(amount, &second_opening.inner),
-        };
+        let second_ciphertext = second_keypair
+            .pubkey()
+            .encrypt_with(amount, &second_opening);
 
         let proof = CiphertextCiphertextEqualityProofData::new(
             &first_keypair,

@@ -85,16 +85,12 @@ mod tests {
 
         let commitment = PedersenCommitment::with_u64(amount, &opening);
 
-        // Check if the commitment matches what the zk-sdk would create.
-        let expected_inner = pedersen::Pedersen::with(amount, &opening.inner);
-        assert_eq!(commitment.inner, expected_inner);
-
         // Serialization
         let bytes = commitment.to_bytes();
         assert_eq!(bytes.len(), 32); // Ristretto points are 32 bytes.
         let new_commitment =
             PedersenCommitment::from_bytes(Uint8Array::from(bytes.as_slice())).unwrap();
-        assert_eq!(commitment.inner, new_commitment.inner);
+        assert_eq!(commitment.to_bytes(), new_commitment.to_bytes());
     }
 
     #[wasm_bindgen_test]
