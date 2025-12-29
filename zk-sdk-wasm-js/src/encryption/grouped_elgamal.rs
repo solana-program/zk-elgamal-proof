@@ -1,5 +1,8 @@
 use {
-    crate::encryption::elgamal::{ElGamalPubkey, ElGamalSecretKey},
+    crate::encryption::{
+        elgamal::{ElGamalPubkey, ElGamalSecretKey},
+        pedersen::PedersenOpening,
+    },
     js_sys::Uint8Array,
     solana_zk_sdk::encryption::{grouped_elgamal, DECRYPT_HANDLE_LEN, PEDERSEN_COMMITMENT_LEN},
     wasm_bindgen::prelude::*,
@@ -32,6 +35,22 @@ impl GroupedElGamalCiphertext2Handles {
         let inner = grouped_elgamal::GroupedElGamal::encrypt(
             [&first_pubkey.inner, &second_pubkey.inner],
             amount,
+        );
+        Self { inner }
+    }
+
+    /// Encrypts a 64-bit amount under two ElGamal public keys using a specific opening.
+    #[wasm_bindgen(js_name = "encryptWith")]
+    pub fn encrypt_with(
+        first_pubkey: &ElGamalPubkey,
+        second_pubkey: &ElGamalPubkey,
+        amount: u64,
+        opening: &PedersenOpening,
+    ) -> Self {
+        let inner = grouped_elgamal::GroupedElGamal::encrypt_with(
+            [&first_pubkey.inner, &second_pubkey.inner],
+            amount,
+            &opening.inner,
         );
         Self { inner }
     }
@@ -104,6 +123,27 @@ impl GroupedElGamalCiphertext3Handles {
                 &third_pubkey.inner,
             ],
             amount,
+        );
+        Self { inner }
+    }
+
+    /// Encrypts a 64-bit amount under three ElGamal public keys using a specific opening.
+    #[wasm_bindgen(js_name = "encryptWith")]
+    pub fn encrypt_with(
+        first_pubkey: &ElGamalPubkey,
+        second_pubkey: &ElGamalPubkey,
+        third_pubkey: &ElGamalPubkey,
+        amount: u64,
+        opening: &PedersenOpening,
+    ) -> Self {
+        let inner = grouped_elgamal::GroupedElGamal::encrypt_with(
+            [
+                &first_pubkey.inner,
+                &second_pubkey.inner,
+                &third_pubkey.inner,
+            ],
+            amount,
+            &opening.inner,
         );
         Self { inner }
     }

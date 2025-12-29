@@ -161,17 +161,13 @@ mod tests {
         let amount: u64 = 55;
         let opening = PedersenOpening::new_rand();
 
-        let grouped_ciphertext = GroupedElGamalCiphertext3Handles {
-            inner: GroupedElGamal::encrypt_with(
-                [
-                    &first_keypair.pubkey().inner,
-                    &second_keypair.pubkey().inner,
-                    &third_keypair.pubkey().inner,
-                ],
-                amount,
-                &opening.inner,
-            ),
-        };
+        let grouped_ciphertext = GroupedElGamalCiphertext3Handles::encrypt_with(
+            &first_keypair.pubkey(),
+            &second_keypair.pubkey(),
+            &third_keypair.pubkey(),
+            amount,
+            &opening,
+        );
 
         let proof = GroupedCiphertext3HandlesValidityProofData::new(
             &first_keypair.pubkey(),

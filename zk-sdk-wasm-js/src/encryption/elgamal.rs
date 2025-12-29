@@ -1,5 +1,5 @@
 use {
-    crate::encryption::pedersen::PedersenCommitment,
+    crate::encryption::pedersen::{PedersenCommitment, PedersenOpening},
     js_sys::Uint8Array,
     solana_zk_sdk::encryption::{
         elgamal, DECRYPT_HANDLE_LEN, ELGAMAL_CIPHERTEXT_LEN, ELGAMAL_PUBKEY_LEN,
@@ -56,6 +56,12 @@ impl ElGamalPubkey {
     #[wasm_bindgen(js_name = "encryptU64")]
     pub fn encrypt_u64(&self, amount: u64) -> ElGamalCiphertext {
         self.inner.encrypt(amount).into()
+    }
+
+    /// Encrypts a 64-bit amount using the public key and a specific opening.
+    #[wasm_bindgen(js_name = "encryptWith")]
+    pub fn encrypt_with(&self, amount: u64, opening: &PedersenOpening) -> ElGamalCiphertext {
+        self.inner.encrypt_with(amount, &opening.inner).into()
     }
 }
 
