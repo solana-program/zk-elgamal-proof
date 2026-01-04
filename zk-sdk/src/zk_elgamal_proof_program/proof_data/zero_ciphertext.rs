@@ -9,6 +9,7 @@ use {
     crate::{
         encryption::elgamal::{ElGamalCiphertext, ElGamalKeypair},
         sigma_proofs::zero_ciphertext::ZeroCiphertextProof,
+        transcript::TranscriptProtocol,
         zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
     },
     merlin::Transcript,
@@ -18,7 +19,6 @@ use {
     crate::{
         encryption::pod::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
         sigma_proofs::pod::PodZeroCiphertextProof,
-        transcript::TranscriptProtocol,
         zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
     },
     bytemuck_derive::{Pod, Zeroable},

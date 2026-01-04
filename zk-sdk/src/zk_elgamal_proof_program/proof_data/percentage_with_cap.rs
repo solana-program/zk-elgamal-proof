@@ -11,6 +11,7 @@ use {
     crate::{
         encryption::pedersen::{PedersenCommitment, PedersenOpening},
         sigma_proofs::percentage_with_cap::PercentageWithCapProof,
+        transcript::TranscriptProtocol,
         zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
     },
     merlin::Transcript,
@@ -21,7 +22,6 @@ use {
         encryption::pod::pedersen::PodPedersenCommitment,
         pod::PodU64,
         sigma_proofs::pod::PodPercentageWithCapProof,
-        transcript::TranscriptProtocol,
         zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
     },
     bytemuck_derive::{Pod, Zeroable},

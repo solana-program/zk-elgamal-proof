@@ -10,6 +10,7 @@ use {
     crate::{
         encryption::elgamal::ElGamalKeypair,
         sigma_proofs::pubkey_validity::PubkeyValidityProof,
+        transcript::TranscriptProtocol,
         zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
     },
     merlin::Transcript,
@@ -19,7 +20,6 @@ use {
     crate::{
         encryption::pod::elgamal::PodElGamalPubkey,
         sigma_proofs::pod::PodPubkeyValidityProof,
-        transcript::TranscriptProtocol,
         zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
     },
     bytemuck_derive::{Pod, Zeroable},
