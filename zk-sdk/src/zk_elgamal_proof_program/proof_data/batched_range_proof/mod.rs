@@ -128,6 +128,33 @@ impl TryInto<(Vec<PedersenCommitment>, Vec<usize>)> for BatchedRangeProofContext
             .map(|bit_length| bit_length as usize)
             .collect();
 
+        // Ensure at least one commitment exists
+        if commitments.is_empty() {
+            return Err(ProofVerificationError::IllegalCommitmentLength);
+        }
+
+        // Validate bit lengths (must be > 0 and <= MAX_SINGLE_BIT_LENGTH)
+        if bit_lengths
+            .iter()
+            .any(|&bit_length| bit_length == 0 || bit_length > MAX_SINGLE_BIT_LENGTH)
+        {
+            return Err(ProofVerificationError::IllegalAmountBitLength);
+        }
+
+        // Ensure that all ignored data in the context (the "tail") is strictly zero.
+        let len = commitments.len();
+        let commitments_padding_valid = self.commitments[len..]
+            .iter()
+            .all(|commitment| *commitment == PodPedersenCommitment::zeroed());
+
+        let bit_lengths_padding_valid = self.bit_lengths[len..]
+            .iter()
+            .all(|&bit_length| bit_length == 0);
+
+        if !commitments_padding_valid || !bit_lengths_padding_valid {
+            return Err(ProofVerificationError::ProofContext);
+        }
+
         Ok((commitments, bit_lengths))
     }
 }
