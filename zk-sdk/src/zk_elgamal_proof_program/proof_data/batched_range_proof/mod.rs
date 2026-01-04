@@ -26,6 +26,7 @@ use crate::encryption::pod::pedersen::PodPedersenCommitment;
 use {
     crate::{
         encryption::pedersen::{PedersenCommitment, PedersenOpening},
+        transcript::TranscriptProtocol,
         zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
     },
     bytemuck::{bytes_of, Zeroable},
@@ -60,7 +61,8 @@ pub struct BatchedRangeProofContext {
 #[cfg(not(target_os = "solana"))]
 impl BatchedRangeProofContext {
     fn new_transcript(&self) -> Transcript {
-        let mut transcript = Transcript::new(b"batched-range-proof-instruction");
+        let mut transcript =
+            Transcript::new_zk_elgamal_transcript(b"batched-range-proof-instruction");
         transcript.append_message(b"commitments", bytes_of(&self.commitments));
         transcript.append_message(b"bit-lengths", bytes_of(&self.bit_lengths));
         transcript

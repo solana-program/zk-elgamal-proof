@@ -288,8 +288,8 @@ mod test {
         let ciphertext = keypair.pubkey().encrypt(message);
         let (commitment, opening) = Pedersen::new(message);
 
-        let mut prover_transcript = Transcript::new(b"Test");
-        let mut verifier_transcript = Transcript::new(b"Test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
 
         let proof = CiphertextCommitmentEqualityProof::new(
             &keypair,
@@ -317,8 +317,8 @@ mod test {
         let ciphertext = keypair.pubkey().encrypt(encrypted_message);
         let (commitment, opening) = Pedersen::new(committed_message);
 
-        let mut prover_transcript = Transcript::new(b"Test");
-        let mut verifier_transcript = Transcript::new(b"Test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
 
         let proof = CiphertextCommitmentEqualityProof::new(
             &keypair,
@@ -356,8 +356,8 @@ mod test {
         let ciphertext = elgamal_keypair.pubkey().encrypt(message);
         let (commitment, opening) = Pedersen::new(message);
 
-        let mut prover_transcript = Transcript::new(b"Test");
-        let mut verifier_transcript = Transcript::new(b"Test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
 
         let proof = CiphertextCommitmentEqualityProof::new(
             &elgamal_keypair,
@@ -386,8 +386,8 @@ mod test {
         let commitment = PedersenCommitment::from_bytes(&[0u8; 32]).unwrap();
         let opening = PedersenOpening::from_bytes(&[0u8; 32]).unwrap();
 
-        let mut prover_transcript = Transcript::new(b"Test");
-        let mut verifier_transcript = Transcript::new(b"Test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
 
         let proof = CiphertextCommitmentEqualityProof::new(
             &elgamal_keypair,
@@ -416,8 +416,8 @@ mod test {
         let commitment = PedersenCommitment::from_bytes(&[0u8; 32]).unwrap();
         let opening = PedersenOpening::from_bytes(&[0u8; 32]).unwrap();
 
-        let mut prover_transcript = Transcript::new(b"Test");
-        let mut verifier_transcript = Transcript::new(b"Test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
 
         let proof = CiphertextCommitmentEqualityProof::new(
             &elgamal_keypair,
@@ -445,8 +445,8 @@ mod test {
         let ciphertext = ElGamalCiphertext::from_bytes(&[0u8; 64]).unwrap();
         let (commitment, opening) = Pedersen::new(message);
 
-        let mut prover_transcript = Transcript::new(b"Test");
-        let mut verifier_transcript = Transcript::new(b"Test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
 
         let proof = CiphertextCommitmentEqualityProof::new(
             &elgamal_keypair,
@@ -485,7 +485,7 @@ mod test {
         let pod_proof = PodCiphertextCommitmentEqualityProof::from_str(proof_str).unwrap();
         let proof: CiphertextCommitmentEqualityProof = pod_proof.try_into().unwrap();
 
-        let mut verifier_transcript = Transcript::new(b"Test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
 
         proof
             .verify(&pubkey, &ciphertext, &commitment, &mut verifier_transcript)

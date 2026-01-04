@@ -680,8 +680,8 @@ mod test {
 
         let (claimed_commitment, _claimed_opening) = Pedersen::new(0_u64);
 
-        let mut prover_transcript = Transcript::new(b"test");
-        let mut verifier_transcript = Transcript::new(b"test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
 
         prover_transcript
             .append_message(b"percentage-commitment", &percentage_commitment.to_bytes());
@@ -727,8 +727,8 @@ mod test {
 
         let (claimed_commitment, claimed_opening) = Pedersen::new(delta_amount);
 
-        let mut prover_transcript = Transcript::new(b"test");
-        let mut verifier_transcript = Transcript::new(b"test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
 
         prover_transcript
             .append_message(b"percentage-commitment", &percentage_commitment.to_bytes());
@@ -781,8 +781,8 @@ mod test {
 
         let (claimed_commitment, claimed_opening) = Pedersen::new(0_u64);
 
-        let mut prover_transcript = Transcript::new(b"test");
-        let mut verifier_transcript = Transcript::new(b"test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
 
         let proof = PercentageWithCapProof::new(
             &percentage_commitment,
@@ -838,8 +838,8 @@ mod test {
             claimed_commitment.get_point() - claimed_opening.get_scalar() * &(*H)
         );
 
-        let mut prover_transcript = Transcript::new(b"test");
-        let mut verifier_transcript = Transcript::new(b"test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
 
         let proof = PercentageWithCapProof::new(
             &percentage_commitment,
@@ -885,8 +885,8 @@ mod test {
 
         let (claimed_commitment, claimed_opening) = Pedersen::new(delta);
 
-        let mut prover_transcript = Transcript::new(b"test");
-        let mut verifier_transcript = Transcript::new(b"test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
 
         let proof = PercentageWithCapProof::new(
             &percentage_commitment,
@@ -935,7 +935,7 @@ mod test {
         let pod_proof = PodPercentageWithCapProof::from_str(proof_str).unwrap();
         let proof: PercentageWithCapProof = pod_proof.try_into().unwrap();
 
-        let mut verifier_transcript = Transcript::new(b"test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
 
         proof
             .verify(

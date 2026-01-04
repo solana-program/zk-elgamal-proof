@@ -203,8 +203,8 @@ mod test {
     fn test_zero_ciphertext_proof_correctness() {
         let keypair = ElGamalKeypair::new_rand();
 
-        let mut prover_transcript = Transcript::new(b"test");
-        let mut verifier_transcript = Transcript::new(b"test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
 
         // general case: encryption of 0
         let elgamal_ciphertext = keypair.pubkey().encrypt(0_u64);
@@ -238,8 +238,8 @@ mod test {
     fn test_zero_ciphertext_proof_edge_cases() {
         let keypair = ElGamalKeypair::new_rand();
 
-        let mut prover_transcript = Transcript::new(b"test");
-        let mut verifier_transcript = Transcript::new(b"test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
 
         // all zero ciphertext should always be a valid encryption of 0
         let ciphertext = ElGamalCiphertext::from_bytes(&[0u8; 64]).unwrap();
@@ -252,8 +252,8 @@ mod test {
 
         // if only either commitment or handle is zero, the ciphertext is always invalid and proof
         // verification should always reject
-        let mut prover_transcript = Transcript::new(b"test");
-        let mut verifier_transcript = Transcript::new(b"test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
 
         let zeroed_commitment = PedersenCommitment::from_bytes(&[0u8; 32]).unwrap();
         let handle = keypair
@@ -271,8 +271,8 @@ mod test {
             .verify(keypair.pubkey(), &ciphertext, &mut verifier_transcript)
             .is_err());
 
-        let mut prover_transcript = Transcript::new(b"test");
-        let mut verifier_transcript = Transcript::new(b"test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
 
         let (zeroed_commitment, _) = Pedersen::new(0_u64);
         let ciphertext = ElGamalCiphertext {
@@ -287,8 +287,8 @@ mod test {
             .is_err());
 
         // if public key is always zero, then the proof should always reject
-        let mut prover_transcript = Transcript::new(b"test");
-        let mut verifier_transcript = Transcript::new(b"test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
 
         let public = ElGamalPubkey::try_from([0u8; 32].as_slice()).unwrap();
         let ciphertext = public.encrypt(0_u64);
@@ -314,7 +314,7 @@ mod test {
         let pod_proof = PodZeroCiphertextProof::from_str(proof_str).unwrap();
         let proof: ZeroCiphertextProof = pod_proof.try_into().unwrap();
 
-        let mut verifier_transcript = Transcript::new(b"test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
 
         proof
             .verify(&pubkey, &ciphertext, &mut verifier_transcript)

@@ -164,8 +164,8 @@ mod test {
         // random ElGamal keypair
         let keypair = ElGamalKeypair::new_rand();
 
-        let mut prover_transcript = Transcript::new(b"test");
-        let mut verifier_transcript = Transcript::new(b"test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
 
         let proof = PubkeyValidityProof::new(&keypair, &mut prover_transcript);
         proof
@@ -176,8 +176,8 @@ mod test {
         let keypair =
             ElGamalKeypair::new_from_signer(&Keypair::new(), Pubkey::default().as_ref()).unwrap();
 
-        let mut prover_transcript = Transcript::new(b"test");
-        let mut verifier_transcript = Transcript::new(b"test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
 
         let proof = PubkeyValidityProof::new(&keypair, &mut prover_transcript);
         proof
@@ -200,7 +200,7 @@ mod test {
         let pod_proof = PodPubkeyValidityProof::from_str(proof_str).unwrap();
         let proof: PubkeyValidityProof = pod_proof.try_into().unwrap();
 
-        let mut verifier_transcript = Transcript::new(b"test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
 
         proof.verify(&pubkey, &mut verifier_transcript).unwrap();
     }
@@ -216,7 +216,7 @@ mod test {
             z: Scalar::ZERO,
         };
 
-        let mut verifier_transcript = Transcript::new(b"test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
         let err = proof
             .verify(&identity_pubkey, &mut verifier_transcript)
             .unwrap_err();

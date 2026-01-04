@@ -529,8 +529,8 @@ mod tests {
     fn test_single_rangeproof() {
         let (comm, open) = Pedersen::new(55_u64);
 
-        let mut transcript_create = Transcript::new(b"Test");
-        let mut transcript_verify = Transcript::new(b"Test");
+        let mut transcript_create = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut transcript_verify = Transcript::new_zk_elgamal_transcript(b"Test");
 
         let proof =
             RangeProof::new(vec![55], vec![32], vec![&open], &mut transcript_create).unwrap();
@@ -551,8 +551,8 @@ mod tests {
         let (comm_2, open_2) = Pedersen::new(77_u64);
         let (comm_3, open_3) = Pedersen::new(99_u64);
 
-        let mut transcript_create = Transcript::new(b"Test");
-        let mut transcript_verify = Transcript::new(b"Test");
+        let mut transcript_create = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut transcript_verify = Transcript::new_zk_elgamal_transcript(b"Test");
 
         let proof = RangeProof::new(
             vec![55, 77, 99],
@@ -580,8 +580,8 @@ mod tests {
     fn range_proof_bytes_roundtrip() {
         let (comm, open) = Pedersen::new(42_u64);
 
-        let mut transcript_create = Transcript::new(b"Test");
-        let mut transcript_verify = Transcript::new(b"Test");
+        let mut transcript_create = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut transcript_verify = Transcript::new_zk_elgamal_transcript(b"Test");
 
         let bits: usize = 8;
 
@@ -618,7 +618,7 @@ mod tests {
         let pod_proof = PodRangeProofU128::from_str(proof_str).unwrap();
         let proof: RangeProof = pod_proof.try_into().unwrap();
 
-        let mut transcript_verify = Transcript::new(b"Test");
+        let mut transcript_verify = Transcript::new_zk_elgamal_transcript(b"Test");
 
         proof
             .verify(

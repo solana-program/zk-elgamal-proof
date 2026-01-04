@@ -19,6 +19,7 @@ use {
     crate::{
         encryption::pod::elgamal::PodElGamalPubkey,
         sigma_proofs::pod::PodPubkeyValidityProof,
+        transcript::TranscriptProtocol,
         zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
     },
     bytemuck_derive::{Pod, Zeroable},
@@ -54,7 +55,7 @@ impl PubkeyValidityProofData {
 
         let context = PubkeyValidityProofContext { pubkey: pod_pubkey };
 
-        let mut transcript = Transcript::new(b"pubkey-validity-instruction");
+        let mut transcript = Transcript::new_zk_elgamal_transcript(b"pubkey-validity-instruction");
         let proof = PubkeyValidityProof::new(keypair, &mut transcript).into();
 
         Ok(PubkeyValidityProofData { context, proof })
@@ -70,7 +71,7 @@ impl ZkProofData<PubkeyValidityProofContext> for PubkeyValidityProofData {
 
     #[cfg(not(target_os = "solana"))]
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
-        let mut transcript = Transcript::new(b"pubkey-validity-instruction");
+        let mut transcript = Transcript::new_zk_elgamal_transcript(b"pubkey-validity-instruction");
         let pubkey = self.context.pubkey.try_into()?;
         let proof: PubkeyValidityProof = self.proof.try_into()?;
         proof.verify(&pubkey, &mut transcript).map_err(|e| e.into())

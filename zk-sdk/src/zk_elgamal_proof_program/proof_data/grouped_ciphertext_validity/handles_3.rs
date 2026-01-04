@@ -23,6 +23,7 @@ use {
             pedersen::PedersenOpening,
         },
         sigma_proofs::grouped_ciphertext_validity::GroupedCiphertext3HandlesValidityProof,
+        transcript::TranscriptProtocol,
         zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
     },
     merlin::Transcript,
@@ -75,7 +76,9 @@ impl GroupedCiphertext3HandlesValidityProofData {
             grouped_ciphertext: pod_grouped_ciphertext,
         };
 
-        let mut transcript = Transcript::new(b"grouped-ciphertext-validity-3-handles-instruction");
+        let mut transcript = Transcript::new_zk_elgamal_transcript(
+            b"grouped-ciphertext-validity-3-handles-instruction",
+        );
 
         let proof = GroupedCiphertext3HandlesValidityProof::new(
             first_pubkey,
@@ -103,7 +106,9 @@ impl ZkProofData<GroupedCiphertext3HandlesValidityProofContext>
 
     #[cfg(not(target_os = "solana"))]
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
-        let mut transcript = Transcript::new(b"grouped-ciphertext-validity-3-handles-instruction");
+        let mut transcript = Transcript::new_zk_elgamal_transcript(
+            b"grouped-ciphertext-validity-3-handles-instruction",
+        );
 
         let first_pubkey = self.context.first_pubkey.try_into()?;
         let second_pubkey = self.context.second_pubkey.try_into()?;

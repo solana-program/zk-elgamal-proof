@@ -319,8 +319,8 @@ mod test {
             handles: [first_handle, second_handle],
         };
 
-        let mut prover_transcript = Transcript::new(b"Test");
-        let mut verifier_transcript = Transcript::new(b"Test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
 
         let proof = GroupedCiphertext2HandlesValidityProof::new(
             first_pubkey,
@@ -360,8 +360,8 @@ mod test {
             handles: [first_handle, second_handle],
         };
 
-        let mut prover_transcript = Transcript::new(b"Test");
-        let mut verifier_transcript = Transcript::new(b"Test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
 
         let proof = GroupedCiphertext2HandlesValidityProof::new(
             &first_pubkey,
@@ -400,8 +400,8 @@ mod test {
             handles: [first_handle, second_handle],
         };
 
-        let mut prover_transcript = Transcript::new(b"Test");
-        let mut verifier_transcript = Transcript::new(b"Test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
 
         let proof = GroupedCiphertext2HandlesValidityProof::new(
             first_pubkey,
@@ -439,8 +439,8 @@ mod test {
             handles: [first_handle, second_handle],
         };
 
-        let mut prover_transcript = Transcript::new(b"Test");
-        let mut verifier_transcript = Transcript::new(b"Test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
 
         let proof = GroupedCiphertext2HandlesValidityProof::new(
             first_pubkey,
@@ -486,7 +486,7 @@ mod test {
         let pod_proof = PodGroupedCiphertext2HandlesValidityProof::from_str(proof_str).unwrap();
         let proof: GroupedCiphertext2HandlesValidityProof = pod_proof.try_into().unwrap();
 
-        let mut verifier_transcript = Transcript::new(b"Test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
 
         proof
             .verify(

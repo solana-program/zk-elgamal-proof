@@ -245,8 +245,8 @@ mod test {
             handles: [first_handle_hi, second_handle_hi, third_handle_hi],
         };
 
-        let mut prover_transcript = Transcript::new(b"Test");
-        let mut verifier_transcript = Transcript::new(b"Test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
 
         let proof = BatchedGroupedCiphertext3HandlesValidityProof::new(
             first_pubkey,
@@ -309,7 +309,7 @@ mod test {
             PodBatchedGroupedCiphertext3HandlesValidityProof::from_str(proof_str).unwrap();
         let proof: BatchedGroupedCiphertext3HandlesValidityProof = pod_proof.try_into().unwrap();
 
-        let mut verifier_transcript = Transcript::new(b"Test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
 
         proof
             .verify(

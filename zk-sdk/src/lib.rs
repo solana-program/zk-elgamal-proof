@@ -29,6 +29,12 @@ mod sigma_proofs;
 pub mod transcript;
 pub mod zk_elgamal_proof_program;
 
+/// Global transcript domain separator.
+///
+/// This string MUST be changed for any fork or separate deployment to prevent
+/// cross-chain proof replay attacks.
+pub const TRANSCRIPT_DOMAIN: &[u8] = b"solana-zk-elgamal-proof-program-v1";
+
 /// Byte length of a compressed Ristretto point or scalar in Curve255519
 const UNIT_LEN: usize = 32;
 /// Byte length of a compressed Ristretto point in Curve25519

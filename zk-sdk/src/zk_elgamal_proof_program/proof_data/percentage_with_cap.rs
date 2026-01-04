@@ -21,6 +21,7 @@ use {
         encryption::pod::pedersen::PodPedersenCommitment,
         pod::PodU64,
         sigma_proofs::pod::PodPercentageWithCapProof,
+        transcript::TranscriptProtocol,
         zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
     },
     bytemuck_derive::{Pod, Zeroable},
@@ -87,7 +88,8 @@ impl PercentageWithCapProofData {
             max_value: pod_max_value,
         };
 
-        let mut transcript = Transcript::new(b"percentage-with-cap-instruction");
+        let mut transcript =
+            Transcript::new_zk_elgamal_transcript(b"percentage-with-cap-instruction");
 
         let proof = PercentageWithCapProof::new(
             percentage_commitment,
@@ -116,7 +118,8 @@ impl ZkProofData<PercentageWithCapProofContext> for PercentageWithCapProofData {
 
     #[cfg(not(target_os = "solana"))]
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
-        let mut transcript = Transcript::new(b"percentage-with-cap-instruction");
+        let mut transcript =
+            Transcript::new_zk_elgamal_transcript(b"percentage-with-cap-instruction");
 
         let percentage_commitment = self.context.percentage_commitment.try_into()?;
         let delta_commitment = self.context.delta_commitment.try_into()?;

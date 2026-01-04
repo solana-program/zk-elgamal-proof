@@ -325,8 +325,8 @@ mod test {
             .pubkey()
             .encrypt_with(message, &second_opening);
 
-        let mut prover_transcript = Transcript::new(b"Test");
-        let mut verifier_transcript = Transcript::new(b"Test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
 
         let proof = CiphertextCiphertextEqualityProof::new(
             &first_keypair,
@@ -359,8 +359,8 @@ mod test {
             .pubkey()
             .encrypt_with(second_message, &second_opening);
 
-        let mut prover_transcript = Transcript::new(b"Test");
-        let mut verifier_transcript = Transcript::new(b"Test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
 
         let proof = CiphertextCiphertextEqualityProof::new(
             &first_keypair,
@@ -410,7 +410,7 @@ mod test {
         let pod_proof = PodCiphertextCiphertextEqualityProof::from_str(proof_str).unwrap();
         let proof: CiphertextCiphertextEqualityProof = pod_proof.try_into().unwrap();
 
-        let mut verifier_transcript = Transcript::new(b"Test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
 
         proof
             .verify(
