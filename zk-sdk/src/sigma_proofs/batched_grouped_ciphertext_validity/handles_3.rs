@@ -280,31 +280,31 @@ mod test {
 
     #[test]
     fn test_batched_grouped_ciphertext_3_handles_validity_proof_string() {
-        let first_pubkey_str = "wHNY5XvUo78IXLa1cUlUihKFtGc4MBYNa2owsDMUeGY=";
+        let first_pubkey_str = "mv/4oSby3PfTEG9gG4SDDlkN3b0YTpuyjdX9+40FKQY=";
         let pod_first_pubkey = PodElGamalPubkey::from_str(first_pubkey_str).unwrap();
         let first_pubkey: ElGamalPubkey = pod_first_pubkey.try_into().unwrap();
 
-        let second_pubkey_str = "gFcPVz9K6hrmZaIIxZCzUReAaslmoeG+iYgqgAjYIik=";
+        let second_pubkey_str = "hPehNW3wI5YdK5b4yeIM+t9zS5oBtGILLiltFUui1UA=";
         let pod_second_pubkey = PodElGamalPubkey::from_str(second_pubkey_str).unwrap();
         let second_pubkey: ElGamalPubkey = pod_second_pubkey.try_into().unwrap();
 
-        let third_pubkey_str = "BDq8H0zNhWN4a33SbBS9VeKkaPHH+XpEuOtQKmVoHhY=";
+        let third_pubkey_str = "hlACCsmVJVIZxa25qpKbjBO11wg/Tdtcz954OtHOWVw=";
         let pod_third_pubkey = PodElGamalPubkey::from_str(third_pubkey_str).unwrap();
         let third_pubkey: ElGamalPubkey = pod_third_pubkey.try_into().unwrap();
 
-        let grouped_ciphertext_lo_str = "iKQ6Z39F6m4aax7LZT6fOSj4zCVRtymxFoUHnZ5y3ypWwQDK5BwI0tB+T/D+GKe9xL2RLLCp3a0DFh6Wa3HUMQ5TGnwZSqpqvx4+G9LUVYhLsIJgkm9+ugn8W2xI7IsgtKVtI25e728L3RuNlVuPTFpo6JBpeQu6JVKLFlND+Cg=";
+        let grouped_ciphertext_lo_str = "ksKg6KXMBA9iFSh/PMqV9k03AGz5eigsm2+TT6RZplg2HCExsRJJQCpHbCu+ab7aj5hMEWhNLokKB2S2uEsnEF7w6HriN99/+vKbkGg7613d2+TzX8gxjeC6boZWtGFCqH00JXSvbZIjbvOPffhGy/Y7u/zh1r+aeDmuQRd7vmM=";
         let pod_grouped_ciphertext_lo =
             PodGroupedElGamalCiphertext3Handles::from_str(grouped_ciphertext_lo_str).unwrap();
         let grouped_ciphertext_lo: GroupedElGamalCiphertext<3> =
             pod_grouped_ciphertext_lo.try_into().unwrap();
 
-        let grouped_ciphertext_hi_str = "XIMFG7lp3lvF/6AhQPdnKiNITBBZFC18ldeZ8WcH9Hvan3Af1pmZKpCGYNmVq6o08rdp/GVLsousKle927xgJORqagQIJJRI9m3ycxsNnVNQp3xH6j2fFCTMGV1WRP4XJuS9DLkByIqDaKZzAJX1NiHCoQr32W9Pn+aHVo5d+Co=";
+        let grouped_ciphertext_hi_str = "DMNBOrDAamfntobNpK1EXJ/dSA44Qmhc5EeVcZTz/gQOnxO4GYRSpeiu7IwujAPPalnuaWkQYlzfS8b79OfNJRganJZYVQg4aU2Ul+OjKrETKdhCo7K3qFhMoJiZGJFKnHLFCGyDsCPyvc2FQopxjbaDjrVsmDTMEJPStpZZAH8=";
         let pod_grouped_ciphertext_hi =
             PodGroupedElGamalCiphertext3Handles::from_str(grouped_ciphertext_hi_str).unwrap();
         let grouped_ciphertext_hi: GroupedElGamalCiphertext<3> =
             pod_grouped_ciphertext_hi.try_into().unwrap();
 
-        let proof_str = "Xuc6mdJ9uwShYmmxOti6mkyYsL7sbvoAQGCZabm6e2wGeIPORDtsQt1s4lnEtPodoFGBOjw/GH7qNtwcTBewWnrvfRA7ZzYbb1kTO7NfCthxunu7YQ9S3kemdIJlYKM3aoYkJp7/vLm7FE6Tuhr128I9nYIUcrYoRIuDVSMeTHpMBaLkfKHJGI95IPiCBHWtE0KeNKZLWUpM/CFdELJECNDJ68dG169GKLANMQh8rxMIgHyasVuG/bP11JAvgAwF";
+        let proof_str = "tA4eOWOFFKF50h5vEGUdh7znZDV2KY/PJN8aFsqtyVuOvHoJQTyxMA8f1PTYa39rTkiVEYz3r2eV4Es8gvDMXCZdQoSc/mHE5QsPLT02ArpTSsFoZ1z4E9DZOxIuoqQ5EBc4Zy/brk2NWbpJua4FtPQB7fLHWIS/YgK7v6/cKlKhz64iyKeZxmNFKi12awd5s9vRGDGZvv0inoF+QoqgBB5PRTCR933/r4+Alkx340oFTQnZG7HABG4ora3i0KwK";
         let pod_proof =
             PodBatchedGroupedCiphertext3HandlesValidityProof::from_str(proof_str).unwrap();
         let proof: BatchedGroupedCiphertext3HandlesValidityProof = pod_proof.try_into().unwrap();

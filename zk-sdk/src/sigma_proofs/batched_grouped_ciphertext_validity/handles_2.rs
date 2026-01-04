@@ -254,27 +254,27 @@ mod test {
 
     #[test]
     fn test_batched_grouped_ciphertext_2_handles_validity_proof_string() {
-        let first_pubkey_str = "wiRFV9DBwFjq0VAhE0nIqReYYUp8ONNL8o2btZ7vMyA=";
+        let first_pubkey_str = "cvkvHnlr6h8V9V1Q2mGj5+XH6SBvJRR3dMdDYtgnpwk=";
         let pod_first_pubkey = PodElGamalPubkey::from_str(first_pubkey_str).unwrap();
         let first_pubkey: ElGamalPubkey = pod_first_pubkey.try_into().unwrap();
 
-        let second_pubkey_str = "4NXmE874oiZ5ZnId2pjT3G4PpIiZ+XXQ/S6CN7X3L0k=";
+        let second_pubkey_str = "evcjLw8+v2mcWRisCCKXbjWVNRsC0JufOoSV5cR9ixg=";
         let pod_second_pubkey = PodElGamalPubkey::from_str(second_pubkey_str).unwrap();
         let second_pubkey: ElGamalPubkey = pod_second_pubkey.try_into().unwrap();
 
-        let grouped_ciphertext_lo_str = "znf5HkMod0lFyQIXs/vEh5y/XupcB0BFWpifP3r9ty/yKqpQckmCu346CR0mz6c8UsCno340HpNHnXWgEu2BFuKo/7SDXpRBPwexGl1p2XWr4gzRA2mq02w7lGyKmXBD";
+        let grouped_ciphertext_lo_str = "MsnlU3s9YjWFaC3IjIKS52yl41X1xH+mre0BbAwE2j3E28wjWQPZn4B4nM+eV0zgihHq7uUSY57a4l42HJRULIBlCR/8G2Wfuq63WVbBroxmRbbJzZFGgdpGVLoFA8Aw";
         let pod_grouped_ciphertext_lo =
             PodGroupedElGamalCiphertext2Handles::from_str(grouped_ciphertext_lo_str).unwrap();
         let grouped_ciphertext_lo: GroupedElGamalCiphertext<2> =
             pod_grouped_ciphertext_lo.try_into().unwrap();
 
-        let grouped_ciphertext_hi_str = "8K38lmBNf4fym6a5VXtimvCeOl7+WnRy0flw4c8bEnOQkH+KjCuq49eoBFLWYj1qBl3z4T1oX0jqVMUV7Q56TSChJHie1HFJ/2JA0lNNLAGHFN2wWvi/oIsydgkHofov";
+        let grouped_ciphertext_hi_str = "2kpzTKaOoiNM/zZimt9g5uX60GFCes355lM4S2QvWx46YMpuGWoU5gG5G9hoCuY5T9PwGTiIQashf6mUFuulPWr0EYKatR7Q8dfyeFpJl2pdZ2Imwmf5LDqDUXSt9Zg3";
         let pod_grouped_ciphertext_hi =
             PodGroupedElGamalCiphertext2Handles::from_str(grouped_ciphertext_hi_str).unwrap();
         let grouped_ciphertext_hi: GroupedElGamalCiphertext<2> =
             pod_grouped_ciphertext_hi.try_into().unwrap();
 
-        let proof_str = "/nHixPF/ne2Wo67Ga4Jk/H1BkD0Erf/aqKqiUSjb71liado8WGgY0He29iKYeDUoq5NMASG/Qd9YGNg4IDr+ZLL4uTGGv4+Gdu2oXsTDgVM1rfu8K27vb5k7crDw7DN15CHXR+vjrVR0VxajwlBNWQAFWB8rEkSIDZUoJOU28gGjWK3TpJ3mBwY2YgntcHT1+GgeRmdnSrieU6wo45oHAw==";
+        let proof_str = "GqVxS3sISd9hw3r0jDx3qwNFArLpiXMcySvtQqu5PSGoZDTtRgXMDiSEPSRoTER7/pjI/z2G8yNWYBMS6E28U8rnVCAS6k1K8anbrTF4n7TRmAac4CdpKCh8AZPzvi40kpWskl20Fogq8WPVf1r2i6nesQGTrMsKXH5j7ShC8QZbPtTn878eTdB7K9DNWFxGshxL8KzMh0dLMlj7IAJnAg==";
         let pod_proof =
             PodBatchedGroupedCiphertext2HandlesValidityProof::from_str(proof_str).unwrap();
         let proof: BatchedGroupedCiphertext2HandlesValidityProof = pod_proof.try_into().unwrap();

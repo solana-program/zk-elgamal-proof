@@ -468,21 +468,21 @@ mod test {
 
     #[test]
     fn test_grouped_ciphertext_validity_proof_string() {
-        let first_pubkey_str = "/AAGWq6R6Q+WTAAVKPWfprjJyxEZJTSfc7d86p4NoQY=";
+        let first_pubkey_str = "gtNxEo4FPZgflFBNJP5bH5j8lNIKy2tSdMc2NgH9/GE=";
         let pod_first_pubkey = PodElGamalPubkey::from_str(first_pubkey_str).unwrap();
         let first_pubkey: ElGamalPubkey = pod_first_pubkey.try_into().unwrap();
 
-        let second_pubkey_str = "SH4Fx8z2WPPw1RFtpNHJqpmWZ4caT4DJrAZeB0Uejg4=";
+        let second_pubkey_str = "2n1QN21P9Sct2VLIPZPnMrKaaOk32HgJswBSrnS//2c=";
         let pod_second_pubkey = PodElGamalPubkey::from_str(second_pubkey_str).unwrap();
         let second_pubkey: ElGamalPubkey = pod_second_pubkey.try_into().unwrap();
 
-        let grouped_ciphertext_str = "TvcjS9N355ALEoD1XmUmr9wJbTJtbatTO08vrGP72n8+7LjGEkJtz98qwx0EXFGUWOgIfLTX9nIb/9T8uIE4a6ggg0i5ymLFP/7nIQFbTAKbCR6ZaMAzJ7ifFjUsS60E";
+        let grouped_ciphertext_str = "ZBw1CGUSTw+HUMOz5kZfudrvpA06RRXZ3r1Fbbl9W2NgowjM+0pXGDX3o+15YjMOdYLMpATyRVOAn/tvViyndEZy4BYO6P9gK3snCDVBqVLWe3NhpYqZODiy0KycRLo1";
         let pod_grouped_ciphertext =
             PodGroupedElGamalCiphertext2Handles::from_str(grouped_ciphertext_str).unwrap();
         let grouped_ciphertext: GroupedElGamalCiphertext<2> =
             pod_grouped_ciphertext.try_into().unwrap();
 
-        let proof_str = "yrq38Wvs11QWFGVCw4nNOYdS5cEdSYWhCOnxRFfucmDsOv7If1hAOO+c634+r5gQn5Xz6pOTzMmbLGY5dlhvW1QaYNtcOcA93w21DfTLKb7OuOqBP6AV/XjhuQzOKkg+plDrzdHLGdxwMpFTpvzrCgCiJZc7z2j7okCBuh4INwZ+k28TF1l6dGg4dhnoWNW8+R/yMq7WmfJ4b84fUdMDBA==";
+        let proof_str = "0KudqgloR0IekkFmhDTz63kwtqecTVEMZtmb1qruARuqqki5AjgZoyHy6qJG3AugO4Ur8AP6/4RbH+EJExAzNKJincDYZUxe1VFZRgmD4pRnfYz2NEqZ3YizYC3NQ051ii91O1FxQzYfXOjsnQl4qvtkZqM6c6gZMxWtVmlMJAuu3buONyUOsyDHEx0gXBWTN5hv/CvSZij7owfPnZ36CA==";
         let pod_proof = PodGroupedCiphertext2HandlesValidityProof::from_str(proof_str).unwrap();
         let proof: GroupedCiphertext2HandlesValidityProof = pod_proof.try_into().unwrap();
 

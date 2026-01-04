@@ -469,19 +469,19 @@ mod test {
 
     #[test]
     fn test_ciphertext_commitment_equality_proof_string() {
-        let pubkey_str = "GjhkgCwnACDgcXgg84ftN6D/qTXklqGHXV6bpS6Gxng=";
+        let pubkey_str = "uO3j5FuK4OGJD8ain+4MXLU84ixomYnBI5s0pQ3X0Cs=";
         let pod_pubkey = PodElGamalPubkey::from_str(pubkey_str).unwrap();
         let pubkey: ElGamalPubkey = pod_pubkey.try_into().unwrap();
 
-        let ciphertext_str = "tFwKgb/c+ur8umDgAS0KgZLonGmasp3Q+2ZsmLm2U22wPiAKj38zY36XtXYvoFfz9uQPYhw6yQipmtMa+UQDHA==";
+        let ciphertext_str = "PsM4qA4ImFKGui57JZKzIFl1RO30GG+saCMmI9gAAENu82mvud6uhZ6YLJoLcq5hLSLPY48R8p//H24gNjxoBg==";
         let pod_ciphertext = PodElGamalCiphertext::from_str(ciphertext_str).unwrap();
         let ciphertext: ElGamalCiphertext = pod_ciphertext.try_into().unwrap();
 
-        let commitment_str = "QqbD5LkfgnlpIYnJyyC24R32FarXXYWUJBgK/IDGwBc=";
+        let commitment_str = "RNst9nTGL7PkluExuhmD1kJNM86ZZH6OE8R4P1pPFHQ=";
         let pod_commitment = PodPedersenCommitment::from_str(commitment_str).unwrap();
         let commitment: PedersenCommitment = pod_commitment.try_into().unwrap();
 
-        let proof_str = "wrCo38Ny+SoLGdSDQ/UuE2JnjQslz7rofz386C5VRjRUBaZ1Y7oeT4WVOonW+W1c0uFUCg0zhs/8FmsVORBfXV43lnRkwuPUPKPDDUXWciZoVtWrVOSakutDYLI62CIsIXCx6IzcfEXHYPYpXQGqc/Cf9LdEiVAgFV8BDVe3GQZV9V6HwQWyadTx0R/cAb4vrCqe9h5cudM5Qwj45wAzDmiXUkbLb53Y1nvC3qf7Pq7b94eAClSSzhDr3VbO9k8L";
+        let proof_str = "ELyazp4KuO/vLn91GiiEBgwYlMvisVisVRf8DWRjE1KoFGV2mxRX370N/roHFXArVXGTzL1e0C8UAPHHVYI5M+rE7mXhpGJ1rpMuGduCavOb7WIvzYE0xO6gQmPMeow08x5O/e4SlyGfA2s1S/Z8J+t9yxqbfqTugn9TNjFBFAcM3WOOFGk0dQdi7V3YGpNQMz3P9oWE7d1SsVohUDYEAvyaqXYWc0+YSJEdC7BaRdTqXp4ft8ybAjNB6SmCeisO";
         let pod_proof = PodCiphertextCommitmentEqualityProof::from_str(proof_str).unwrap();
         let proof: CiphertextCommitmentEqualityProof = pod_proof.try_into().unwrap();
 

@@ -916,22 +916,22 @@ mod test {
     fn test_percentage_with_cap_proof_string() {
         let max_value: u64 = 3;
 
-        let percentage_commitment_str = "0E3JSrvPEjVf2QST6m8tJ9huEwRSbb8D/phD4UG8cnU=";
+        let percentage_commitment_str = "OBDhFPvEfM1g2lR5dF0eH2pFGJC+MSW+B71WrUz8bkk=";
         let pod_percentage_commitment =
             PodPedersenCommitment::from_str(percentage_commitment_str).unwrap();
         let percentage_commitment: PedersenCommitment =
             pod_percentage_commitment.try_into().unwrap();
 
-        let delta_commitment_str = "nHYaTODvZ1gSz6l6X1/Sr8zdgMx4jsVaG2D/bN6HvA4=";
+        let delta_commitment_str = "DGcxgwh381H/WiDlptyk3o2Q+eyDIEmIVY6JsdUI3GA=";
         let pod_delta_commitment = PodPedersenCommitment::from_str(delta_commitment_str).unwrap();
         let delta_commitment: PedersenCommitment = pod_delta_commitment.try_into().unwrap();
 
-        let claimed_commitment_str = "JpWpWZXGgQ6KU2n0HXYkc4bQIirq82OKAPQx+lN5B0Q=";
+        let claimed_commitment_str = "PCUoVQfHE0ZV/ZrV5ECyqTzcZpSa3Hs9rkgoCTPsoxI=";
         let pod_claimed_commitment =
             PodPedersenCommitment::from_str(claimed_commitment_str).unwrap();
         let claimed_commitment: PedersenCommitment = pod_claimed_commitment.try_into().unwrap();
 
-        let proof_str = "FFlTOVj/0m96Bh27AVGay+EQiKLkPJTwLpVCYV7JCAGUMa8+gvW9Q5tiSbOldI7pNKLEDXINDGGsNhqm02NDDpuyV+ub5G0A8tMcSTHc3IdmI6sSMO/ThgdXtuFP0LcHpmQzXFM/jLRTR2Ey0s30fJ5u+uWLG8ntyQDHQ9PHc0qOULenzw2ibTSi9BpAw+mieyp+lTQ+JEK9wgDbZyI+EgC7x8s6Ff1vnR4GTS8FoQeGieAb8k/Zp1xttxhRk/sEshiG106FkFOQOjWr+fjYDyMyL1H+TAFxp8dGcuovCArmIP84n67PENWSeN81M90llIuV2OsdCK2eCvSYPJVcDA==";
+        let proof_str = "NPcjkaOzpPNz7uNZXMry5MsiVyqbSnThXioe+Ulw606XDZl2dpKcQ+wYhQqC+XH4aXCgbNB2mClYNZcR0pt7CFh64cJdNGkNuzVAjQBfeq0G+UM7ciF31UcT+1gvjcsIXA2RX9dpiXZWNqCBYbV4nwAV94RFi+ro4HNDBLnmQ3+C2xtal1Qob2tqurvUTYnUdaQDEpDdVhGhvOh8Y/jvTr4h2aQeDSBCi03qN9L4y8jAUXR4UcqwPWBJo7hp2gsF+qmg3iawG/d9taaOssRny6OVWwhuBU1P7pMKZeh1xAo/HCbAYY+CEz9SyMnUPPuZq+38npHiy6icqQoItwfRDg==";
         let pod_proof = PodPercentageWithCapProof::from_str(proof_str).unwrap();
         let proof: PercentageWithCapProof = pod_proof.try_into().unwrap();
 

@@ -302,15 +302,15 @@ mod test {
 
     #[test]
     fn test_zero_ciphertext_proof_string() {
-        let pubkey_str = "ghXlevXjXYxZ5EfCUA/GkuXutYszDIhR4HQQQtQZrUM=";
+        let pubkey_str = "iKeujRa2kL82Az2fl7MXHYVMc0XJFoGZckD7LvPtSU8=";
         let pod_pubkey = PodElGamalPubkey::from_str(pubkey_str).unwrap();
         let pubkey: ElGamalPubkey = pod_pubkey.try_into().unwrap();
 
-        let ciphertext_str = "BuN6mUznNwepi3DLPpmwAUl2JsnUO7KG6vsqfHjvxnOcB+lk/z6uod6VJdwjfb59g0+1ZdGErttsUHn0nU1qPQ==";
+        let ciphertext_str = "crvDqbMD4OVe4mkuzqUJrhyblxTAu3vaUqMvfYuAHybADkpXli9m1zXHrvdpO1PfDQ6U/RHxLgr3XUvDg2sLBA==";
         let pod_ciphertext = PodElGamalCiphertext::from_str(ciphertext_str).unwrap();
         let ciphertext: ElGamalCiphertext = pod_ciphertext.try_into().unwrap();
 
-        let proof_str = "WgkuFTQDH9aQkdk76xAK9YpfxZmqWS56jBN/ic73yhv6YMS3+bz8HrO4G7DangnI8D0sFL2LPBC5ocwycbQvLAUZ671RZsTXGLzCyytpbdLFTL8d+Y2xkibnJ9AA6MkM";
+        let proof_str = "fMibXtwhpBMr5FWg9CrBqlCrLq/cC2RmiwMpToMHxSyCI5AT+Ns4orbzcbqTiOJzF+tCgaJj+XCLXHk/YQLcQ4G+g3bppv3RDOLmGnVuyepMsSCVI4CGykTBqXb+ReQJ";
         let pod_proof = PodZeroCiphertextProof::from_str(proof_str).unwrap();
         let proof: ZeroCiphertextProof = pod_proof.try_into().unwrap();
 

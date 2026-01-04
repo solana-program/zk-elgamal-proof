@@ -192,11 +192,11 @@ mod test {
 
     #[test]
     fn test_pubkey_proof_str() {
-        let pubkey_str = "1KM0Ld9q6NU69bINtfUCujhlNbzrhLumxLMfRVKMvFg=";
+        let pubkey_str = "lhKgvZ+xRsKTR7wfKNlpltvPZk0Pc5MfpyVlqRmDcAk=";
         let pod_pubkey = PodElGamalPubkey::from_str(pubkey_str).unwrap();
         let pubkey: ElGamalPubkey = pod_pubkey.try_into().unwrap();
 
-        let proof_str = "QKtYgQdnHJF/qwlynbdkS1veGp+hK3VTUh0bNJaHPTLslNRBX5eDo7z2N+wS9+yJwHHiOh47QmbgYwOJ/hZYDA==";
+        let proof_str = "utgoLBANuVRtvN7YyZrUwz0dZL+ObsDlRpJdb6erXiQZWCtkvRbSJ8mSBKPvkahHunah80JooQWqhFQXkOCWBw==";
         let pod_proof = PodPubkeyValidityProof::from_str(proof_str).unwrap();
         let proof: PubkeyValidityProof = pod_proof.try_into().unwrap();
 
