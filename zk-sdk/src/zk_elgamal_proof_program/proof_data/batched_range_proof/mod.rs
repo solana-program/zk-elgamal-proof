@@ -50,7 +50,7 @@ const MAX_SINGLE_BIT_LENGTH: usize = 64;
 /// This struct holds the public information that a batched range proof certifies. It includes the
 /// Pedersen commitments and their corresponding bit lengths. This context is shared by all
 /// `VerifyBatchedRangeProof{N}` instructions.
-#[derive(Clone, Copy, bytemuck_derive::Pod, bytemuck_derive::Zeroable)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, bytemuck_derive::Pod, bytemuck_derive::Zeroable)]
 #[repr(C)]
 pub struct BatchedRangeProofContext {
     pub commitments: [PodPedersenCommitment; MAX_COMMITMENTS],

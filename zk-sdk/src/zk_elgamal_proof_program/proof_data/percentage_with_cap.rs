@@ -32,7 +32,7 @@ use {
 ///
 /// It includes the cryptographic proof as well as the context data information needed to verify
 /// the proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct PercentageWithCapProofData {
     pub context: PercentageWithCapProofContext,
@@ -46,7 +46,7 @@ pub struct PercentageWithCapProofData {
 /// computed.
 ///
 /// [`ZK ElGamal proof`]: https://docs.solanalabs.com/runtime/zk-token-proof
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct PercentageWithCapProofContext {
     /// The Pedersen commitment to the percentage amount.

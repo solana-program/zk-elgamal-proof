@@ -16,7 +16,7 @@ use {
 };
 
 /// The `RangeProof` type as a `Pod` restricted to proofs on 64-bit numbers.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct PodRangeProofU64(pub(crate) [u8; RANGE_PROOF_U64_LEN]);
 
@@ -63,7 +63,7 @@ impl_from_str!(
 impl_from_bytes!(TYPE = PodRangeProofU64, BYTES_LEN = RANGE_PROOF_U64_LEN);
 
 /// The `RangeProof` type as a `Pod` restricted to proofs on 128-bit numbers.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct PodRangeProofU128(pub(crate) [u8; RANGE_PROOF_U128_LEN]);
 
@@ -110,7 +110,7 @@ impl_from_str!(
 impl_from_bytes!(TYPE = PodRangeProofU128, BYTES_LEN = RANGE_PROOF_U128_LEN);
 
 /// The `RangeProof` type as a `Pod` restricted to proofs on 256-bit numbers.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct PodRangeProofU256(pub(crate) [u8; RANGE_PROOF_U256_LEN]);
 

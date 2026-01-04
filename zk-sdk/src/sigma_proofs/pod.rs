@@ -26,7 +26,7 @@ use {
 };
 
 /// The `CiphertextCommitmentEqualityProof` type as a `Pod`.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct PodCiphertextCommitmentEqualityProof(
     pub(crate) [u8; CIPHERTEXT_COMMITMENT_EQUALITY_PROOF_LEN],
@@ -68,7 +68,7 @@ impl_from_bytes!(
 );
 
 /// The `CiphertextCiphertextEqualityProof` type as a `Pod`.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct PodCiphertextCiphertextEqualityProof(
     pub(crate) [u8; CIPHERTEXT_CIPHERTEXT_EQUALITY_PROOF_LEN],
@@ -110,7 +110,7 @@ impl_from_bytes!(
 );
 
 /// The `GroupedCiphertext2HandlesValidityProof` type as a `Pod`.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct PodGroupedCiphertext2HandlesValidityProof(
     pub(crate) [u8; GROUPED_CIPHERTEXT_2_HANDLES_VALIDITY_PROOF_LEN],
@@ -152,7 +152,7 @@ impl_from_bytes!(
 );
 
 /// The `GroupedCiphertext3HandlesValidityProof` type as a `Pod`.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct PodGroupedCiphertext3HandlesValidityProof(
     pub(crate) [u8; GROUPED_CIPHERTEXT_3_HANDLES_VALIDITY_PROOF_LEN],
@@ -194,7 +194,7 @@ impl_from_bytes!(
 );
 
 /// The `BatchedGroupedCiphertext2HandlesValidityProof` type as a `Pod`.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct PodBatchedGroupedCiphertext2HandlesValidityProof(
     pub(crate) [u8; BATCHED_GROUPED_CIPHERTEXT_2_HANDLES_VALIDITY_PROOF_LEN],
@@ -242,7 +242,7 @@ impl_from_bytes!(
 );
 
 /// The `BatchedGroupedCiphertext3HandlesValidityProof` type as a `Pod`.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct PodBatchedGroupedCiphertext3HandlesValidityProof(
     pub(crate) [u8; BATCHED_GROUPED_CIPHERTEXT_3_HANDLES_VALIDITY_PROOF_LEN],
@@ -290,7 +290,7 @@ impl_from_bytes!(
 );
 
 /// The `ZeroCiphertextProof` type as a `Pod`.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(transparent)]
 pub struct PodZeroCiphertextProof(pub(crate) [u8; ZERO_CIPHERTEXT_PROOF_LEN]);
 
@@ -330,7 +330,7 @@ impl_from_bytes!(
 );
 
 /// The `PercentageWithCapProof` type as a `Pod`.
-#[derive(Clone, Copy, bytemuck_derive::Pod, bytemuck_derive::Zeroable)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, bytemuck_derive::Pod, bytemuck_derive::Zeroable)]
 #[repr(transparent)]
 pub struct PodPercentageWithCapProof(pub(crate) [u8; PERCENTAGE_WITH_CAP_PROOF_LEN]);
 
@@ -370,7 +370,7 @@ impl_from_bytes!(
 );
 
 /// The `PubkeyValidityProof` type as a `Pod`.
-#[derive(Clone, Copy, bytemuck_derive::Pod, bytemuck_derive::Zeroable)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, bytemuck_derive::Pod, bytemuck_derive::Zeroable)]
 #[repr(transparent)]
 pub struct PodPubkeyValidityProof(pub(crate) [u8; PUBKEY_VALIDITY_PROOF_LEN]);
 

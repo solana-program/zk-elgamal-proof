@@ -35,7 +35,7 @@ use {
 ///
 /// It includes the cryptographic proof as well as the context data information needed to verify
 /// the proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct CiphertextCommitmentEqualityProofData {
     pub context: CiphertextCommitmentEqualityProofContext,
@@ -43,7 +43,7 @@ pub struct CiphertextCommitmentEqualityProofData {
 }
 
 /// The context data needed to verify a ciphertext-commitment equality proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct CiphertextCommitmentEqualityProofContext {
     /// The ElGamal pubkey

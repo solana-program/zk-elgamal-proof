@@ -33,7 +33,7 @@ use {
 ///
 /// It includes the cryptographic proof as well as the context data information needed to verify
 /// the proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct CiphertextCiphertextEqualityProofData {
     pub context: CiphertextCiphertextEqualityProofContext,
@@ -42,7 +42,7 @@ pub struct CiphertextCiphertextEqualityProofData {
 }
 
 /// The context data needed to verify a ciphertext-ciphertext equality proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct CiphertextCiphertextEqualityProofContext {
     pub first_pubkey: PodElGamalPubkey, // 32 bytes

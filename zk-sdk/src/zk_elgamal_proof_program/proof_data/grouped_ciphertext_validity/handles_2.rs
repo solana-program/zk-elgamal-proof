@@ -34,7 +34,7 @@ use {
 ///
 /// It includes the cryptographic proof as well as the context data information needed to verify
 /// the proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct GroupedCiphertext2HandlesValidityProofData {
     pub context: GroupedCiphertext2HandlesValidityProofContext,
@@ -42,7 +42,7 @@ pub struct GroupedCiphertext2HandlesValidityProofData {
     pub proof: PodGroupedCiphertext2HandlesValidityProof,
 }
 
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct GroupedCiphertext2HandlesValidityProofContext {
     pub first_pubkey: PodElGamalPubkey, // 32 bytes

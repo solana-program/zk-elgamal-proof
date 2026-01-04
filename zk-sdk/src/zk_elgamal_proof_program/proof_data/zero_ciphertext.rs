@@ -28,7 +28,7 @@ use {
 ///
 /// It includes the cryptographic proof as well as the context data information needed to verify
 /// the proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct ZeroCiphertextProofData {
     /// The context data for the zero-ciphertext proof
@@ -39,7 +39,7 @@ pub struct ZeroCiphertextProofData {
 }
 
 /// The context data needed to verify a zero-ciphertext proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct ZeroCiphertextProofContext {
     /// The ElGamal pubkey associated with the ElGamal ciphertext
