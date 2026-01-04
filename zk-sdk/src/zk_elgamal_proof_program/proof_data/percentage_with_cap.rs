@@ -9,7 +9,7 @@
 #[cfg(not(target_os = "solana"))]
 use {
     crate::{
-        encryption::pedersen::{PedersenCommitment, PedersenOpening},
+        encryption::pedersen::{Pedersen, PedersenCommitment, PedersenOpening},
         sigma_proofs::percentage_with_cap::PercentageWithCapProof,
         transcript::TranscriptProtocol,
         zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
@@ -76,6 +76,19 @@ impl PercentageWithCapProofData {
         claimed_opening: &PedersenOpening,
         max_value: u64,
     ) -> Result<Self, ProofGenerationError> {
+        // Verify percentage commitment
+        if *percentage_commitment != Pedersen::with(percentage_amount, percentage_opening) {
+            return Err(ProofGenerationError::InconsistentInput);
+        }
+        // Verify delta commitment
+        if *delta_commitment != Pedersen::with(delta_amount, delta_opening) {
+            return Err(ProofGenerationError::InconsistentInput);
+        }
+        // Verify claimed commitment
+        if *claimed_commitment != Pedersen::with(delta_amount, claimed_opening) {
+            return Err(ProofGenerationError::InconsistentInput);
+        }
+
         let pod_percentage_commitment = PodPedersenCommitment(percentage_commitment.to_bytes());
         let pod_delta_commitment = PodPedersenCommitment(delta_commitment.to_bytes());
         let pod_claimed_commitment = PodPedersenCommitment(claimed_commitment.to_bytes());
@@ -180,22 +193,12 @@ mod test {
         assert!(proof_data.verify_proof().is_ok());
 
         // base amount is equal to max value
-        let base_amount: u64 = 55;
         let max_value: u64 = 3;
-
-        let percentage_rate: u16 = 555;
-        let percentage_amount: u64 = 4;
-
-        let (transfer_commitment, transfer_opening) = Pedersen::new(base_amount);
-        let (percentage_commitment, percentage_opening) = Pedersen::new(max_value);
-
-        let scalar_rate = Scalar::from(percentage_rate);
-        let delta_commitment =
-            &percentage_commitment * &Scalar::from(10000_u64) - &transfer_commitment * &scalar_rate;
-        let delta_opening =
-            &percentage_opening * &Scalar::from(10000_u64) - &transfer_opening * &scalar_rate;
-
-        let (claimed_commitment, claimed_opening) = Pedersen::new(0_u64);
+        let percentage_amount: u64 = 3;
+        let (percentage_commitment, percentage_opening) = Pedersen::new(percentage_amount);
+        let delta_amount: u64 = 100;
+        let (delta_commitment, delta_opening) = Pedersen::new(delta_amount);
+        let (claimed_commitment, claimed_opening) = Pedersen::new(delta_amount);
 
         let proof_data = PercentageWithCapProofData::new(
             &percentage_commitment,
@@ -211,5 +214,21 @@ mod test {
         .unwrap();
 
         assert!(proof_data.verify_proof().is_ok());
+
+        let (fake_commitment, _) = Pedersen::new(999_u64);
+
+        let result = PercentageWithCapProofData::new(
+            &percentage_commitment,
+            &percentage_opening,
+            percentage_amount,
+            &delta_commitment,
+            &delta_opening,
+            delta_amount,
+            &fake_commitment,
+            &claimed_opening,
+            max_value,
+        );
+
+        assert_eq!(result, Err(ProofGenerationError::InconsistentInput));
     }
 }

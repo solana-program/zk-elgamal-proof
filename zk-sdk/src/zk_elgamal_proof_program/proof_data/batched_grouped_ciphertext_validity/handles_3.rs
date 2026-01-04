@@ -19,7 +19,8 @@ use {
 use {
     crate::{
         encryption::{
-            elgamal::ElGamalPubkey, grouped_elgamal::GroupedElGamalCiphertext,
+            elgamal::ElGamalPubkey,
+            grouped_elgamal::{GroupedElGamal, GroupedElGamalCiphertext},
             pedersen::PedersenOpening,
         },
         sigma_proofs::batched_grouped_ciphertext_validity::BatchedGroupedCiphertext3HandlesValidityProof,
@@ -70,6 +71,24 @@ impl BatchedGroupedCiphertext3HandlesValidityProofData {
         opening_lo: &PedersenOpening,
         opening_hi: &PedersenOpening,
     ) -> Result<Self, ProofGenerationError> {
+        let expected_lo = GroupedElGamal::encrypt_with(
+            [first_pubkey, second_pubkey, third_pubkey],
+            amount_lo,
+            opening_lo,
+        );
+        if *grouped_ciphertext_lo != expected_lo {
+            return Err(ProofGenerationError::InconsistentInput);
+        }
+
+        let expected_hi = GroupedElGamal::encrypt_with(
+            [first_pubkey, second_pubkey, third_pubkey],
+            amount_hi,
+            opening_hi,
+        );
+        if *grouped_ciphertext_hi != expected_hi {
+            return Err(ProofGenerationError::InconsistentInput);
+        }
+
         let pod_first_pubkey = PodElGamalPubkey(first_pubkey.into());
         let pod_second_pubkey = PodElGamalPubkey(second_pubkey.into());
         let pod_third_pubkey = PodElGamalPubkey(third_pubkey.into());
@@ -196,5 +215,19 @@ mod test {
         .unwrap();
 
         assert!(proof_data.verify_proof().is_ok());
+
+        let other_keypair = ElGamalKeypair::new_rand();
+        let result = BatchedGroupedCiphertext3HandlesValidityProofData::new(
+            first_keypair.pubkey(),
+            second_keypair.pubkey(),
+            other_keypair.pubkey(), // Mismatch: Ciphertext was encrypted with `third_keypair`
+            &grouped_ciphertext_lo,
+            &grouped_ciphertext_hi,
+            amount_lo,
+            amount_hi,
+            &opening_lo,
+            &opening_hi,
+        );
+        assert_eq!(result, Err(ProofGenerationError::InconsistentInput));
     }
 }

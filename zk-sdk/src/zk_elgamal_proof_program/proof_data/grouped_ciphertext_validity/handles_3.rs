@@ -19,7 +19,8 @@ use {
 use {
     crate::{
         encryption::{
-            elgamal::ElGamalPubkey, grouped_elgamal::GroupedElGamalCiphertext,
+            elgamal::ElGamalPubkey,
+            grouped_elgamal::{GroupedElGamal, GroupedElGamalCiphertext},
             pedersen::PedersenOpening,
         },
         sigma_proofs::grouped_ciphertext_validity::GroupedCiphertext3HandlesValidityProof,
@@ -64,6 +65,15 @@ impl GroupedCiphertext3HandlesValidityProofData {
         amount: u64,
         opening: &PedersenOpening,
     ) -> Result<Self, ProofGenerationError> {
+        let expected_ciphertext = GroupedElGamal::encrypt_with(
+            [first_pubkey, second_pubkey, third_pubkey],
+            amount,
+            opening,
+        );
+        if *grouped_ciphertext != expected_ciphertext {
+            return Err(ProofGenerationError::InconsistentInput);
+        }
+
         let pod_first_pubkey = PodElGamalPubkey(first_pubkey.into());
         let pod_second_pubkey = PodElGamalPubkey(second_pubkey.into());
         let pod_third_pubkey = PodElGamalPubkey(third_pubkey.into());
@@ -169,5 +179,16 @@ mod test {
         .unwrap();
 
         assert!(proof_data.verify_proof().is_ok());
+
+        let wrong_opening = PedersenOpening::new_rand();
+        let result = GroupedCiphertext3HandlesValidityProofData::new(
+            first_keypair.pubkey(),
+            second_keypair.pubkey(),
+            third_keypair.pubkey(),
+            &grouped_ciphertext,
+            amount,
+            &wrong_opening,
+        );
+        assert_eq!(result, Err(ProofGenerationError::InconsistentInput));
     }
 }

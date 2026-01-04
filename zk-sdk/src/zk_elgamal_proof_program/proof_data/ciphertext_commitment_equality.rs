@@ -21,12 +21,13 @@ use {
     crate::{
         encryption::{
             elgamal::{ElGamalCiphertext, ElGamalKeypair},
-            pedersen::{PedersenCommitment, PedersenOpening},
+            pedersen::{Pedersen, PedersenCommitment, PedersenOpening, G},
         },
         sigma_proofs::ciphertext_commitment_equality::CiphertextCommitmentEqualityProof,
         transcript::TranscriptProtocol,
         zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
     },
+    curve25519_dalek::scalar::Scalar,
     merlin::Transcript,
     std::convert::TryInto,
 };
@@ -65,6 +66,19 @@ impl CiphertextCommitmentEqualityProofData {
         opening: &PedersenOpening,
         amount: u64,
     ) -> Result<Self, ProofGenerationError> {
+        // Ciphertext should decrypt to amount
+        let decrypted_point = ciphertext.decrypt(keypair.secret()).target;
+        let expected_point = Scalar::from(amount) * G;
+        if decrypted_point != expected_point {
+            return Err(ProofGenerationError::InconsistentInput);
+        }
+
+        // Commitment should match amount and opening
+        let expected_commitment = Pedersen::with(amount, opening);
+        if *commitment != expected_commitment {
+            return Err(ProofGenerationError::InconsistentInput);
+        }
+
         let context = CiphertextCommitmentEqualityProofContext {
             pubkey: PodElGamalPubkey(keypair.pubkey().into()),
             ciphertext: PodElGamalCiphertext(ciphertext.to_bytes()),
@@ -136,5 +150,18 @@ mod test {
         .unwrap();
 
         assert!(proof_data.verify_proof().is_ok());
+
+        let amount_2 = 77_u64;
+        let (commitment_2, opening_2) = Pedersen::new(amount_2);
+
+        let result = CiphertextCommitmentEqualityProofData::new(
+            &keypair,
+            &ciphertext,
+            &commitment_2,
+            &opening_2,
+            amount,
+        );
+
+        assert_eq!(result, Err(ProofGenerationError::InconsistentInput));
     }
 }
