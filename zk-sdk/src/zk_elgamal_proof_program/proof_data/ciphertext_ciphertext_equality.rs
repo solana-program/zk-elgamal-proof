@@ -21,6 +21,7 @@ use {
             pedersen::PedersenOpening,
         },
         sigma_proofs::ciphertext_ciphertext_equality::CiphertextCiphertextEqualityProof,
+        transcript::TranscriptProtocol,
         zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
     },
     merlin::Transcript,
@@ -75,7 +76,8 @@ impl CiphertextCiphertextEqualityProofData {
             second_ciphertext: pod_second_ciphertext,
         };
 
-        let mut transcript = Transcript::new(b"ciphertext-ciphertext-equality-instruction");
+        let mut transcript =
+            Transcript::new_zk_elgamal_transcript(b"ciphertext-ciphertext-equality-instruction");
 
         let proof = CiphertextCiphertextEqualityProof::new(
             first_keypair,
@@ -103,7 +105,8 @@ impl ZkProofData<CiphertextCiphertextEqualityProofContext>
 
     #[cfg(not(target_os = "solana"))]
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
-        let mut transcript = Transcript::new(b"ciphertext-ciphertext-equality-instruction");
+        let mut transcript =
+            Transcript::new_zk_elgamal_transcript(b"ciphertext-ciphertext-equality-instruction");
 
         let first_pubkey = self.context.first_pubkey.try_into()?;
         let second_pubkey = self.context.second_pubkey.try_into()?;

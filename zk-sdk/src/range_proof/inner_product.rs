@@ -503,8 +503,8 @@ mod tests {
             G.iter().chain(H.iter()).chain(iter::once(&Q)),
         );
 
-        let mut prover_transcript = Transcript::new(b"innerproducttest");
-        let mut verifier_transcript = Transcript::new(b"innerproducttest");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"innerproducttest");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"innerproducttest");
 
         let proof = InnerProductProof::new(
             &Q,
@@ -532,7 +532,7 @@ mod tests {
             .is_ok());
 
         let proof = InnerProductProof::from_bytes(proof.to_bytes().as_slice()).unwrap();
-        let mut verifier_transcript = Transcript::new(b"innerproducttest");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"innerproducttest");
         assert!(proof
             .verify(
                 n,

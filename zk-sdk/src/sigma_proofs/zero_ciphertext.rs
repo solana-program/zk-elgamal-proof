@@ -203,8 +203,8 @@ mod test {
     fn test_zero_ciphertext_proof_correctness() {
         let keypair = ElGamalKeypair::new_rand();
 
-        let mut prover_transcript = Transcript::new(b"test");
-        let mut verifier_transcript = Transcript::new(b"test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
 
         // general case: encryption of 0
         let elgamal_ciphertext = keypair.pubkey().encrypt(0_u64);
@@ -238,8 +238,8 @@ mod test {
     fn test_zero_ciphertext_proof_edge_cases() {
         let keypair = ElGamalKeypair::new_rand();
 
-        let mut prover_transcript = Transcript::new(b"test");
-        let mut verifier_transcript = Transcript::new(b"test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
 
         // all zero ciphertext should always be a valid encryption of 0
         let ciphertext = ElGamalCiphertext::from_bytes(&[0u8; 64]).unwrap();
@@ -252,8 +252,8 @@ mod test {
 
         // if only either commitment or handle is zero, the ciphertext is always invalid and proof
         // verification should always reject
-        let mut prover_transcript = Transcript::new(b"test");
-        let mut verifier_transcript = Transcript::new(b"test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
 
         let zeroed_commitment = PedersenCommitment::from_bytes(&[0u8; 32]).unwrap();
         let handle = keypair
@@ -271,8 +271,8 @@ mod test {
             .verify(keypair.pubkey(), &ciphertext, &mut verifier_transcript)
             .is_err());
 
-        let mut prover_transcript = Transcript::new(b"test");
-        let mut verifier_transcript = Transcript::new(b"test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
 
         let (zeroed_commitment, _) = Pedersen::new(0_u64);
         let ciphertext = ElGamalCiphertext {
@@ -287,8 +287,8 @@ mod test {
             .is_err());
 
         // if public key is always zero, then the proof should always reject
-        let mut prover_transcript = Transcript::new(b"test");
-        let mut verifier_transcript = Transcript::new(b"test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
 
         let public = ElGamalPubkey::try_from([0u8; 32].as_slice()).unwrap();
         let ciphertext = public.encrypt(0_u64);
@@ -302,19 +302,19 @@ mod test {
 
     #[test]
     fn test_zero_ciphertext_proof_string() {
-        let pubkey_str = "ghXlevXjXYxZ5EfCUA/GkuXutYszDIhR4HQQQtQZrUM=";
+        let pubkey_str = "iKeujRa2kL82Az2fl7MXHYVMc0XJFoGZckD7LvPtSU8=";
         let pod_pubkey = PodElGamalPubkey::from_str(pubkey_str).unwrap();
         let pubkey: ElGamalPubkey = pod_pubkey.try_into().unwrap();
 
-        let ciphertext_str = "BuN6mUznNwepi3DLPpmwAUl2JsnUO7KG6vsqfHjvxnOcB+lk/z6uod6VJdwjfb59g0+1ZdGErttsUHn0nU1qPQ==";
+        let ciphertext_str = "crvDqbMD4OVe4mkuzqUJrhyblxTAu3vaUqMvfYuAHybADkpXli9m1zXHrvdpO1PfDQ6U/RHxLgr3XUvDg2sLBA==";
         let pod_ciphertext = PodElGamalCiphertext::from_str(ciphertext_str).unwrap();
         let ciphertext: ElGamalCiphertext = pod_ciphertext.try_into().unwrap();
 
-        let proof_str = "WgkuFTQDH9aQkdk76xAK9YpfxZmqWS56jBN/ic73yhv6YMS3+bz8HrO4G7DangnI8D0sFL2LPBC5ocwycbQvLAUZ671RZsTXGLzCyytpbdLFTL8d+Y2xkibnJ9AA6MkM";
+        let proof_str = "fMibXtwhpBMr5FWg9CrBqlCrLq/cC2RmiwMpToMHxSyCI5AT+Ns4orbzcbqTiOJzF+tCgaJj+XCLXHk/YQLcQ4G+g3bppv3RDOLmGnVuyepMsSCVI4CGykTBqXb+ReQJ";
         let pod_proof = PodZeroCiphertextProof::from_str(proof_str).unwrap();
         let proof: ZeroCiphertextProof = pod_proof.try_into().unwrap();
 
-        let mut verifier_transcript = Transcript::new(b"test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
 
         proof
             .verify(&pubkey, &ciphertext, &mut verifier_transcript)
