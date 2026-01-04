@@ -25,7 +25,6 @@ use {
         sigma_proofs::grouped_ciphertext_validity::GroupedCiphertext3HandlesValidityProof,
         zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
     },
-    bytemuck::bytes_of,
     merlin::Transcript,
 };
 
@@ -76,12 +75,13 @@ impl GroupedCiphertext3HandlesValidityProofData {
             grouped_ciphertext: pod_grouped_ciphertext,
         };
 
-        let mut transcript = context.new_transcript();
+        let mut transcript = Transcript::new(b"grouped-ciphertext-validity-3-handles-instruction");
 
         let proof = GroupedCiphertext3HandlesValidityProof::new(
             first_pubkey,
             second_pubkey,
             third_pubkey,
+            grouped_ciphertext,
             amount,
             opening,
             &mut transcript,
@@ -103,7 +103,7 @@ impl ZkProofData<GroupedCiphertext3HandlesValidityProofContext>
 
     #[cfg(not(target_os = "solana"))]
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
-        let mut transcript = self.context.new_transcript();
+        let mut transcript = Transcript::new(b"grouped-ciphertext-validity-3-handles-instruction");
 
         let first_pubkey = self.context.first_pubkey.try_into()?;
         let second_pubkey = self.context.second_pubkey.try_into()?;
@@ -111,38 +111,17 @@ impl ZkProofData<GroupedCiphertext3HandlesValidityProofContext>
         let grouped_ciphertext: GroupedElGamalCiphertext<3> =
             self.context.grouped_ciphertext.try_into()?;
 
-        let first_handle = grouped_ciphertext.handles.first().unwrap();
-        let second_handle = grouped_ciphertext.handles.get(1).unwrap();
-        let third_handle = grouped_ciphertext.handles.get(2).unwrap();
-
         let proof: GroupedCiphertext3HandlesValidityProof = self.proof.try_into()?;
 
         proof
             .verify(
-                &grouped_ciphertext.commitment,
                 &first_pubkey,
                 &second_pubkey,
                 &third_pubkey,
-                first_handle,
-                second_handle,
-                third_handle,
+                &grouped_ciphertext,
                 &mut transcript,
             )
             .map_err(|e| e.into())
-    }
-}
-
-#[cfg(not(target_os = "solana"))]
-impl GroupedCiphertext3HandlesValidityProofContext {
-    fn new_transcript(&self) -> Transcript {
-        let mut transcript = Transcript::new(b"grouped-ciphertext-validity-3-handles-instruction");
-
-        transcript.append_message(b"first-pubkey", bytes_of(&self.first_pubkey));
-        transcript.append_message(b"second-pubkey", bytes_of(&self.second_pubkey));
-        transcript.append_message(b"third-pubkey", bytes_of(&self.third_pubkey));
-        transcript.append_message(b"grouped-ciphertext", bytes_of(&self.grouped_ciphertext));
-
-        transcript
     }
 }
 
