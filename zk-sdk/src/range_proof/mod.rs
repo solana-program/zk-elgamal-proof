@@ -332,6 +332,11 @@ impl RangeProof {
             return Err(RangeProofVerificationError::VectorLengthMismatch);
         }
 
+        // explicitly reject identity commitments.
+        if comms.iter().any(|c| c.get_point().is_identity()) {
+            return Err(RangeProofVerificationError::AlgebraicRelation);
+        }
+
         let m = bit_lengths.len();
         let nm: usize = bit_lengths.iter().sum();
         if !nm.is_power_of_two() {
