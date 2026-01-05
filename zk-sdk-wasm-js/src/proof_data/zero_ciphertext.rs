@@ -128,8 +128,8 @@ mod tests {
 
         // Proof for an invalid encryption of 1
         let one_ciphertext = keypair.pubkey().encrypt_u64(1);
-        let proof_invalid = ZeroCiphertextProofData::new(&keypair, &one_ciphertext).unwrap();
-        assert!(proof_invalid.verify().is_err());
+        let result = ZeroCiphertextProofData::new(&keypair, &one_ciphertext);
+        assert!(result.is_err());
     }
 
     #[wasm_bindgen_test]
