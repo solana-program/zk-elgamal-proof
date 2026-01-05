@@ -29,12 +29,12 @@ use {
 use {
     crate::{
         sigma_proofs::{
-            errors::ValidityProofVerificationError,
+            errors::{SigmaProofVerificationError, ValidityProofVerificationError},
             grouped_ciphertext_validity::GroupedCiphertext2HandlesValidityProof,
         },
         transcript::TranscriptProtocol,
     },
-    curve25519_dalek::scalar::Scalar,
+    curve25519_dalek::{scalar::Scalar, traits::IsIdentity},
     merlin::Transcript,
 };
 
@@ -112,6 +112,16 @@ impl BatchedGroupedCiphertext2HandlesValidityProof {
         grouped_ciphertext_hi: &GroupedElGamalCiphertext<2>,
         transcript: &mut Transcript,
     ) -> Result<(), ValidityProofVerificationError> {
+        // We reject if the first public key or the commitments are the identity point.
+        // We allow the second public key to be an identity point as it is often the auditor's
+        // public key in the token-2022 program that can be the identity.
+        if first_pubkey.get_point().is_identity()
+            || grouped_ciphertext_lo.commitment.get_point().is_identity()
+            || grouped_ciphertext_hi.commitment.get_point().is_identity()
+        {
+            return Err(SigmaProofVerificationError::IdentityPoint.into());
+        }
+
         Self::hash_context_into_transcript(
             first_pubkey,
             second_pubkey,

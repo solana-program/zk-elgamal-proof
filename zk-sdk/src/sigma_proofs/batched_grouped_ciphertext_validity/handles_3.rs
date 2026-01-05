@@ -33,13 +33,13 @@ use {
 use {
     crate::{
         sigma_proofs::{
-            errors::ValidityProofVerificationError,
+            errors::{SigmaProofVerificationError, ValidityProofVerificationError},
             grouped_ciphertext_validity::GroupedCiphertext3HandlesValidityProof,
         },
         transcript::TranscriptProtocol,
         UNIT_LEN,
     },
-    curve25519_dalek::scalar::Scalar,
+    curve25519_dalek::{scalar::Scalar, traits::IsIdentity},
     merlin::Transcript,
 };
 
@@ -118,6 +118,17 @@ impl BatchedGroupedCiphertext3HandlesValidityProof {
         grouped_ciphertext_hi: &GroupedElGamalCiphertext<3>,
         transcript: &mut Transcript,
     ) -> Result<(), ValidityProofVerificationError> {
+        // We reject if the public keys or the commitments are the identity point.
+        // The exception is the third public key, which is often the auditor's
+        // public key in the tokne-2022 program that can be the identity.
+        if first_pubkey.get_point().is_identity()
+            || second_pubkey.get_point().is_identity()
+            || grouped_ciphertext_lo.commitment.get_point().is_identity()
+            || grouped_ciphertext_hi.commitment.get_point().is_identity()
+        {
+            return Err(SigmaProofVerificationError::IdentityPoint.into());
+        }
+
         Self::hash_context_into_transcript(
             first_pubkey,
             second_pubkey,

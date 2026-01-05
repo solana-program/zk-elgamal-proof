@@ -152,6 +152,14 @@ impl CiphertextCiphertextEqualityProof {
         second_ciphertext: &ElGamalCiphertext,
         transcript: &mut Transcript,
     ) -> Result<(), EqualityProofVerificationError> {
+        if first_pubkey.get_point().is_identity()
+            || second_pubkey.get_point().is_identity()
+            || first_ciphertext.commitment.get_point().is_identity()
+            || second_ciphertext.commitment.get_point().is_identity()
+        {
+            return Err(SigmaProofVerificationError::IdentityPoint.into());
+        }
+
         Self::hash_context_into_transcript(
             first_pubkey,
             second_pubkey,

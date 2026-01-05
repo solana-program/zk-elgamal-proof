@@ -101,6 +101,12 @@ impl ZeroCiphertextProof {
         ciphertext: &ElGamalCiphertext,
         transcript: &mut Transcript,
     ) -> Result<(), ZeroCiphertextProofVerificationError> {
+        if elgamal_pubkey.get_point().is_identity()
+            || ciphertext.commitment.get_point().is_identity()
+        {
+            return Err(SigmaProofVerificationError::IdentityPoint.into());
+        }
+
         Self::hash_context_into_transcript(elgamal_pubkey, ciphertext, transcript);
         transcript.zero_ciphertext_proof_domain_separator();
 
@@ -235,23 +241,23 @@ mod test {
     }
 
     #[test]
-    fn test_zero_ciphertext_proof_edge_cases() {
+    fn test_zero_ciphertext_proof_identity_inputs() {
         let keypair = ElGamalKeypair::new_rand();
 
         let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"test");
         let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
 
-        // all zero ciphertext should always be a valid encryption of 0
+        // All zero ciphertext
         let ciphertext = ElGamalCiphertext::from_bytes(&[0u8; 64]).unwrap();
-
         let proof = ZeroCiphertextProof::new(&keypair, &ciphertext, &mut prover_transcript);
 
-        proof
-            .verify(keypair.pubkey(), &ciphertext, &mut verifier_transcript)
-            .unwrap();
+        let result = proof.verify(keypair.pubkey(), &ciphertext, &mut verifier_transcript);
+        assert_eq!(
+            result.unwrap_err(),
+            ZeroCiphertextProofVerificationError::from(SigmaProofVerificationError::IdentityPoint)
+        );
 
-        // if only either commitment or handle is zero, the ciphertext is always invalid and proof
-        // verification should always reject
+        // Only commitment is zero
         let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"test");
         let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
 
@@ -259,45 +265,31 @@ mod test {
         let handle = keypair
             .pubkey()
             .decrypt_handle(&PedersenOpening::new_rand());
-
         let ciphertext = ElGamalCiphertext {
             commitment: zeroed_commitment,
             handle,
         };
-
         let proof = ZeroCiphertextProof::new(&keypair, &ciphertext, &mut prover_transcript);
 
-        assert!(proof
-            .verify(keypair.pubkey(), &ciphertext, &mut verifier_transcript)
-            .is_err());
+        let result = proof.verify(keypair.pubkey(), &ciphertext, &mut verifier_transcript);
+        assert_eq!(
+            result.unwrap_err(),
+            ZeroCiphertextProofVerificationError::from(SigmaProofVerificationError::IdentityPoint)
+        );
 
-        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"test");
-        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
-
-        let (zeroed_commitment, _) = Pedersen::new(0_u64);
-        let ciphertext = ElGamalCiphertext {
-            commitment: zeroed_commitment,
-            handle: DecryptHandle::from_bytes(&[0u8; 32]).unwrap(),
-        };
-
-        let proof = ZeroCiphertextProof::new(&keypair, &ciphertext, &mut prover_transcript);
-
-        assert!(proof
-            .verify(keypair.pubkey(), &ciphertext, &mut verifier_transcript)
-            .is_err());
-
-        // if public key is always zero, then the proof should always reject
+        // Public key is zero
         let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"test");
         let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");
 
         let public = ElGamalPubkey::try_from([0u8; 32].as_slice()).unwrap();
         let ciphertext = public.encrypt(0_u64);
-
         let proof = ZeroCiphertextProof::new(&keypair, &ciphertext, &mut prover_transcript);
 
-        assert!(proof
-            .verify(keypair.pubkey(), &ciphertext, &mut verifier_transcript)
-            .is_err());
+        let result = proof.verify(&public, &ciphertext, &mut verifier_transcript);
+        assert_eq!(
+            result.unwrap_err(),
+            ZeroCiphertextProofVerificationError::from(SigmaProofVerificationError::IdentityPoint)
+        );
     }
 
     #[test]

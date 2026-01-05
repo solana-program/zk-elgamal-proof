@@ -11,8 +11,8 @@ pub enum SigmaProofVerificationError {
     MultiscalarMul,
     #[error("transcript failed to produce a challenge")]
     Transcript(#[from] TranscriptError),
-    #[error("public key is the identity")]
-    PubkeyIsIdentity,
+    #[error("input point is the identity")]
+    IdentityPoint,
 }
 
 macro_rules! impl_from_transcript_error {

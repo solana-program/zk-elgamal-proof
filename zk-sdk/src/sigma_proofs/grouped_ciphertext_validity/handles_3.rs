@@ -168,6 +168,16 @@ impl GroupedCiphertext3HandlesValidityProof {
         grouped_ciphertext: &GroupedElGamalCiphertext<3>,
         transcript: &mut Transcript,
     ) -> Result<(), ValidityProofVerificationError> {
+        // We reject if the public keys or the commitment is the identity point.
+        // The exception is the third public key, which is often the auditor's
+        // public key in the tokne-2022 program that can be the identity.
+        if first_pubkey.get_point().is_identity()
+            || second_pubkey.get_point().is_identity()
+            || grouped_ciphertext.commitment.get_point().is_identity()
+        {
+            return Err(SigmaProofVerificationError::IdentityPoint.into());
+        }
+
         Self::hash_context_into_transcript(
             first_pubkey,
             second_pubkey,
@@ -399,10 +409,9 @@ mod test {
 
     #[test]
     fn test_grouped_ciphertext_3_handles_validity_proof_edge_cases() {
-        // if first or second public key zeroed, then the proof should always reject
+        // First public key zeroed
         let first_pubkey = ElGamalPubkey::try_from([0u8; 32].as_slice()).unwrap();
         let second_pubkey = ElGamalPubkey::try_from([0u8; 32].as_slice()).unwrap();
-
         let third_keypair = ElGamalKeypair::new_rand();
         let third_pubkey = third_keypair.pubkey();
 
@@ -431,23 +440,23 @@ mod test {
             &mut prover_transcript,
         );
 
-        assert!(proof
-            .verify(
-                &first_pubkey,
-                &second_pubkey,
-                third_pubkey,
-                &grouped_ciphertext,
-                &mut verifier_transcript,
-            )
-            .is_err());
+        let result = proof.verify(
+            &first_pubkey,
+            &second_pubkey,
+            third_pubkey,
+            &grouped_ciphertext,
+            &mut verifier_transcript,
+        );
+        assert_eq!(
+            result.unwrap_err(),
+            ValidityProofVerificationError::from(SigmaProofVerificationError::IdentityPoint)
+        );
 
-        // all zeroed ciphertext should still be valid
+        // All zeroed ciphertext (Previously valid, now invalid)
         let first_keypair = ElGamalKeypair::new_rand();
         let first_pubkey = first_keypair.pubkey();
-
         let second_keypair = ElGamalKeypair::new_rand();
         let second_pubkey = second_keypair.pubkey();
-
         let third_keypair = ElGamalKeypair::new_rand();
         let third_pubkey = third_keypair.pubkey();
 
@@ -477,67 +486,17 @@ mod test {
             &mut prover_transcript,
         );
 
-        proof
-            .verify(
-                first_pubkey,
-                second_pubkey,
-                third_pubkey,
-                &grouped_ciphertext,
-                &mut verifier_transcript,
-            )
-            .unwrap();
-
-        // decryption handles can be zero as long as the Pedersen commitment is valid
-        let first_keypair = ElGamalKeypair::new_rand();
-        let first_pubkey = first_keypair.pubkey();
-
-        let second_keypair = ElGamalKeypair::new_rand();
-        let second_pubkey = second_keypair.pubkey();
-
-        let third_keypair = ElGamalKeypair::new_rand();
-        let third_pubkey = third_keypair.pubkey();
-
-        let amount: u64 = 55;
-        let zeroed_opening = PedersenOpening::default();
-
-        let commitment = Pedersen::with(amount, &zeroed_opening);
-
-        let first_handle = first_pubkey.decrypt_handle(&zeroed_opening);
-        let second_handle = second_pubkey.decrypt_handle(&zeroed_opening);
-        let third_handle = third_pubkey.decrypt_handle(&zeroed_opening);
-
-        let grouped_ciphertext = GroupedElGamalCiphertext {
-            commitment,
-            handles: [first_handle, second_handle, third_handle],
-        };
-
-        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
-        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
-
-        let proof = GroupedCiphertext3HandlesValidityProof::new(
+        let result = proof.verify(
             first_pubkey,
             second_pubkey,
             third_pubkey,
             &grouped_ciphertext,
-            amount,
-            &opening,
-            &mut prover_transcript,
+            &mut verifier_transcript,
         );
-
-        proof
-            .verify(
-                first_pubkey,
-                second_pubkey,
-                third_pubkey,
-                &grouped_ciphertext,
-                &mut verifier_transcript,
-            )
-            .unwrap();
-
         assert_eq!(
-            prover_transcript.challenge_scalar(b"test"),
-            verifier_transcript.challenge_scalar(b"test"),
-        )
+            result.unwrap_err(),
+            ValidityProofVerificationError::from(SigmaProofVerificationError::IdentityPoint)
+        );
     }
 
     #[test]
