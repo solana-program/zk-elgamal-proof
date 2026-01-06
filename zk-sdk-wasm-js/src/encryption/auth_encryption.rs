@@ -112,7 +112,7 @@ mod tests {
         let key_bytes = key.to_bytes();
         assert_eq!(key_bytes.len(), 16);
         let recovered_key = AeKey::from_bytes(Uint8Array::from(key_bytes.as_slice())).unwrap();
-        assert_eq!(key.inner, recovered_key.inner);
+        assert_eq!(key.to_bytes(), recovered_key.to_bytes());
     }
 
     #[wasm_bindgen_test]

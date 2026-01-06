@@ -1,5 +1,8 @@
 use {
-    crate::encryption::elgamal::{ElGamalPubkey, ElGamalSecretKey},
+    crate::encryption::{
+        elgamal::{ElGamalPubkey, ElGamalSecretKey},
+        pedersen::PedersenOpening,
+    },
     js_sys::Uint8Array,
     solana_zk_sdk::encryption::{grouped_elgamal, DECRYPT_HANDLE_LEN, PEDERSEN_COMMITMENT_LEN},
     wasm_bindgen::prelude::*,
@@ -32,6 +35,22 @@ impl GroupedElGamalCiphertext2Handles {
         let inner = grouped_elgamal::GroupedElGamal::encrypt(
             [&first_pubkey.inner, &second_pubkey.inner],
             amount,
+        );
+        Self { inner }
+    }
+
+    /// Encrypts a 64-bit amount under two ElGamal public keys using a specific opening.
+    #[wasm_bindgen(js_name = "encryptWith")]
+    pub fn encrypt_with(
+        first_pubkey: &ElGamalPubkey,
+        second_pubkey: &ElGamalPubkey,
+        amount: u64,
+        opening: &PedersenOpening,
+    ) -> Self {
+        let inner = grouped_elgamal::GroupedElGamal::encrypt_with(
+            [&first_pubkey.inner, &second_pubkey.inner],
+            amount,
+            &opening.inner,
         );
         Self { inner }
     }
@@ -104,6 +123,27 @@ impl GroupedElGamalCiphertext3Handles {
                 &third_pubkey.inner,
             ],
             amount,
+        );
+        Self { inner }
+    }
+
+    /// Encrypts a 64-bit amount under three ElGamal public keys using a specific opening.
+    #[wasm_bindgen(js_name = "encryptWith")]
+    pub fn encrypt_with(
+        first_pubkey: &ElGamalPubkey,
+        second_pubkey: &ElGamalPubkey,
+        third_pubkey: &ElGamalPubkey,
+        amount: u64,
+        opening: &PedersenOpening,
+    ) -> Self {
+        let inner = grouped_elgamal::GroupedElGamal::encrypt_with(
+            [
+                &first_pubkey.inner,
+                &second_pubkey.inner,
+                &third_pubkey.inner,
+            ],
+            amount,
+            &opening.inner,
         );
         Self { inner }
     }
@@ -254,5 +294,46 @@ mod tests {
         assert_eq!(recovered.decrypt(&keypair1.secret(), 0), Ok(amount));
         assert_eq!(recovered.decrypt(&keypair2.secret(), 1), Ok(amount));
         assert_eq!(recovered.decrypt(&keypair3.secret(), 2), Ok(amount));
+    }
+
+    #[wasm_bindgen_test]
+    fn test_grouped_elgamal_2_handles_encrypt_with_correctness() {
+        let keypair1 = ElGamalKeypair::new_rand();
+        let keypair2 = ElGamalKeypair::new_rand();
+        let amount: u64 = 42;
+        let opening = PedersenOpening::new_rand();
+
+        // Use the new encrypt_with method using the explicit opening
+        let ciphertext = GroupedElGamalCiphertext2Handles::encrypt_with(
+            &keypair1.pubkey(),
+            &keypair2.pubkey(),
+            amount,
+            &opening,
+        );
+
+        assert_eq!(ciphertext.decrypt(&keypair1.secret(), 0), Ok(amount));
+        assert_eq!(ciphertext.decrypt(&keypair2.secret(), 1), Ok(amount));
+    }
+
+    #[wasm_bindgen_test]
+    fn test_grouped_elgamal_3_handles_encrypt_with_correctness() {
+        let keypair1 = ElGamalKeypair::new_rand();
+        let keypair2 = ElGamalKeypair::new_rand();
+        let keypair3 = ElGamalKeypair::new_rand();
+        let amount: u64 = 99;
+        let opening = PedersenOpening::new_rand();
+
+        // Use the new encrypt_with method using the explicit opening
+        let ciphertext = GroupedElGamalCiphertext3Handles::encrypt_with(
+            &keypair1.pubkey(),
+            &keypair2.pubkey(),
+            &keypair3.pubkey(),
+            amount,
+            &opening,
+        );
+
+        assert_eq!(ciphertext.decrypt(&keypair1.secret(), 0), Ok(amount));
+        assert_eq!(ciphertext.decrypt(&keypair2.secret(), 1), Ok(amount));
+        assert_eq!(ciphertext.decrypt(&keypair3.secret(), 2), Ok(amount));
     }
 }

@@ -157,16 +157,12 @@ mod tests {
         let amount: u64 = 55;
         let opening = PedersenOpening::new_rand();
 
-        let grouped_ciphertext = GroupedElGamalCiphertext2Handles {
-            inner: GroupedElGamal::encrypt_with(
-                [
-                    &first_keypair.pubkey().inner,
-                    &second_keypair.pubkey().inner,
-                ],
-                amount,
-                &opening.inner,
-            ),
-        };
+        let grouped_ciphertext = GroupedElGamalCiphertext2Handles::encrypt_with(
+            &first_keypair.pubkey(),
+            &second_keypair.pubkey(),
+            amount,
+            &opening,
+        );
 
         let proof = GroupedCiphertext2HandlesValidityProofData::new(
             &first_keypair.pubkey(),

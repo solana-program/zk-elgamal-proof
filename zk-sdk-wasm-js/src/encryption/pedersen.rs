@@ -94,7 +94,7 @@ mod tests {
         assert_eq!(bytes.len(), 32); // Ristretto points are 32 bytes.
         let new_commitment =
             PedersenCommitment::from_bytes(Uint8Array::from(bytes.as_slice())).unwrap();
-        assert_eq!(commitment.inner, new_commitment.inner);
+        assert_eq!(commitment.to_bytes(), new_commitment.to_bytes());
     }
 
     #[wasm_bindgen_test]

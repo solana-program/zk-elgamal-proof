@@ -165,27 +165,19 @@ mod tests {
         let opening_lo = PedersenOpening::new_rand();
         let opening_hi = PedersenOpening::new_rand();
 
-        let grouped_ciphertext_lo = GroupedElGamalCiphertext2Handles {
-            inner: GroupedElGamal::encrypt_with(
-                [
-                    &first_keypair.pubkey().inner,
-                    &second_keypair.pubkey().inner,
-                ],
-                amount_lo,
-                &opening_lo.inner,
-            ),
-        };
+        let grouped_ciphertext_lo = GroupedElGamalCiphertext2Handles::encrypt_with(
+            &first_keypair.pubkey(),
+            &second_keypair.pubkey(),
+            amount_lo,
+            &opening_lo,
+        );
 
-        let grouped_ciphertext_hi = GroupedElGamalCiphertext2Handles {
-            inner: GroupedElGamal::encrypt_with(
-                [
-                    &first_keypair.pubkey().inner,
-                    &second_keypair.pubkey().inner,
-                ],
-                amount_hi,
-                &opening_hi.inner,
-            ),
-        };
+        let grouped_ciphertext_hi = GroupedElGamalCiphertext2Handles::encrypt_with(
+            &first_keypair.pubkey(),
+            &second_keypair.pubkey(),
+            amount_hi,
+            &opening_hi,
+        );
 
         let proof = BatchedGroupedCiphertext2HandlesValidityProofData::new(
             &first_keypair.pubkey(),

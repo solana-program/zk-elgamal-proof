@@ -1,5 +1,5 @@
 use {
-    crate::encryption::pedersen::PedersenCommitment,
+    crate::encryption::pedersen::{PedersenCommitment, PedersenOpening},
     js_sys::Uint8Array,
     solana_zk_sdk::encryption::{
         elgamal, DECRYPT_HANDLE_LEN, ELGAMAL_CIPHERTEXT_LEN, ELGAMAL_PUBKEY_LEN,
@@ -56,6 +56,12 @@ impl ElGamalPubkey {
     #[wasm_bindgen(js_name = "encryptU64")]
     pub fn encrypt_u64(&self, amount: u64) -> ElGamalCiphertext {
         self.inner.encrypt(amount).into()
+    }
+
+    /// Encrypts a 64-bit amount using the public key and a specific opening.
+    #[wasm_bindgen(js_name = "encryptWith")]
+    pub fn encrypt_with(&self, amount: u64, opening: &PedersenOpening) -> ElGamalCiphertext {
+        self.inner.encrypt_with(amount, &opening.inner).into()
     }
 }
 
@@ -259,13 +265,13 @@ mod tests {
         let secret_bytes = secret.to_bytes();
         let recovered_secret =
             ElGamalSecretKey::from_bytes(Uint8Array::from(secret_bytes.as_slice())).unwrap();
-        assert_eq!(secret.inner, recovered_secret.inner);
+        assert_eq!(secret.to_bytes(), recovered_secret.to_bytes());
 
         // Public Key roundtrip
         let pubkey_bytes = pubkey.to_bytes();
         let recovered_pubkey =
             ElGamalPubkey::from_bytes(Uint8Array::from(pubkey_bytes.as_slice())).unwrap();
-        assert_eq!(pubkey.inner, recovered_pubkey.inner);
+        assert_eq!(pubkey.to_bytes(), recovered_pubkey.to_bytes());
     }
 
     #[wasm_bindgen_test]
@@ -289,14 +295,14 @@ mod tests {
         let ciphertext_bytes = ciphertext.to_bytes();
         let recovered_ciphertext =
             ElGamalCiphertext::from_bytes(Uint8Array::from(ciphertext_bytes.as_slice())).unwrap();
-        assert_eq!(ciphertext.inner, recovered_ciphertext.inner);
+        assert_eq!(ciphertext.to_bytes(), recovered_ciphertext.to_bytes());
 
         // Handle roundtrip
         let handle = ciphertext.handle();
         let handle_bytes = handle.to_bytes();
         let recovered_handle =
             DecryptHandle::from_bytes(Uint8Array::from(handle_bytes.as_slice())).unwrap();
-        assert_eq!(handle.inner, recovered_handle.inner);
+        assert_eq!(handle.to_bytes(), recovered_handle.to_bytes());
 
         // Commitment roundtrip
         let commitment = ciphertext.commitment();
@@ -305,7 +311,7 @@ mod tests {
             Uint8Array::from(commitment_bytes.as_slice()),
         )
         .unwrap();
-        assert_eq!(commitment.inner, recovered_commitment.inner);
+        assert_eq!(commitment.to_bytes(), recovered_commitment.to_bytes());
     }
 
     #[wasm_bindgen_test]
@@ -367,5 +373,16 @@ mod tests {
         assert!(DecryptHandle::from_bytes(Uint8Array::from(long_handle.as_slice())).is_none());
         let invalid_handle = vec![0xFF; 32];
         assert!(DecryptHandle::from_bytes(Uint8Array::from(invalid_handle.as_slice())).is_none());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_elgamal_encrypt_with_correctness() {
+        let keypair = ElGamalKeypair::new_rand();
+        let amount: u64 = 42;
+        let opening = PedersenOpening::new_rand();
+
+        let ciphertext = keypair.pubkey().encrypt_with(amount, &opening);
+        let decrypted = keypair.secret().decrypt(&ciphertext);
+        assert_eq!(decrypted, Ok(amount));
     }
 }
