@@ -374,4 +374,15 @@ mod tests {
         let invalid_handle = vec![0xFF; 32];
         assert!(DecryptHandle::from_bytes(Uint8Array::from(invalid_handle.as_slice())).is_none());
     }
+
+    #[wasm_bindgen_test]
+    fn test_elgamal_encrypt_with_correctness() {
+        let keypair = ElGamalKeypair::new_rand();
+        let amount: u64 = 42;
+        let opening = PedersenOpening::new_rand();
+
+        let ciphertext = keypair.pubkey().encrypt_with(amount, &opening);
+        let decrypted = keypair.secret().decrypt(&ciphertext);
+        assert_eq!(decrypted, Ok(amount));
+    }
 }

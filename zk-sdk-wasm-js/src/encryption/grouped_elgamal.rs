@@ -295,4 +295,45 @@ mod tests {
         assert_eq!(recovered.decrypt(&keypair2.secret(), 1), Ok(amount));
         assert_eq!(recovered.decrypt(&keypair3.secret(), 2), Ok(amount));
     }
+
+    #[wasm_bindgen_test]
+    fn test_grouped_elgamal_2_handles_encrypt_with_correctness() {
+        let keypair1 = ElGamalKeypair::new_rand();
+        let keypair2 = ElGamalKeypair::new_rand();
+        let amount: u64 = 42;
+        let opening = PedersenOpening::new_rand();
+
+        // Use the new encrypt_with method using the explicit opening
+        let ciphertext = GroupedElGamalCiphertext2Handles::encrypt_with(
+            &keypair1.pubkey(),
+            &keypair2.pubkey(),
+            amount,
+            &opening,
+        );
+
+        assert_eq!(ciphertext.decrypt(&keypair1.secret(), 0), Ok(amount));
+        assert_eq!(ciphertext.decrypt(&keypair2.secret(), 1), Ok(amount));
+    }
+
+    #[wasm_bindgen_test]
+    fn test_grouped_elgamal_3_handles_encrypt_with_correctness() {
+        let keypair1 = ElGamalKeypair::new_rand();
+        let keypair2 = ElGamalKeypair::new_rand();
+        let keypair3 = ElGamalKeypair::new_rand();
+        let amount: u64 = 99;
+        let opening = PedersenOpening::new_rand();
+
+        // Use the new encrypt_with method using the explicit opening
+        let ciphertext = GroupedElGamalCiphertext3Handles::encrypt_with(
+            &keypair1.pubkey(),
+            &keypair2.pubkey(),
+            &keypair3.pubkey(),
+            amount,
+            &opening,
+        );
+
+        assert_eq!(ciphertext.decrypt(&keypair1.secret(), 0), Ok(amount));
+        assert_eq!(ciphertext.decrypt(&keypair2.secret(), 1), Ok(amount));
+        assert_eq!(ciphertext.decrypt(&keypair3.secret(), 2), Ok(amount));
+    }
 }
