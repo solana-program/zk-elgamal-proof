@@ -4,8 +4,12 @@ import {
   generateKeyPairSignerWithSol,
   sendAndConfirmInstructions,
 } from './_setup';
-import { verifyBatchedRangeProofU64 } from '../src';
-import { BatchedRangeProofU64Data, PedersenCommitment, PedersenOpening } from '@solana/zk-sdk/node';
+import { verifyBatchedRangeProofU256 } from '../src';
+import {
+  BatchedRangeProofU256Data,
+  PedersenCommitment,
+  PedersenOpening,
+} from '@solana/zk-sdk/node';
 import { generateKeyPairSigner } from '@solana/kit';
 import {
   createRecord,
@@ -13,81 +17,35 @@ import {
   RECORD_META_DATA_SIZE,
   RECORD_CHUNK_SIZE_POST_INITIALIZE,
 } from '@solana-program/record';
+import { getSetComputeUnitLimitInstruction } from '@solana-program/compute-budget';
 
 const createValidProof = () => {
-  const amount1 = 255n; // 8-bit max
-  const amount2 = (1n << 56n) - 1n; // 56-bit max
+  // Sum of bit lengths must be 256.
+  // We use four 64-bit commitments: 64 * 4 = 256.
+  const amount1 = (1n << 64n) - 1n; // 64-bit max
+  const amount2 = 500n; // arbitrary valid amount
+  const amount3 = 12345n; // arbitrary valid amount
+  const amount4 = 0n; // zero is valid
 
   const opening1 = new PedersenOpening();
   const opening2 = new PedersenOpening();
+  const opening3 = new PedersenOpening();
+  const opening4 = new PedersenOpening();
 
   const commitment1 = PedersenCommitment.from(amount1, opening1);
   const commitment2 = PedersenCommitment.from(amount2, opening2);
+  const commitment3 = PedersenCommitment.from(amount3, opening3);
+  const commitment4 = PedersenCommitment.from(amount4, opening4);
 
-  const commitments = [commitment1, commitment2];
-  const amounts = new BigUint64Array([amount1, amount2]);
-  const bitLengths = new Uint8Array([8, 56]);
-  const openings = [opening1, opening2];
+  const commitments = [commitment1, commitment2, commitment3, commitment4];
+  const amounts = new BigUint64Array([amount1, amount2, amount3, amount4]);
+  const bitLengths = new Uint8Array([64, 64, 64, 64]);
+  const openings = [opening1, opening2, opening3, opening4];
 
-  return new BatchedRangeProofU64Data(commitments, amounts, bitLengths, openings);
+  return new BatchedRangeProofU256Data(commitments, amounts, bitLengths, openings);
 };
 
-test('verifyBatchedRangeProofU64: success with valid proof (no context state)', async t => {
-  const client = createDefaultSolanaClient();
-  const payer = await generateKeyPairSignerWithSol(client);
-
-  // Generate VALID proof
-  const proof = createValidProof();
-
-  // Verify Ephemerally
-  const ixs = await verifyBatchedRangeProofU64({
-    rpc: client.rpc,
-    payer,
-    proofData: proof.toBytes(),
-    // No contextState
-  });
-
-  await t.notThrowsAsync(async () => {
-    await sendAndConfirmInstructions(client, payer, ixs);
-  }, 'Ephemeral verification should succeed within transaction limits');
-});
-
-test('verifyBatchedRangeProofU64: success with valid proof (context state)', async t => {
-  const client = createDefaultSolanaClient();
-  const payer = await generateKeyPairSignerWithSol(client);
-  const contextAccount = await generateKeyPairSigner();
-
-  const proof = createValidProof();
-
-  // Generate instructions (CreateAccount + Verify)
-  const ixs = await verifyBatchedRangeProofU64({
-    rpc: client.rpc,
-    payer,
-    proofData: proof.toBytes(),
-    contextState: {
-      contextAccount,
-      authority: payer.address,
-    },
-  });
-
-  // The proof is large, we send them in two separate transactions.
-  const createIx = ixs[0];
-  const verifyIx = ixs[1];
-
-  // Create Context Account
-  await sendAndConfirmInstructions(client, payer, [createIx]);
-
-  // Verify Proof
-  await sendAndConfirmInstructions(client, payer, [verifyIx]);
-
-  const account = await client.rpc
-    .getAccountInfo(contextAccount.address, { encoding: 'base64' })
-    .send();
-
-  t.truthy(account.value, 'Context state account was created');
-});
-
-test('verifyBatchedRangeProofU64: proof in record account (no context state)', async t => {
+test('verifyBatchedRangeProofU256: proof in record account (no context state)', async t => {
   const client = createDefaultSolanaClient();
   const payer = await generateKeyPairSignerWithSol(client);
 
@@ -105,6 +63,7 @@ test('verifyBatchedRangeProofU64: proof in record account (no context state)', a
 
   await sendAndConfirmInstructions(client, payer, initIxs);
 
+  // Write Proof to Record in Chunks
   let offset = 0;
   while (offset < proofData.length) {
     const chunkEnd = Math.min(offset + RECORD_CHUNK_SIZE_POST_INITIALIZE, proofData.length);
@@ -122,7 +81,7 @@ test('verifyBatchedRangeProofU64: proof in record account (no context state)', a
   }
 
   // Verify using Record Account
-  const verifyIxs = await verifyBatchedRangeProofU64({
+  const verifyIxs = await verifyBatchedRangeProofU256({
     rpc: client.rpc,
     payer,
     proofData: {
@@ -132,13 +91,14 @@ test('verifyBatchedRangeProofU64: proof in record account (no context state)', a
     // No context state
   });
 
-  // This verification is small (just offset), so it fits easily.
+  const computeIx = getSetComputeUnitLimitInstruction({ units: 500_000 });
+
   await t.notThrowsAsync(async () => {
-    await sendAndConfirmInstructions(client, payer, verifyIxs);
+    await sendAndConfirmInstructions(client, payer, [computeIx, ...verifyIxs]);
   }, 'Verification should succeed using data from record account');
 });
 
-test('verifyBatchedRangeProofU64: proof in record account (context state)', async t => {
+test('verifyBatchedRangeProofU256: proof in record account (context state)', async t => {
   const client = createDefaultSolanaClient();
   const payer = await generateKeyPairSignerWithSol(client);
   const contextAccount = await generateKeyPairSigner();
@@ -157,6 +117,7 @@ test('verifyBatchedRangeProofU64: proof in record account (context state)', asyn
 
   await sendAndConfirmInstructions(client, payer, initIxs);
 
+  // Write Proof to Record in Chunks
   let offset = 0;
   while (offset < proofData.length) {
     const chunkEnd = Math.min(offset + RECORD_CHUNK_SIZE_POST_INITIALIZE, proofData.length);
@@ -174,7 +135,7 @@ test('verifyBatchedRangeProofU64: proof in record account (context state)', asyn
   }
 
   // Verify using Record Account AND Create Context State
-  const verifyIxs = await verifyBatchedRangeProofU64({
+  const verifyIxs = await verifyBatchedRangeProofU256({
     rpc: client.rpc,
     payer,
     proofData: {
@@ -187,7 +148,8 @@ test('verifyBatchedRangeProofU64: proof in record account (context state)', asyn
     },
   });
 
-  await sendAndConfirmInstructions(client, payer, verifyIxs);
+  const computeIx = getSetComputeUnitLimitInstruction({ units: 500_000 });
+  await sendAndConfirmInstructions(client, payer, [computeIx, ...verifyIxs]);
 
   const account = await client.rpc
     .getAccountInfo(contextAccount.address, { encoding: 'base64' })
