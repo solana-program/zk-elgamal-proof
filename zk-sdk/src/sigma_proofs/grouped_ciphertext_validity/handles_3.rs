@@ -373,8 +373,8 @@ mod test {
             handles: [first_handle, second_handle, third_handle],
         };
 
-        let mut prover_transcript = Transcript::new(b"Test");
-        let mut verifier_transcript = Transcript::new(b"Test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
 
         let proof = GroupedCiphertext3HandlesValidityProof::new(
             first_pubkey,
@@ -418,8 +418,8 @@ mod test {
             handles: [first_handle, second_handle, third_handle],
         };
 
-        let mut prover_transcript = Transcript::new(b"Test");
-        let mut verifier_transcript = Transcript::new(b"Test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
 
         let proof = GroupedCiphertext3HandlesValidityProof::new(
             &first_pubkey,
@@ -464,8 +464,8 @@ mod test {
             handles: [first_handle, second_handle, third_handle],
         };
 
-        let mut prover_transcript = Transcript::new(b"Test");
-        let mut verifier_transcript = Transcript::new(b"Test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
 
         let proof = GroupedCiphertext3HandlesValidityProof::new(
             first_pubkey,
@@ -511,8 +511,8 @@ mod test {
             handles: [first_handle, second_handle, third_handle],
         };
 
-        let mut prover_transcript = Transcript::new(b"Test");
-        let mut verifier_transcript = Transcript::new(b"Test");
+        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
 
         let proof = GroupedCiphertext3HandlesValidityProof::new(
             first_pubkey,
@@ -542,29 +542,29 @@ mod test {
 
     #[test]
     fn test_grouped_ciphertext_3_handles_validity_proof_string() {
-        let first_pubkey_str = "ZFS3qCHSduL3Ec05YRo2YWPxRxybflL0Gt1isV8RZX4=";
+        let first_pubkey_str = "EAbHeljb89aEvbxaq2i3T8e7kEh1iZa55G67S4aPN2U=";
         let pod_first_pubkey = PodElGamalPubkey::from_str(first_pubkey_str).unwrap();
         let first_pubkey: ElGamalPubkey = pod_first_pubkey.try_into().unwrap();
 
-        let second_pubkey_str = "qMK9fLd04eXzFZxpSsFqNkOzv8+9EPsVgWZ7AiJRol0=";
+        let second_pubkey_str = "lH291F1FwDQEFq3kyCEQ7ANACAoS+tthsCLBRMMKvCo=";
         let pod_second_pubkey = PodElGamalPubkey::from_str(second_pubkey_str).unwrap();
         let second_pubkey: ElGamalPubkey = pod_second_pubkey.try_into().unwrap();
 
-        let third_pubkey_str = "7O10JYXXxLdxns7KQQl375Cmka27/kcT2Fvg/wUFpFA=";
+        let third_pubkey_str = "EuaVaP3a6YvTokc8dq6kKTnn9cz8A92nMISmDzWElGo=";
         let pod_third_pubkey = PodElGamalPubkey::from_str(third_pubkey_str).unwrap();
         let third_pubkey: ElGamalPubkey = pod_third_pubkey.try_into().unwrap();
 
-        let grouped_ciphertext_str = "eBidpsDaf5HlsgHorK/Tevqckk5S3u2GUSl1n4ruqhZ2Cos1br6FttkrDKj3to1XCQ2Gyh8mFclskivxVWrGHa4NZGozBndinSrhPWSSMyVydeX2veMn6yUhGLtZkcFgeEq+j4FKrgeBIvXksHZsf8A+gEo+C/HspWSB5viDPBs=";
+        let grouped_ciphertext_str = "BpvM2hRQg9xKqEC68Zjc7jtVKyfZ5hiF+BgF0+Pnz1CI+/lX8i7xgBejr9O+hrrKWAomNC6Zv5M8B+MUokxAClLrs+zhcm5TdpLbvtUsM/PTKVNKh30PRGSKr12e65EJ5EgyNO2FjjLL4o2jSJepbrOohkUVWojqTGQ4nZAhtVI=";
         let pod_grouped_ciphertext =
             PodGroupedElGamalCiphertext3Handles::from_str(grouped_ciphertext_str).unwrap();
         let grouped_ciphertext: GroupedElGamalCiphertext<3> =
             pod_grouped_ciphertext.try_into().unwrap();
 
-        let proof_str = "BiHICmQCsllZqb/4prAlQbxJy0nC7/7zvfp295vw3HGyyytGcXgQMOtWJrLsJBrMe4Qs0YCwI7R3igIV52bPH0aHtWSY5LdDnNNZRdKJIxmtMRGfOuD6fF/c8XejIt5JlgSozH+paMJb7/AE6ZtcpOSvSVsItudbOw0B8rc7ZX/HtkrCx1gm5uLK45JaDr/osnij3fjXGUw9lfC1odBfDu/9Co/FHlZz+7NU4gQ4Uf0iMtPutw31b6mSVNrvE6gN";
+        let proof_str = "yAJhtqJPhXdUN24lYeD7J+n7/6F+aV+H0rBSseHvD1dEr2FWy9bl20Qf5E3CHA8IlvOzQQpMJiZ8B9sxhqGdDgwVNbhPhMaKksRqMyKrHq2Vpi3Uz8LB6/uCQNcYyLBMlCjgVpscvudqpLuIpk3PRVhC5igNBV9GSL6iXKAuhkWc2ubCdlZKXJM1xFAnTbn5RSoRmSonESBr4NBwjHyaCHMwX7W8+jjxBc3hDSJOqKNkZgym0gmWv64cc32wKVEA";
         let pod_proof = PodGroupedCiphertext3HandlesValidityProof::from_str(proof_str).unwrap();
         let proof: GroupedCiphertext3HandlesValidityProof = pod_proof.try_into().unwrap();
 
-        let mut verifier_transcript = Transcript::new(b"Test");
+        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
 
         proof
             .verify(

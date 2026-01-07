@@ -24,6 +24,7 @@ use {
             pedersen::{PedersenCommitment, PedersenOpening},
         },
         sigma_proofs::ciphertext_commitment_equality::CiphertextCommitmentEqualityProof,
+        transcript::TranscriptProtocol,
         zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
     },
     merlin::Transcript,
@@ -69,7 +70,8 @@ impl CiphertextCommitmentEqualityProofData {
             ciphertext: PodElGamalCiphertext(ciphertext.to_bytes()),
             commitment: PodPedersenCommitment(commitment.to_bytes()),
         };
-        let mut transcript = Transcript::new(b"ciphertext-commitment-equality-instruction");
+        let mut transcript =
+            Transcript::new_zk_elgamal_transcript(b"ciphertext-commitment-equality-instruction");
         let proof = CiphertextCommitmentEqualityProof::new(
             keypair,
             ciphertext,
@@ -96,7 +98,8 @@ impl ZkProofData<CiphertextCommitmentEqualityProofContext>
 
     #[cfg(not(target_os = "solana"))]
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
-        let mut transcript = Transcript::new(b"ciphertext-commitment-equality-instruction");
+        let mut transcript =
+            Transcript::new_zk_elgamal_transcript(b"ciphertext-commitment-equality-instruction");
 
         let pubkey = self.context.pubkey.try_into()?;
         let ciphertext = self.context.ciphertext.try_into()?;

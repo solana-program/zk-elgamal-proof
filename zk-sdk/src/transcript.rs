@@ -1,10 +1,13 @@
 use {
-    crate::errors::TranscriptError,
+    crate::{errors::TranscriptError, TRANSCRIPT_DOMAIN},
     curve25519_dalek::{ristretto::CompressedRistretto, scalar::Scalar, traits::IsIdentity},
     merlin::Transcript,
 };
 
 pub trait TranscriptProtocol {
+    /// Create a new transcript with the global domain separator and a specific label.
+    fn new_zk_elgamal_transcript(label: &'static [u8]) -> Transcript;
+
     /// Append a `scalar` with the given `label`.
     fn append_scalar(&mut self, label: &'static [u8], scalar: &Scalar);
 
@@ -51,6 +54,12 @@ pub trait TranscriptProtocol {
 }
 
 impl TranscriptProtocol for Transcript {
+    fn new_zk_elgamal_transcript(label: &'static [u8]) -> Transcript {
+        let mut transcript = Transcript::new(TRANSCRIPT_DOMAIN);
+        transcript.append_message(b"dom-sep", label);
+        transcript
+    }
+
     fn append_scalar(&mut self, label: &'static [u8], scalar: &Scalar) {
         self.append_message(label, scalar.as_bytes());
     }

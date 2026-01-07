@@ -9,6 +9,7 @@ use {
     crate::{
         encryption::elgamal::{ElGamalCiphertext, ElGamalKeypair},
         sigma_proofs::zero_ciphertext::ZeroCiphertextProof,
+        transcript::TranscriptProtocol,
         zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
     },
     merlin::Transcript,
@@ -62,7 +63,7 @@ impl ZeroCiphertextProofData {
             ciphertext: pod_ciphertext,
         };
 
-        let mut transcript = Transcript::new(b"zero-ciphertext-instruction");
+        let mut transcript = Transcript::new_zk_elgamal_transcript(b"zero-ciphertext-instruction");
         let proof = ZeroCiphertextProof::new(keypair, ciphertext, &mut transcript).into();
 
         Ok(ZeroCiphertextProofData { context, proof })
@@ -78,7 +79,7 @@ impl ZkProofData<ZeroCiphertextProofContext> for ZeroCiphertextProofData {
 
     #[cfg(not(target_os = "solana"))]
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
-        let mut transcript = Transcript::new(b"zero-ciphertext-instruction");
+        let mut transcript = Transcript::new_zk_elgamal_transcript(b"zero-ciphertext-instruction");
         let pubkey = self.context.pubkey.try_into()?;
         let ciphertext = self.context.ciphertext.try_into()?;
         let proof: ZeroCiphertextProof = self.proof.try_into()?;
