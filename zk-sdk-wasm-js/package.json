@@ -1,6 +1,6 @@
 {
   "name": "@solana/zk-sdk",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Universal WASM package for the rust solana-zk-sdk",
   "type": "module",
   "files": [
