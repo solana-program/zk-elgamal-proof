@@ -51,7 +51,7 @@
         "@types/node": "^25.0.2",
         "chai": "^6.2.1",
         "chai-as-promised": "^8.0.2",
-        "eslint": "^8.57.1",
+        "eslint": "^9.39.2",
         "eslint-config-prettier": "^10.1.8",
         "eslint-plugin-prettier": "^5.5.4",
         "eslint-plugin-require-extensions": "^0.1.1",
