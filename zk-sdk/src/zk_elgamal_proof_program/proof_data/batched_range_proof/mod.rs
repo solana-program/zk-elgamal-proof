@@ -37,12 +37,12 @@ use {
 /// The maximum number of Pedersen commitments that can be processed in a single batched range proof.
 const MAX_COMMITMENTS: usize = 8;
 
-/// A bit length in a batched range proof must be at most 128.
+/// A bit length in a batched range proof must be at most 64.
 ///
-/// A 256-bit range proof on a single Pedersen commitment is meaningless and hence enforce an upper
-/// bound as the largest power-of-two number less than 256.
+/// Although the batched proof supports a total of 256 bits, individual components are restricted
+/// to `u64` amounts (64 bits).
 #[cfg(not(target_os = "solana"))]
-const MAX_SINGLE_BIT_LENGTH: usize = 128;
+const MAX_SINGLE_BIT_LENGTH: usize = 64;
 
 /// The context data needed to verify a range-proof for a Pedersen committed value.
 ///
@@ -127,6 +127,33 @@ impl TryInto<(Vec<PedersenCommitment>, Vec<usize>)> for BatchedRangeProofContext
             .take(commitments.len())
             .map(|bit_length| bit_length as usize)
             .collect();
+
+        // Ensure at least one commitment exists
+        if commitments.is_empty() {
+            return Err(ProofVerificationError::IllegalCommitmentLength);
+        }
+
+        // Validate bit lengths (must be > 0 and <= MAX_SINGLE_BIT_LENGTH)
+        if bit_lengths
+            .iter()
+            .any(|&bit_length| bit_length == 0 || bit_length > MAX_SINGLE_BIT_LENGTH)
+        {
+            return Err(ProofVerificationError::IllegalAmountBitLength);
+        }
+
+        // Ensure that all ignored data in the context (the "tail") is strictly zero.
+        let len = commitments.len();
+        let commitments_padding_valid = self.commitments[len..]
+            .iter()
+            .all(|commitment| *commitment == PodPedersenCommitment::zeroed());
+
+        let bit_lengths_padding_valid = self.bit_lengths[len..]
+            .iter()
+            .all(|&bit_length| bit_length == 0);
+
+        if !commitments_padding_valid || !bit_lengths_padding_valid {
+            return Err(ProofVerificationError::ProofContext);
+        }
 
         Ok((commitments, bit_lengths))
     }
