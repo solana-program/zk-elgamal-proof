@@ -282,7 +282,7 @@ impl fmt::Display for AeCiphertext {
 #[cfg(test)]
 mod tests {
     use {
-        super::*, solana_keypair::Keypair, solana_pubkey::Pubkey,
+        super::*, solana_address::Address, solana_keypair::Keypair,
         solana_signer::null_signer::NullSigner,
     };
 
@@ -303,16 +303,16 @@ mod tests {
         let keypair2 = Keypair::new();
 
         assert_ne!(
-            AeKey::new_from_signer(&keypair1, Pubkey::default().as_ref())
+            AeKey::new_from_signer(&keypair1, Address::default().as_ref())
                 .unwrap()
                 .0,
-            AeKey::new_from_signer(&keypair2, Pubkey::default().as_ref())
+            AeKey::new_from_signer(&keypair2, Address::default().as_ref())
                 .unwrap()
                 .0,
         );
 
-        let null_signer = NullSigner::new(&Pubkey::default());
-        assert!(AeKey::new_from_signer(&null_signer, Pubkey::default().as_ref()).is_err());
+        let null_signer = NullSigner::new(&Address::default());
+        assert!(AeKey::new_from_signer(&null_signer, Address::default().as_ref()).is_err());
     }
 
     #[test]

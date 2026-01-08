@@ -17,7 +17,7 @@ level = "warn"
 check-cfg = ['cfg(target_os, values("solana"))']
 
 [workspace.metadata.cli]
-solana = "2.2.11"
+solana = "3.1.1"
 
 # Specify Rust toolchains for rustfmt, clippy, and build.
 # Any unprovided toolchains default to stable.
@@ -43,14 +43,14 @@ serde = "1.0.228"
 serde_derive = "1.0.219"
 serde_json = "1.0.145"
 sha3 = "0.10.8"
+solana-address = { version = "2.0.0", default-features = false }
 solana-derivation-path = "3.0.0"
-solana-instruction = "3.0.0"
-solana-keypair = "3.0.0"
-solana-pubkey = { version = "3.0.0", default-features = false }
-solana-sdk-ids = "3.0.0"
+solana-instruction = "3.1.0"
+solana-keypair = "3.1.0"
+solana-sdk-ids = "3.1.0"
 solana-seed-derivable = "3.0.0"
 solana-seed-phrase = "3.0.0"
-solana-signature = { version = "3.0.0", default-features = false }
+solana-signature = { version = "3.1.0", default-features = false }
 solana-signer = "3.0.0"
 solana-zk-sdk = { path = "zk-sdk", version = "4.0.0" }
 solana-zk-sdk-wasm-js = { path = "zk-sdk-wasm-js", version = "0.1.0" }
