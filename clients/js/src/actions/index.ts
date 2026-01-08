@@ -8,5 +8,6 @@ export * from './verifyCiphertextCiphertextEquality';
 export * from './verifyCiphertextCommitmentEquality';
 export * from './verifyGroupedCiphertext2HandlesValidity';
 export * from './verifyGroupedCiphertext3HandlesValidity';
+export * from './verifyBatchedGroupedCiphertext2HandlesValidity';
 export * from './shared';
 export * from './close';
