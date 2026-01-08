@@ -12,6 +12,7 @@ use {
         transcript::TranscriptProtocol,
         zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
     },
+    curve25519_dalek::traits::IsIdentity,
     merlin::Transcript,
     std::convert::TryInto,
 };
@@ -28,7 +29,7 @@ use {
 ///
 /// It includes the cryptographic proof as well as the context data information needed to verify
 /// the proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct ZeroCiphertextProofData {
     /// The context data for the zero-ciphertext proof
@@ -39,7 +40,7 @@ pub struct ZeroCiphertextProofData {
 }
 
 /// The context data needed to verify a zero-ciphertext proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct ZeroCiphertextProofContext {
     /// The ElGamal pubkey associated with the ElGamal ciphertext
@@ -55,6 +56,12 @@ impl ZeroCiphertextProofData {
         keypair: &ElGamalKeypair,
         ciphertext: &ElGamalCiphertext,
     ) -> Result<Self, ProofGenerationError> {
+        // Ciphertext should decrypt to Identity
+        let decrypted_point = ciphertext.decrypt(keypair.secret()).target;
+        if !decrypted_point.is_identity() {
+            return Err(ProofGenerationError::InconsistentInput);
+        }
+
         let pod_pubkey = PodElGamalPubkey(keypair.pubkey().into());
         let pod_ciphertext = PodElGamalCiphertext(ciphertext.to_bytes());
 
@@ -105,8 +112,7 @@ mod test {
 
         // general case: encryption of > 0
         let ciphertext = keypair.pubkey().encrypt(1_u64);
-        let zero_ciphertext_proof_data =
-            ZeroCiphertextProofData::new(&keypair, &ciphertext).unwrap();
-        assert!(zero_ciphertext_proof_data.verify_proof().is_err());
+        let result = ZeroCiphertextProofData::new(&keypair, &ciphertext);
+        assert_eq!(result, Err(ProofGenerationError::InconsistentInput));
     }
 }

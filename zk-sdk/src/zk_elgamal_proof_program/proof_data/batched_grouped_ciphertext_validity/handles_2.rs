@@ -19,7 +19,8 @@ use {
 use {
     crate::{
         encryption::{
-            elgamal::ElGamalPubkey, grouped_elgamal::GroupedElGamalCiphertext,
+            elgamal::ElGamalPubkey,
+            grouped_elgamal::{GroupedElGamal, GroupedElGamalCiphertext},
             pedersen::PedersenOpening,
         },
         sigma_proofs::batched_grouped_ciphertext_validity::BatchedGroupedCiphertext2HandlesValidityProof,
@@ -34,7 +35,7 @@ use {
 ///
 /// It includes the cryptographic proof as well as the context data information needed to verify
 /// the proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct BatchedGroupedCiphertext2HandlesValidityProofData {
     pub context: BatchedGroupedCiphertext2HandlesValidityProofContext,
@@ -42,7 +43,7 @@ pub struct BatchedGroupedCiphertext2HandlesValidityProofData {
     pub proof: PodBatchedGroupedCiphertext2HandlesValidityProof,
 }
 
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct BatchedGroupedCiphertext2HandlesValidityProofContext {
     pub first_pubkey: PodElGamalPubkey, // 32 bytes
@@ -67,6 +68,18 @@ impl BatchedGroupedCiphertext2HandlesValidityProofData {
         opening_lo: &PedersenOpening,
         opening_hi: &PedersenOpening,
     ) -> Result<Self, ProofGenerationError> {
+        let expected_lo =
+            GroupedElGamal::encrypt_with([first_pubkey, second_pubkey], amount_lo, opening_lo);
+        if *grouped_ciphertext_lo != expected_lo {
+            return Err(ProofGenerationError::InconsistentInput);
+        }
+
+        let expected_hi =
+            GroupedElGamal::encrypt_with([first_pubkey, second_pubkey], amount_hi, opening_hi);
+        if *grouped_ciphertext_hi != expected_hi {
+            return Err(ProofGenerationError::InconsistentInput);
+        }
+
         let pod_first_pubkey = PodElGamalPubkey(first_pubkey.into());
         let pod_second_pubkey = PodElGamalPubkey(second_pubkey.into());
         let pod_grouped_ciphertext_lo = (*grouped_ciphertext_lo).into();
@@ -176,5 +189,17 @@ mod test {
         .unwrap();
 
         assert!(proof_data.verify_proof().is_ok());
+
+        let result = BatchedGroupedCiphertext2HandlesValidityProofData::new(
+            first_keypair.pubkey(),
+            second_keypair.pubkey(),
+            &grouped_ciphertext_hi, // Swapped: Passed Hi ciphertext
+            &grouped_ciphertext_lo, // Swapped: Passed Lo ciphertext
+            amount_lo,              // Claiming Lo amount
+            amount_hi,              // Claiming Hi amount
+            &opening_lo,            // Claiming Lo opening
+            &opening_hi,            // Claiming Hi opening
+        );
+        assert_eq!(result, Err(ProofGenerationError::InconsistentInput));
     }
 }

@@ -18,12 +18,13 @@ use {
     crate::{
         encryption::{
             elgamal::{ElGamalCiphertext, ElGamalKeypair, ElGamalPubkey},
-            pedersen::PedersenOpening,
+            pedersen::{PedersenOpening, G},
         },
         sigma_proofs::ciphertext_ciphertext_equality::CiphertextCiphertextEqualityProof,
         transcript::TranscriptProtocol,
         zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
     },
+    curve25519_dalek::scalar::Scalar,
     merlin::Transcript,
     std::convert::TryInto,
 };
@@ -33,7 +34,7 @@ use {
 ///
 /// It includes the cryptographic proof as well as the context data information needed to verify
 /// the proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct CiphertextCiphertextEqualityProofData {
     pub context: CiphertextCiphertextEqualityProofContext,
@@ -42,7 +43,7 @@ pub struct CiphertextCiphertextEqualityProofData {
 }
 
 /// The context data needed to verify a ciphertext-ciphertext equality proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct CiphertextCiphertextEqualityProofContext {
     pub first_pubkey: PodElGamalPubkey, // 32 bytes
@@ -64,6 +65,20 @@ impl CiphertextCiphertextEqualityProofData {
         second_opening: &PedersenOpening,
         amount: u64,
     ) -> Result<Self, ProofGenerationError> {
+        // First ciphertext should decrypt to the expected amount
+        // D_first = C_first - s * H_first. Should equal amount * G.
+        let decrypted_point = first_ciphertext.decrypt(first_keypair.secret()).target;
+        let expected_point = Scalar::from(amount) * G;
+        if decrypted_point != expected_point {
+            return Err(ProofGenerationError::InconsistentInput);
+        }
+
+        // Second ciphertext should match encryption of amount with second_opening
+        let expected_second_ciphertext = second_pubkey.encrypt_with(amount, second_opening);
+        if *second_ciphertext != expected_second_ciphertext {
+            return Err(ProofGenerationError::InconsistentInput);
+        }
+
         let pod_first_pubkey = PodElGamalPubkey(first_keypair.pubkey().into());
         let pod_second_pubkey = PodElGamalPubkey(second_pubkey.into());
         let pod_first_ciphertext = PodElGamalCiphertext(first_ciphertext.to_bytes());
@@ -194,5 +209,23 @@ mod test {
         .unwrap();
 
         assert!(proof_data.verify_proof().is_ok());
+
+        let amount_2 = 77_u64;
+        let second_opening_2 = PedersenOpening::new_rand();
+        let second_ciphertext_2 = second_keypair
+            .pubkey()
+            .encrypt_with(amount_2, &second_opening_2);
+
+        // We try to prove equality between encryption of 55 and encryption of 77
+        let result = CiphertextCiphertextEqualityProofData::new(
+            &first_keypair,
+            second_keypair.pubkey(),
+            &first_ciphertext,
+            &second_ciphertext_2,
+            &second_opening_2,
+            amount,
+        );
+
+        assert_eq!(result, Err(ProofGenerationError::InconsistentInput));
     }
 }

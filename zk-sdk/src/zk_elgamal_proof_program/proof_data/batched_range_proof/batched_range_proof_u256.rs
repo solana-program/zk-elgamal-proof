@@ -30,7 +30,7 @@ const BATCHED_RANGE_PROOF_U256_BIT_LENGTH: usize = 256;
 ///
 /// It includes the cryptographic proof as well as the context data information needed to verify
 /// the proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct BatchedRangeProofU256Data {
     /// The context data for a batched range proof

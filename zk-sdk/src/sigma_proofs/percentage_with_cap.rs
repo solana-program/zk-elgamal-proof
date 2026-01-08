@@ -418,6 +418,13 @@ impl PercentageWithCapProof {
         max_value: u64,
         transcript: &mut Transcript,
     ) -> Result<(), PercentageWithCapProofVerificationError> {
+        if percentage_commitment.get_point().is_identity()
+            || delta_commitment.get_point().is_identity()
+            || claimed_commitment.get_point().is_identity()
+        {
+            return Err(SigmaProofVerificationError::IdentityPoint.into());
+        }
+
         Self::hash_context_into_transcript(
             percentage_commitment,
             delta_commitment,

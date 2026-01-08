@@ -21,6 +21,8 @@ pub enum ProofGenerationError {
     RangeProof(#[from] RangeProofGenerationError),
     #[error("unexpected proof length")]
     ProofLength,
+    #[error("cryptographic component mismatch")]
+    InconsistentInput,
 }
 
 #[derive(Error, Clone, Debug, Eq, PartialEq)]

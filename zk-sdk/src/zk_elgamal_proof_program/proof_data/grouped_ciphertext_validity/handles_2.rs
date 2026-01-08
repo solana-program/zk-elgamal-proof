@@ -19,7 +19,8 @@ use {
 use {
     crate::{
         encryption::{
-            elgamal::ElGamalPubkey, grouped_elgamal::GroupedElGamalCiphertext,
+            elgamal::ElGamalPubkey,
+            grouped_elgamal::{GroupedElGamal, GroupedElGamalCiphertext},
             pedersen::PedersenOpening,
         },
         sigma_proofs::grouped_ciphertext_validity::GroupedCiphertext2HandlesValidityProof,
@@ -34,7 +35,7 @@ use {
 ///
 /// It includes the cryptographic proof as well as the context data information needed to verify
 /// the proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct GroupedCiphertext2HandlesValidityProofData {
     pub context: GroupedCiphertext2HandlesValidityProofContext,
@@ -42,7 +43,7 @@ pub struct GroupedCiphertext2HandlesValidityProofData {
     pub proof: PodGroupedCiphertext2HandlesValidityProof,
 }
 
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct GroupedCiphertext2HandlesValidityProofContext {
     pub first_pubkey: PodElGamalPubkey, // 32 bytes
@@ -61,6 +62,12 @@ impl GroupedCiphertext2HandlesValidityProofData {
         amount: u64,
         opening: &PedersenOpening,
     ) -> Result<Self, ProofGenerationError> {
+        let expected_ciphertext =
+            GroupedElGamal::encrypt_with([first_pubkey, second_pubkey], amount, opening);
+        if *grouped_ciphertext != expected_ciphertext {
+            return Err(ProofGenerationError::InconsistentInput);
+        }
+
         let pod_first_pubkey = PodElGamalPubkey(first_pubkey.into());
         let pod_second_pubkey = PodElGamalPubkey(second_pubkey.into());
         let pod_grouped_ciphertext = (*grouped_ciphertext).into();
@@ -155,5 +162,15 @@ mod test {
         .unwrap();
 
         assert!(proof_data.verify_proof().is_ok());
+
+        let wrong_amount = 99_u64;
+        let result = GroupedCiphertext2HandlesValidityProofData::new(
+            first_pubkey,
+            second_pubkey,
+            &grouped_ciphertext,
+            wrong_amount,
+            &opening,
+        );
+        assert_eq!(result, Err(ProofGenerationError::InconsistentInput));
     }
 }

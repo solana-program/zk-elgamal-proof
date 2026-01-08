@@ -143,6 +143,13 @@ impl CiphertextCommitmentEqualityProof {
         commitment: &PedersenCommitment,
         transcript: &mut Transcript,
     ) -> Result<(), EqualityProofVerificationError> {
+        if pubkey.get_point().is_identity()
+            || ciphertext.commitment.get_point().is_identity()
+            || commitment.get_point().is_identity()
+        {
+            return Err(SigmaProofVerificationError::IdentityPoint.into());
+        }
+
         Self::hash_context_into_transcript(pubkey, ciphertext, commitment, transcript);
         transcript.ciphertext_commitment_equality_proof_domain_separator();
 
@@ -345,11 +352,10 @@ mod test {
     }
 
     #[test]
-    fn test_ciphertext_commitment_equality_proof_edge_cases() {
-        // if ElGamal public key zero (public key is invalid), then the proof should always reject
+    fn test_ciphertext_commitment_equality_proof_identity_inputs() {
+        // ElGamal public key zero (already invalid, but now checks IdentityPoint)
         let public = ElGamalPubkey::try_from([0u8; 32].as_slice()).unwrap();
         let secret = ElGamalSecretKey::new_rand();
-
         let elgamal_keypair = ElGamalKeypair::new_for_tests(public, secret);
 
         let message: u64 = 55;
@@ -368,19 +374,19 @@ mod test {
             &mut prover_transcript,
         );
 
-        assert!(proof
-            .verify(
-                elgamal_keypair.pubkey(),
-                &ciphertext,
-                &commitment,
-                &mut verifier_transcript
-            )
-            .is_err());
+        let result = proof.verify(
+            elgamal_keypair.pubkey(),
+            &ciphertext,
+            &commitment,
+            &mut verifier_transcript,
+        );
+        assert_eq!(
+            result.unwrap_err(),
+            EqualityProofVerificationError::from(SigmaProofVerificationError::IdentityPoint)
+        );
 
-        // if ciphertext is all-zero (valid commitment of 0) and commitment is also all-zero, then
-        // the proof should still accept
+        // Ciphertext and Commitment are all-zero
         let elgamal_keypair = ElGamalKeypair::new_rand();
-
         let message: u64 = 0;
         let ciphertext = ElGamalCiphertext::from_bytes(&[0u8; 64]).unwrap();
         let commitment = PedersenCommitment::from_bytes(&[0u8; 32]).unwrap();
@@ -398,19 +404,19 @@ mod test {
             &mut prover_transcript,
         );
 
-        proof
-            .verify(
-                elgamal_keypair.pubkey(),
-                &ciphertext,
-                &commitment,
-                &mut verifier_transcript,
-            )
-            .unwrap();
+        let result = proof.verify(
+            elgamal_keypair.pubkey(),
+            &ciphertext,
+            &commitment,
+            &mut verifier_transcript,
+        );
+        assert_eq!(
+            result.unwrap_err(),
+            EqualityProofVerificationError::from(SigmaProofVerificationError::IdentityPoint)
+        );
 
-        // if commitment is all-zero and the ciphertext is a correct encryption of 0, then the
-        // proof should still accept
+        // Only Commitment is zero
         let elgamal_keypair = ElGamalKeypair::new_rand();
-
         let message: u64 = 0;
         let ciphertext = elgamal_keypair.pubkey().encrypt(message);
         let commitment = PedersenCommitment::from_bytes(&[0u8; 32]).unwrap();
@@ -428,43 +434,16 @@ mod test {
             &mut prover_transcript,
         );
 
-        proof
-            .verify(
-                elgamal_keypair.pubkey(),
-                &ciphertext,
-                &commitment,
-                &mut verifier_transcript,
-            )
-            .unwrap();
-
-        // if ciphertext is all zero and commitment correctly encodes 0, then the proof should
-        // still accept
-        let elgamal_keypair = ElGamalKeypair::new_rand();
-
-        let message: u64 = 0;
-        let ciphertext = ElGamalCiphertext::from_bytes(&[0u8; 64]).unwrap();
-        let (commitment, opening) = Pedersen::new(message);
-
-        let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
-        let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"Test");
-
-        let proof = CiphertextCommitmentEqualityProof::new(
-            &elgamal_keypair,
+        let result = proof.verify(
+            elgamal_keypair.pubkey(),
             &ciphertext,
             &commitment,
-            &opening,
-            message,
-            &mut prover_transcript,
+            &mut verifier_transcript,
         );
-
-        proof
-            .verify(
-                elgamal_keypair.pubkey(),
-                &ciphertext,
-                &commitment,
-                &mut verifier_transcript,
-            )
-            .unwrap();
+        assert_eq!(
+            result.unwrap_err(),
+            EqualityProofVerificationError::from(SigmaProofVerificationError::IdentityPoint)
+        );
     }
 
     #[test]

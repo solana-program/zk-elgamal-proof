@@ -30,7 +30,7 @@ use {
 ///
 /// It includes the cryptographic proof as well as the context data information needed to verify
 /// the proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct PubkeyValidityProofData {
     /// The context data for the public key validity proof
@@ -41,7 +41,7 @@ pub struct PubkeyValidityProofData {
 }
 
 /// The context data needed to verify a pubkey validity proof.
-#[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
 #[repr(C)]
 pub struct PubkeyValidityProofContext {
     /// The public key to be proved

@@ -100,7 +100,7 @@ impl PubkeyValidityProof {
         let P = elgamal_pubkey.get_point();
 
         if P.is_identity() {
-            return Err(SigmaProofVerificationError::PubkeyIsIdentity.into());
+            return Err(SigmaProofVerificationError::IdentityPoint.into());
         }
 
         // include Y to transcript and extract challenge
@@ -223,9 +223,7 @@ mod test {
 
         assert_eq!(
             err,
-            PubkeyValidityProofVerificationError::from(
-                SigmaProofVerificationError::PubkeyIsIdentity
-            )
+            PubkeyValidityProofVerificationError::from(SigmaProofVerificationError::IdentityPoint)
         );
     }
 }
