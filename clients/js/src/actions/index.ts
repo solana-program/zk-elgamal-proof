@@ -4,5 +4,6 @@ export * from './verifyPercentageWithCap';
 export * from './verifyBatchedRangeProofU64';
 export * from './verifyBatchedRangeProofU128';
 export * from './verifyBatchedRangeProofU256';
+export * from './verifyCiphertextCiphertextEquality';
 export * from './shared';
 export * from './close';
