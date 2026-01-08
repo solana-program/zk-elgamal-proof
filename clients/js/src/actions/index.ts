@@ -7,5 +7,6 @@ export * from './verifyBatchedRangeProofU256';
 export * from './verifyCiphertextCiphertextEquality';
 export * from './verifyCiphertextCommitmentEquality';
 export * from './verifyGroupedCiphertext2HandlesValidity';
+export * from './verifyGroupedCiphertext3HandlesValidity';
 export * from './shared';
 export * from './close';
