@@ -145,6 +145,7 @@ impl CiphertextCommitmentEqualityProof {
     ) -> Result<(), EqualityProofVerificationError> {
         if pubkey.get_point().is_identity()
             || ciphertext.commitment.get_point().is_identity()
+            || ciphertext.handle.get_point().is_identity()
             || commitment.get_point().is_identity()
         {
             return Err(SigmaProofVerificationError::IdentityPoint.into());

@@ -152,10 +152,13 @@ impl CiphertextCiphertextEqualityProof {
         second_ciphertext: &ElGamalCiphertext,
         transcript: &mut Transcript,
     ) -> Result<(), EqualityProofVerificationError> {
+        // Reject if any public key or the first ciphertext is the identity point.
+        // The second ciphertext is allowed to be the identity point, as this is
+        // a common state in Token-2022.
         if first_pubkey.get_point().is_identity()
             || second_pubkey.get_point().is_identity()
             || first_ciphertext.commitment.get_point().is_identity()
-            || second_ciphertext.commitment.get_point().is_identity()
+            || first_ciphertext.handle.get_point().is_identity()
         {
             return Err(SigmaProofVerificationError::IdentityPoint.into());
         }
