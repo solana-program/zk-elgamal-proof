@@ -862,8 +862,8 @@ mod tests {
         super::*,
         crate::encryption::pedersen::Pedersen,
         bip39::{Language, Mnemonic, MnemonicType, Seed},
+        solana_address::Address,
         solana_keypair::Keypair,
-        solana_pubkey::Pubkey,
         solana_signer::null_signer::NullSigner,
         std::fs::{self, File},
     };
@@ -1112,17 +1112,17 @@ mod tests {
         let keypair2 = Keypair::new();
 
         assert_ne!(
-            ElGamalSecretKey::new_from_signer(&keypair1, Pubkey::default().as_ref())
+            ElGamalSecretKey::new_from_signer(&keypair1, Address::default().as_ref())
                 .unwrap()
                 .0,
-            ElGamalSecretKey::new_from_signer(&keypair2, Pubkey::default().as_ref())
+            ElGamalSecretKey::new_from_signer(&keypair2, Address::default().as_ref())
                 .unwrap()
                 .0,
         );
 
-        let null_signer = NullSigner::new(&Pubkey::default());
+        let null_signer = NullSigner::new(&Address::default());
         assert!(
-            ElGamalSecretKey::new_from_signer(&null_signer, Pubkey::default().as_ref()).is_err()
+            ElGamalSecretKey::new_from_signer(&null_signer, Address::default().as_ref()).is_err()
         );
     }
 

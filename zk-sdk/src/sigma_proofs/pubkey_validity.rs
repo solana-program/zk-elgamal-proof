@@ -154,8 +154,8 @@ mod test {
         },
         bytemuck::Zeroable,
         curve25519_dalek::traits::Identity,
+        solana_address::Address,
         solana_keypair::Keypair,
-        solana_pubkey::Pubkey,
         std::str::FromStr,
     };
 
@@ -174,7 +174,7 @@ mod test {
 
         // derived ElGamal keypair
         let keypair =
-            ElGamalKeypair::new_from_signer(&Keypair::new(), Pubkey::default().as_ref()).unwrap();
+            ElGamalKeypair::new_from_signer(&Keypair::new(), Address::default().as_ref()).unwrap();
 
         let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"test");
         let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");

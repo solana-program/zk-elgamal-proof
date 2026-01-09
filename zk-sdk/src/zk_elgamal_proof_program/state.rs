@@ -2,8 +2,8 @@ use {
     crate::zk_elgamal_proof_program::proof_data::{pod::PodProofType, ProofType},
     bytemuck::{bytes_of, Pod, Zeroable},
     num_traits::ToPrimitive,
+    solana_address::Address,
     solana_instruction::error::{InstructionError, InstructionError::InvalidAccountData},
-    solana_pubkey::Pubkey,
     std::mem::size_of,
 };
 
@@ -27,7 +27,7 @@ use {
 #[repr(C)]
 pub struct ProofContextState<T: Pod> {
     /// The proof context authority that can close the account
-    pub context_state_authority: Pubkey,
+    pub context_state_authority: Address,
     /// The proof type for the context data
     pub proof_type: PodProofType,
     /// The proof context data
@@ -43,7 +43,7 @@ unsafe impl<T: Pod> Pod for ProofContextState<T> {}
 
 impl<T: Pod> ProofContextState<T> {
     pub fn encode(
-        context_state_authority: &Pubkey,
+        context_state_authority: &Address,
         proof_type: ProofType,
         proof_context: &T,
     ) -> Vec<u8> {
@@ -70,7 +70,7 @@ impl<T: Pod> ProofContextState<T> {
 #[repr(C)]
 pub struct ProofContextStateMeta {
     /// The proof context authority that can close the account
-    pub context_state_authority: Pubkey,
+    pub context_state_authority: Address,
     /// The proof type for the context data
     pub proof_type: PodProofType,
 }

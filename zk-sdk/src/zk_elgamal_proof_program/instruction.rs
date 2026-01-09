@@ -44,8 +44,8 @@ use {
     bytemuck::{bytes_of, Pod},
     num_derive::{FromPrimitive, ToPrimitive},
     num_traits::{FromPrimitive, ToPrimitive},
+    solana_address::Address,
     solana_instruction::{AccountMeta, Instruction},
-    solana_pubkey::Pubkey,
 };
 
 #[derive(Clone, Copy, Debug, FromPrimitive, ToPrimitive, PartialEq, Eq)]
@@ -465,14 +465,14 @@ pub enum ProofInstruction {
 /// Pubkeys associated with a context state account to be used as parameters to functions.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct ContextStateInfo<'a> {
-    pub context_state_account: &'a Pubkey,
-    pub context_state_authority: &'a Pubkey,
+    pub context_state_account: &'a Address,
+    pub context_state_authority: &'a Address,
 }
 
 /// Create a `CloseContextState` instruction.
 pub fn close_context_state(
     context_state_info: ContextStateInfo,
-    destination_account: &Pubkey,
+    destination_account: &Address,
 ) -> Instruction {
     let accounts = vec![
         AccountMeta::new(*context_state_info.context_state_account, false),
@@ -521,7 +521,7 @@ impl ProofInstruction {
     pub fn encode_verify_proof_from_account(
         &self,
         context_state_info: Option<ContextStateInfo>,
-        proof_account: &Pubkey,
+        proof_account: &Address,
         offset: u32,
     ) -> Instruction {
         let accounts = if let Some(context_state_info) = context_state_info {

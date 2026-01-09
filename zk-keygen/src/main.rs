@@ -338,7 +338,7 @@ impl FromStr for KeyType {
 mod tests {
     use {
         super::*,
-        solana_pubkey::Pubkey,
+        solana_address::Address,
         tempfile::{tempdir, TempDir},
     };
 
@@ -364,8 +364,8 @@ mod tests {
     #[test]
     fn test_new_elgamal() {
         let outfile_dir = tempdir().unwrap();
-        // use `Pubkey::new_unique()` to generate names for temporary key files
-        let outfile_path = tmp_outfile_path(&outfile_dir, &Pubkey::new_unique().to_string());
+        // use `Address::new_unique()` to generate names for temporary key files
+        let outfile_path = tmp_outfile_path(&outfile_dir, &Address::new_unique().to_string());
 
         // general success case
         process_test_command(&[
@@ -407,8 +407,8 @@ mod tests {
     #[test]
     fn test_new_aes128() {
         let outfile_dir = tempdir().unwrap();
-        // use `Pubkey::new_unique()` to generate names for temporary key files
-        let outfile_path = tmp_outfile_path(&outfile_dir, &Pubkey::new_unique().to_string());
+        // use `Address::new_unique()` to generate names for temporary key files
+        let outfile_path = tmp_outfile_path(&outfile_dir, &Address::new_unique().to_string());
 
         // general success case
         process_test_command(&[
@@ -450,8 +450,8 @@ mod tests {
     #[test]
     fn test_pubkey() {
         let keypair_out_dir = tempdir().unwrap();
-        // use `Pubkey::new_unique()` to generate names for temporary key files
-        let keypair_path = tmp_outfile_path(&keypair_out_dir, &Pubkey::new_unique().to_string());
+        // use `Address::new_unique()` to generate names for temporary key files
+        let keypair_path = tmp_outfile_path(&keypair_out_dir, &Address::new_unique().to_string());
 
         let keypair = ElGamalKeypair::new_rand();
         keypair.write_to_file(&keypair_path).unwrap();
