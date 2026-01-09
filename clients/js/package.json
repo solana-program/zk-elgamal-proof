@@ -49,7 +49,7 @@
   },
   "devDependencies": {
     "@ava/typescript": "^6.0.0",
-    "@eslint/js": "^9.39.1",
+    "@eslint/js": "^9.39.2",
     "@solana-program/compute-budget": "^0.11.0",
     "@solana-program/record": "^0.1.0",
     "@solana/kit": "^5.0.0",
