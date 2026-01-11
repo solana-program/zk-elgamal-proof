@@ -97,7 +97,7 @@ try {
 }
 
 function getFixturePrograms() {
-    const binaryDir = path.join(__dirname, '..', 'clients', 'js-legacy', 'test', 'fixtures');
+    const binaryDir = path.join(__dirname, '..', 'clients', 'js', 'test', 'fixtures');
     return [{
         programId: 'recr1L3PCGKLbckBqMNcJhuuyU1zgo8nBhfLVsJNwr5',
         deployPath: path.join(binaryDir, 'spl_record.so'),
