@@ -41,7 +41,7 @@ num-traits = "0.2"
 rand = "0.8.5"
 serde = "1.0.228"
 serde_derive = "1.0.219"
-serde_json = "1.0.145"
+serde_json = "1.0.149"
 sha3 = "0.10.8"
 solana-address = { version = "2.0.0", default-features = false }
 solana-derivation-path = "3.0.0"
