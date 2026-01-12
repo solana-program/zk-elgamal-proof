@@ -196,8 +196,8 @@ mod test {
         super::*,
         crate::{
             encryption::{
-                elgamal::{DecryptHandle, ElGamalKeypair},
-                pedersen::{Pedersen, PedersenCommitment, PedersenOpening},
+                elgamal::ElGamalKeypair,
+                pedersen::{PedersenCommitment, PedersenOpening},
                 pod::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
             },
             sigma_proofs::pod::PodZeroCiphertextProof,

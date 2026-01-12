@@ -5,8 +5,6 @@
 //!
 //! [`ZK Token proof`]: https://docs.solanalabs.com/runtime/zk-token-proof
 
-#![allow(dead_code, unused_imports)]
-
 pub mod errors;
 pub mod pod;
 
