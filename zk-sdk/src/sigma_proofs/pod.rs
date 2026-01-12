@@ -8,6 +8,7 @@ use crate::sigma_proofs::{
     },
     ciphertext_ciphertext_equality::CiphertextCiphertextEqualityProof,
     ciphertext_commitment_equality::CiphertextCommitmentEqualityProof,
+    errors::*,
     grouped_ciphertext_validity::{
         GroupedCiphertext2HandlesValidityProof, GroupedCiphertext3HandlesValidityProof,
     },
@@ -18,7 +19,7 @@ use crate::sigma_proofs::{
 use {
     crate::{
         pod::{impl_from_bytes, impl_from_str},
-        sigma_proofs::{errors::*, *},
+        sigma_proofs::*,
     },
     base64::{prelude::BASE64_STANDARD, Engine},
     bytemuck::{Pod, Zeroable},

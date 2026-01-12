@@ -12,9 +12,9 @@
 use {
     crate::{
         encryption::{
-            elgamal::{DecryptHandle, ElGamalPubkey},
+            elgamal::ElGamalPubkey,
             grouped_elgamal::GroupedElGamalCiphertext,
-            pedersen::{PedersenCommitment, PedersenOpening, G, H},
+            pedersen::{PedersenOpening, G, H},
         },
         sigma_proofs::{canonical_scalar_from_optional_slice, ristretto_point_from_optional_slice},
         UNIT_LEN,
@@ -297,11 +297,9 @@ mod test {
         crate::{
             encryption::{
                 elgamal::ElGamalKeypair,
-                pedersen::Pedersen,
+                pedersen::{Pedersen, PedersenCommitment},
                 pod::{
-                    elgamal::{PodDecryptHandle, PodElGamalPubkey},
-                    grouped_elgamal::PodGroupedElGamalCiphertext2Handles,
-                    pedersen::PodPedersenCommitment,
+                    elgamal::PodElGamalPubkey, grouped_elgamal::PodGroupedElGamalCiphertext2Handles,
                 },
             },
             sigma_proofs::pod::PodGroupedCiphertext2HandlesValidityProof,

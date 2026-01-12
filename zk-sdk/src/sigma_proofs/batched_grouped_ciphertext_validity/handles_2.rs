@@ -20,9 +20,8 @@
 #[cfg(not(target_os = "solana"))]
 use {
     crate::encryption::{
-        elgamal::{DecryptHandle, ElGamalPubkey},
-        grouped_elgamal::GroupedElGamalCiphertext,
-        pedersen::{PedersenCommitment, PedersenOpening},
+        elgamal::ElGamalPubkey, grouped_elgamal::GroupedElGamalCiphertext,
+        pedersen::PedersenOpening,
     },
     zeroize::Zeroize,
 };
@@ -192,9 +191,7 @@ mod test {
                 elgamal::ElGamalKeypair,
                 pedersen::Pedersen,
                 pod::{
-                    elgamal::{PodDecryptHandle, PodElGamalPubkey},
-                    grouped_elgamal::PodGroupedElGamalCiphertext2Handles,
-                    pedersen::PodPedersenCommitment,
+                    elgamal::PodElGamalPubkey, grouped_elgamal::PodGroupedElGamalCiphertext2Handles,
                 },
             },
             sigma_proofs::pod::PodBatchedGroupedCiphertext2HandlesValidityProof,
