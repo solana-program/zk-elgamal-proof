@@ -53,7 +53,6 @@ jobs:
           clippy: true
           rustfmt: true
           solana: true
-          wasm: true
 
       - name: Format
         run: pnpm zx ./scripts/rust/format.mjs "${{ inputs.package_path }}"
@@ -63,9 +62,6 @@ jobs:
 
       - name: Build SBF
         run: pnpm zx ./scripts/rust/build-sbf.mjs "${{ inputs.package_path }}"
-
-      - name: Build WASM
-        run: pnpm zx ./scripts/rust/build-wasm.mjs "${{ inputs.package_path }}"
 
       - name: Test
         run: pnpm zx ./scripts/rust/test.mjs "${{ inputs.package_path }}"
