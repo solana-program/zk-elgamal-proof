@@ -95,8 +95,8 @@ importers:
         specifier: ^9.39.2
         version: 9.39.2
       '@solana/prettier-config-solana':
-        specifier: 0.0.5
-        version: 0.0.5(prettier@3.7.4)
+        specifier: 0.0.6
+        version: 0.0.6(prettier@3.7.4)
       '@solana/spl-record':
         specifier: ^0.1.0
         version: 0.1.0(@solana/web3.js@1.98.4(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10))(typescript@5.9.3)
@@ -1123,10 +1123,10 @@ packages:
     peerDependencies:
       typescript: '>=5.9.3'
 
-  '@solana/prettier-config-solana@0.0.5':
-    resolution: {integrity: sha512-igtLH1QaX5xzSLlqteexRIg9X1QKA03xKYQc2qY1TrMDDhxKXoRZOStQPWdita2FVJzxTGz/tdMGC1vS0biRcg==}
+  '@solana/prettier-config-solana@0.0.6':
+    resolution: {integrity: sha512-/s55hDoAyh5QyltQh/jjNK3AgACEq885+DnC6lYhrmYZiV6I0iHITWYnKd8d23KRKs/RBjlaQH54MiafeoI9hw==}
     peerDependencies:
-      prettier: ^3.2.0
+      prettier: ^3.7.4
 
   '@solana/programs@5.0.0':
     resolution: {integrity: sha512-BKOfBDrSUCJGZ+qKk2aFLu0nU9/84o6z/VDCJkLjaNNuTv8nOlSYq5flNzo1eyJmnpyW372qNvqqRN3AS23+FQ==}
@@ -5087,7 +5087,7 @@ snapshots:
     transitivePeerDependencies:
       - fastestsmallesttextencoderdecoder
 
-  '@solana/prettier-config-solana@0.0.5(prettier@3.7.4)':
+  '@solana/prettier-config-solana@0.0.6(prettier@3.7.4)':
     dependencies:
       prettier: 3.7.4
 
