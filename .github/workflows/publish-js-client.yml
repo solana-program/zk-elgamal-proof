@@ -102,9 +102,9 @@ jobs:
         run: |
           cd "${{ inputs.package_path }}"
           org="$(jq '.name|split("/")|.[0]' package.json)"
-          if [[ $org == "\"@solana-program\"" ]] then
+          if [[ $org == "\"@solana-program\"" ]]; then
             pnpm config set '//registry.npmjs.org/:_authToken' "${SOLANA_PROGRAM_NPM_TOKEN}"
-          elif [[ $org == "\"@solana\"" ]] then
+          elif [[ $org == "\"@solana\"" ]]; then
             pnpm config set '//registry.npmjs.org/:_authToken' "${SOLANA_NPM_TOKEN}"
           else
             echo "Unknown organization: $org"
