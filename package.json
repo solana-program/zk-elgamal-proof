@@ -25,7 +25,8 @@
     "clients:js-legacy:test": "zx ./scripts/js/test.mjs clients/js-legacy",
     "clients:js:format": "zx ./scripts/js/format.mjs clients/js",
     "clients:js:lint": "zx ./scripts/js/lint.mjs clients/js",
-    "clients:js:test": "zx ./scripts/js/test.mjs clients/js"
+    "clients:js:test": "zx ./scripts/js/test.mjs clients/js",
+    "js:publish": "zx ./scripts/js/publish.mjs"
   },
   "devDependencies": {
     "@iarna/toml": "^2.2.5",
