@@ -1,6 +1,6 @@
 {
   "name": "@solana-program/zk-elgamal-proof",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "JavaScript client for the ZK ElGamal Proof program",
   "sideEffects": false,
   "module": "./dist/src/index.mjs",
