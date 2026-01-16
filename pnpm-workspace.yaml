@@ -1,5 +1,4 @@
 packages:
   - "clients/js"
-  - "clients/js-legacy"
   - "zk-sdk-wasm-js"
   - "zk-sdk-wasm-js/examples/*"
