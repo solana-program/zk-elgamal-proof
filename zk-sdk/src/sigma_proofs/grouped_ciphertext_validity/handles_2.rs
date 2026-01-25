@@ -273,6 +273,10 @@ impl GroupedCiphertext2HandlesValidityProof {
     }
 
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, ValidityProofVerificationError> {
+        if bytes.len() != GROUPED_CIPHERTEXT_2_HANDLES_VALIDITY_PROOF_LEN {
+            return Err(SigmaProofVerificationError::Deserialization.into());
+        }
+
         let mut chunks = bytes.chunks(UNIT_LEN);
         let Y_0 = ristretto_point_from_optional_slice(chunks.next())?;
         let Y_1 = ristretto_point_from_optional_slice(chunks.next())?;
