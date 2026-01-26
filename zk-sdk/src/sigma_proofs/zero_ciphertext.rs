@@ -182,6 +182,10 @@ impl ZeroCiphertextProof {
     }
 
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, ZeroCiphertextProofVerificationError> {
+        if bytes.len() != ZERO_CIPHERTEXT_PROOF_LEN {
+            return Err(SigmaProofVerificationError::Deserialization.into());
+        }
+
         let mut chunks = bytes.chunks(UNIT_LEN);
         let Y_P = ristretto_point_from_optional_slice(chunks.next())?;
         let Y_D = ristretto_point_from_optional_slice(chunks.next())?;

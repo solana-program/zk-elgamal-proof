@@ -289,6 +289,10 @@ impl CiphertextCiphertextEqualityProof {
     }
 
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, EqualityProofVerificationError> {
+        if bytes.len() != CIPHERTEXT_CIPHERTEXT_EQUALITY_PROOF_LEN {
+            return Err(SigmaProofVerificationError::Deserialization.into());
+        }
+
         let mut chunks = bytes.chunks(UNIT_LEN);
 
         let Y_0 = ristretto_point_from_optional_slice(chunks.next())?;

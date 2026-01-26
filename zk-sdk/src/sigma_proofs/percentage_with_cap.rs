@@ -571,6 +571,10 @@ impl PercentageWithCapProof {
     }
 
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, PercentageWithCapProofVerificationError> {
+        if bytes.len() != PERCENTAGE_WITH_CAP_PROOF_LEN {
+            return Err(SigmaProofVerificationError::Deserialization.into());
+        }
+
         let mut chunks = bytes.chunks(UNIT_LEN);
         let Y_max_proof = ristretto_point_from_optional_slice(chunks.next())?;
         let z_max_proof = canonical_scalar_from_optional_slice(chunks.next())?;
