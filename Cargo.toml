@@ -50,7 +50,7 @@ solana-keypair = "3.1.0"
 solana-sdk-ids = "3.1.0"
 solana-seed-derivable = "3.0.0"
 solana-seed-phrase = "3.0.0"
-solana-signature = { version = "3.1.0", default-features = false }
+solana-signature = { version = "3.2.0", default-features = false }
 solana-signer = "3.0.0"
 solana-zk-sdk = { path = "zk-sdk", version = "5.0.0" }
 solana-zk-sdk-wasm-js = { path = "zk-sdk-wasm-js", version = "0.1.0" }
