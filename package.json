@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@iarna/toml": "^2.2.5",
-    "@playwright/test": "^1.57.0",
+    "@playwright/test": "^1.58.1",
     "typescript": "^5.9.3",
     "zx": "^8.8.5"
   },
