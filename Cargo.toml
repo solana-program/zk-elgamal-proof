@@ -83,3 +83,6 @@ opt-level = 1
 # we override the opt-level to 3 for the crate.
 [profile.dev.package.curve25519-dalek]
 opt-level = 3
+
+[patch.crates-io]
+merlin = { path = "deps/merlin" }
