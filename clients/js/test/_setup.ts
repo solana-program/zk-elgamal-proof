@@ -1,5 +1,5 @@
 import {
-  BaseTransactionMessage,
+  TransactionMessage,
   Commitment,
   Instruction,
   Rpc,
@@ -61,7 +61,7 @@ export const createDefaultTransaction = async (client: Client, feePayer: Transac
 
 export const signAndSendTransaction = async (
   client: Client,
-  transactionMessage: BaseTransactionMessage &
+  transactionMessage: TransactionMessage &
     TransactionMessageWithFeePayer &
     TransactionMessageWithBlockhashLifetime,
   commitment: Commitment = 'confirmed',
