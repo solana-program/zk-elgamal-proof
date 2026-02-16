@@ -814,6 +814,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "sha2-const-stable"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5f179d4e11094a893b82fff208f74d448a7512f99f5a0acbd5c679b705f83ed9"
+
+[[package]]
 name = "sha3"
 version = "0.10.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -850,19 +856,20 @@ version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a2ecac8e1b7f74c2baa9e774c42817e3e75b20787134b76cc4d45e8a604488f5"
 dependencies = [
- "solana-address 2.1.0",
+ "solana-address 2.2.0",
 ]
 
 [[package]]
 name = "solana-address"
-version = "2.1.0"
+version = "2.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "998227476aed49e1c63dec0e89341b768a2cf3bd22913c3ed8baa985cda882c9"
+checksum = "68c5d02824391b072dc5cd0aaa85fb0af9784a21d23286a767994d1e8a322131"
 dependencies = [
  "bytemuck",
  "bytemuck_derive",
  "five8 1.0.0",
  "five8_const",
+ "sha2-const-stable",
  "solana-atomic-u64",
  "solana-define-syscall 5.0.0",
  "solana-program-error",
@@ -951,7 +958,7 @@ dependencies = [
  "ed25519-dalek",
  "five8 1.0.0",
  "rand",
- "solana-address 2.1.0",
+ "solana-address 2.2.0",
  "solana-seed-phrase",
  "solana-signature",
  "solana-signer",
@@ -978,7 +985,7 @@ version = "4.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a6f7104d456b58e1418c21a8581e89810278d1190f70f27ece7fc0b2c9282a57"
 dependencies = [
- "solana-address 2.1.0",
+ "solana-address 2.2.0",
 ]
 
 [[package]]
@@ -993,7 +1000,7 @@ version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "def234c1956ff616d46c9dd953f251fa7096ddbaa6d52b165218de97882b7280"
 dependencies = [
- "solana-address 2.1.0",
+ "solana-address 2.2.0",
 ]
 
 [[package]]
@@ -1080,7 +1087,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "sha3",
- "solana-address 2.1.0",
+ "solana-address 2.2.0",
  "solana-derivation-path",
  "solana-instruction",
  "solana-keypair",
