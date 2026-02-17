@@ -91,18 +91,6 @@ impl ZkProofData<BatchedRangeProofContext> for BatchedRangeProofU256Data {
         let (commitments, bit_lengths) = self.context.try_into()?;
         let num_commitments = commitments.len();
 
-        // This check is unique to the 256-bit proof. For 64-bit and 128-bit proofs,
-        // the total sum constraint already guarantees that no single bit length can
-        // exceed 128. However, for a 256-bit proof, bit lengths can sum to 256
-        // while containing a value greater than 128 (e.g., [160, 96]), so this
-        // must be explicitly checked.
-        if bit_lengths
-            .iter()
-            .any(|length| *length > MAX_SINGLE_BIT_LENGTH)
-        {
-            return Err(ProofVerificationError::IllegalCommitmentLength);
-        }
-
         if num_commitments > MAX_COMMITMENTS {
             return Err(ProofVerificationError::IllegalCommitmentLength);
         }
