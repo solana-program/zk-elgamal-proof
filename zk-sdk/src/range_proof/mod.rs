@@ -633,4 +633,42 @@ mod tests {
             )
             .unwrap()
     }
+
+    #[test]
+    fn test_aggregated_rangeproof_non_power_of_two_lengths() {
+        // 10 + 22 = 32 (Power of two sum is required)
+        let bit_len_1 = 10;
+        let bit_len_2 = 22;
+
+        // Create amounts that fit within these arbitrary ranges
+        let amount_1 = (1 << bit_len_1) - 1; // Max value for 10 bits
+        let amount_2 = (1 << bit_len_2) - 1; // Max value for 22 bits
+
+        let (comm_1, open_1) = Pedersen::new(amount_1);
+        let (comm_2, open_2) = Pedersen::new(amount_2);
+
+        let mut transcript_create = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut transcript_verify = Transcript::new_zk_elgamal_transcript(b"Test");
+
+        let proof = RangeProof::new(
+            vec![amount_1, amount_2],
+            vec![bit_len_1, bit_len_2],
+            vec![&open_1, &open_2],
+            &mut transcript_create,
+        )
+        .unwrap();
+
+        assert!(proof
+            .verify(
+                vec![&comm_1, &comm_2],
+                vec![bit_len_1, bit_len_2],
+                &mut transcript_verify,
+            )
+            .is_ok());
+
+        assert_eq!(
+            transcript_create.challenge_scalar(b"test"),
+            transcript_verify.challenge_scalar(b"test"),
+        );
+    }
 }
