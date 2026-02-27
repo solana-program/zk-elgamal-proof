@@ -1076,7 +1076,7 @@ dependencies = [
  "bytemuck_derive",
  "num-derive",
  "num-traits",
- "solana-address 2.1.0",
+ "solana-address 2.2.0",
  "solana-instruction",
  "solana-sdk-ids",
  "solana-zk-sdk",
