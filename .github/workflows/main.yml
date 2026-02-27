@@ -7,6 +7,27 @@ on:
     branches: [main]
 
 jobs:
+  format_and_lint_program:
+    name: Format & Lint ZK ElGamal Proof Program
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup
+        with:
+          clippy: true
+          rustfmt: true
+          cargo-cache-key: cargo-zk-sdk-lint
+          cargo-cache-fallback-key: cargo-zk-sdk
+
+      - name: Format ZK ElGamal Proof Program
+        run: pnpm program:format
+
+      - name: Lint ZK ElGamal Proof Program
+        run: pnpm program:lint
+
   format_and_lint_zk_sdk:
     name: Format & Lint ZK SDK
     runs-on: ubuntu-latest
@@ -81,6 +102,22 @@ jobs:
       - name: Test Client JS
         run: pnpm clients:js:test
 
+  test_program:
+    name: Test ZK ElGamal Proof Program
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup
+        with:
+          cargo-cache-key: cargo-zk-sdk-test
+          cargo-cache-fallback-key: cargo-zk-sdk
+
+      - name: Test ZK ElGamal Proof Program
+        run: pnpm program:test
+
   test_zk_sdk:
     name: Test ZK SDK
     runs-on: ubuntu-latest
@@ -152,6 +189,9 @@ jobs:
         with:
           cargo-cache-key: cargo-zk-sdk
           solana: true
+
+      - name: Build ZK ElGamal Proof Program
+        run: pnpm program:build-sbf
 
       - name: Build ZK SDK
         run: pnpm zk-sdk:build-sbf
