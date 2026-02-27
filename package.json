@@ -1,6 +1,10 @@
 {
   "private": true,
   "scripts": {
+    "program:build-sbf": "zx ./scripts/rust/build-sbf.mjs program",
+    "program:test": "zx ./scripts/rust/test.mjs program",
+    "program:format": "zx ./scripts/rust/format.mjs program",
+    "program:lint": "zx ./scripts/rust/lint.mjs program",
     "zk-sdk:build-sbf": "zx ./scripts/rust/build-sbf.mjs zk-sdk",
     "zk-sdk:test": "zx ./scripts/rust/test.mjs zk-sdk",
     "zk-sdk:format": "zx ./scripts/rust/format.mjs zk-sdk",
