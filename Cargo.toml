@@ -16,14 +16,8 @@ warnings = "deny"
 level = "warn"
 check-cfg = ['cfg(target_os, values("solana"))']
 
-[workspace.metadata.cli]
-solana = "3.1.1"
-
-# Specify Rust toolchains for rustfmt, clippy, and build.
-# Any unprovided toolchains default to stable.
-[workspace.metadata.toolchains]
-format = "nightly-2025-03-29"
-lint = "nightly-2025-03-29"
+[workspace.metadata.spellcheck]
+config = "scripts/spellcheck.toml"
 
 [workspace.dependencies]
 aes-gcm-siv = "0.11.1"
