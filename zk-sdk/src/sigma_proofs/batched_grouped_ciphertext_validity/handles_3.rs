@@ -6,7 +6,7 @@
 //! `(commitment, first_handle, second_handle, third_handle)`. An instance of a batched
 //! grouped ciphertext with 3 handles validity proof consist of a pair of `(commitment_0,
 //! first_handle_0, second_handle_0, third_handle_0)` and `(commitment_1, first_handle_1,
-//! second_handle_1, third_handle_1)`. The proof certifies the anagolous decryptable
+//! second_handle_1, third_handle_1)`. The proof certifies the analogous decryptable
 //! properties for each one of these pairs of commitment and decryption handles.
 //!
 //! This protocol reduces two `GroupedCiphertext3HandlesValidityProof` instances into a single

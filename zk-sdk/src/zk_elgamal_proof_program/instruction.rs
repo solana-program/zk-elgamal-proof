@@ -14,7 +14,7 @@
 //! instruction data.
 //!
 //! **Case A: Proof in a separate account**
-//! If the instruction data is exactly 5 bytes (1-byte instruction discriminator + 4-byte unsigned
+//! If the instruction data is exactly 5 bytes (1-byte instruction discriminator plus 4-byte unsigned
 //! integer for offset), the program assumes that the first account provided with the instruction
 //! contains the zero-knowledge proof. It then verifies the account data at the offset specified in
 //! the instruction.
