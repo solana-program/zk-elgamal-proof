@@ -65,64 +65,60 @@ pub struct PercentageWithCapProofContext {
     pub max_value: PodU64,
 }
 
-#[cfg(not(target_os = "solana"))]
-impl PercentageWithCapProofData {
-    #[allow(clippy::too_many_arguments)]
-    pub fn new(
-        percentage_commitment: &PedersenCommitment,
-        percentage_opening: &PedersenOpening,
-        percentage_amount: u64,
-        delta_commitment: &PedersenCommitment,
-        delta_opening: &PedersenOpening,
-        delta_amount: u64,
-        claimed_commitment: &PedersenCommitment,
-        claimed_opening: &PedersenOpening,
-        max_value: u64,
-    ) -> Result<Self, ProofGenerationError> {
-        // Verify percentage commitment
-        if *percentage_commitment != Pedersen::with(percentage_amount, percentage_opening) {
-            return Err(ProofGenerationError::InconsistentInput);
-        }
-        // Verify delta commitment
-        if *delta_commitment != Pedersen::with(delta_amount, delta_opening) {
-            return Err(ProofGenerationError::InconsistentInput);
-        }
-        // Verify claimed commitment
-        if *claimed_commitment != Pedersen::with(delta_amount, claimed_opening) {
-            return Err(ProofGenerationError::InconsistentInput);
-        }
-
-        let pod_percentage_commitment = PodPedersenCommitment(percentage_commitment.to_bytes());
-        let pod_delta_commitment = PodPedersenCommitment(delta_commitment.to_bytes());
-        let pod_claimed_commitment = PodPedersenCommitment(claimed_commitment.to_bytes());
-        let pod_max_value = max_value.into();
-
-        let context = PercentageWithCapProofContext {
-            percentage_commitment: pod_percentage_commitment,
-            delta_commitment: pod_delta_commitment,
-            claimed_commitment: pod_claimed_commitment,
-            max_value: pod_max_value,
-        };
-
-        let mut transcript =
-            Transcript::new_zk_elgamal_transcript(b"percentage-with-cap-instruction");
-
-        let proof = PercentageWithCapProof::new(
-            percentage_commitment,
-            percentage_opening,
-            percentage_amount,
-            delta_commitment,
-            delta_opening,
-            delta_amount,
-            claimed_commitment,
-            claimed_opening,
-            max_value,
-            &mut transcript,
-        )
-        .into();
-
-        Ok(Self { context, proof })
+#[allow(clippy::too_many_arguments)]
+pub fn build_percentage_with_cap_proof_data(
+    percentage_commitment: &PedersenCommitment,
+    percentage_opening: &PedersenOpening,
+    percentage_amount: u64,
+    delta_commitment: &PedersenCommitment,
+    delta_opening: &PedersenOpening,
+    delta_amount: u64,
+    claimed_commitment: &PedersenCommitment,
+    claimed_opening: &PedersenOpening,
+    max_value: u64,
+) -> Result<PercentageWithCapProofData, ProofGenerationError> {
+    // Verify percentage commitment
+    if *percentage_commitment != Pedersen::with(percentage_amount, percentage_opening) {
+        return Err(ProofGenerationError::InconsistentInput);
     }
+    // Verify delta commitment
+    if *delta_commitment != Pedersen::with(delta_amount, delta_opening) {
+        return Err(ProofGenerationError::InconsistentInput);
+    }
+    // Verify claimed commitment
+    if *claimed_commitment != Pedersen::with(delta_amount, claimed_opening) {
+        return Err(ProofGenerationError::InconsistentInput);
+    }
+
+    let pod_percentage_commitment = PodPedersenCommitment(percentage_commitment.to_bytes());
+    let pod_delta_commitment = PodPedersenCommitment(delta_commitment.to_bytes());
+    let pod_claimed_commitment = PodPedersenCommitment(claimed_commitment.to_bytes());
+    let pod_max_value = max_value.into();
+
+    let context = PercentageWithCapProofContext {
+        percentage_commitment: pod_percentage_commitment,
+        delta_commitment: pod_delta_commitment,
+        claimed_commitment: pod_claimed_commitment,
+        max_value: pod_max_value,
+    };
+
+    let mut transcript = Transcript::new_zk_elgamal_transcript(b"percentage-with-cap-instruction");
+
+    let proof = PercentageWithCapProof::new(
+        percentage_commitment,
+        percentage_opening,
+        percentage_amount,
+        delta_commitment,
+        delta_opening,
+        delta_amount,
+        claimed_commitment,
+        claimed_opening,
+        max_value,
+        &mut transcript,
+    )
+    .into();
+
+    Ok(PercentageWithCapProofData { context, proof })
 }
 
 impl ZkProofData<PercentageWithCapProofContext> for PercentageWithCapProofData {
@@ -182,7 +178,7 @@ mod test {
 
         let (claimed_commitment, claimed_opening) = Pedersen::new(delta_amount);
 
-        let proof_data = PercentageWithCapProofData::new(
+        let proof_data = build_percentage_with_cap_proof_data(
             &percentage_commitment,
             &percentage_opening,
             percentage_amount,
@@ -205,7 +201,7 @@ mod test {
         let (delta_commitment, delta_opening) = Pedersen::new(delta_amount);
         let (claimed_commitment, claimed_opening) = Pedersen::new(delta_amount);
 
-        let proof_data = PercentageWithCapProofData::new(
+        let proof_data = build_percentage_with_cap_proof_data(
             &percentage_commitment,
             &percentage_opening,
             percentage_amount,
@@ -222,7 +218,7 @@ mod test {
 
         let (fake_commitment, _) = Pedersen::new(999_u64);
 
-        let result = PercentageWithCapProofData::new(
+        let result = build_percentage_with_cap_proof_data(
             &percentage_commitment,
             &percentage_opening,
             percentage_amount,

@@ -61,47 +61,45 @@ pub struct CiphertextCommitmentEqualityProofContext {
 }
 
 #[cfg(not(target_os = "solana"))]
-impl CiphertextCommitmentEqualityProofData {
-    pub fn new(
-        keypair: &ElGamalKeypair,
-        ciphertext: &ElGamalCiphertext,
-        commitment: &PedersenCommitment,
-        opening: &PedersenOpening,
-        amount: u64,
-    ) -> Result<Self, ProofGenerationError> {
-        // Ciphertext should decrypt to amount
-        let decrypted_point = ciphertext.decrypt(keypair.secret()).target;
-        let expected_point = Scalar::from(amount) * G;
-        if decrypted_point != expected_point {
-            return Err(ProofGenerationError::InconsistentInput);
-        }
-
-        // Commitment should match amount and opening
-        let expected_commitment = Pedersen::with(amount, opening);
-        if *commitment != expected_commitment {
-            return Err(ProofGenerationError::InconsistentInput);
-        }
-
-        let context = CiphertextCommitmentEqualityProofContext {
-            pubkey: PodElGamalPubkey(keypair.pubkey().into()),
-            ciphertext: PodElGamalCiphertext(ciphertext.to_bytes()),
-            commitment: PodPedersenCommitment(commitment.to_bytes()),
-        };
-        let mut transcript =
-            Transcript::new_zk_elgamal_transcript(b"ciphertext-commitment-equality-instruction");
-        let proof = CiphertextCommitmentEqualityProof::new(
-            keypair,
-            ciphertext,
-            commitment,
-            opening,
-            amount,
-            &mut transcript,
-        );
-        Ok(CiphertextCommitmentEqualityProofData {
-            context,
-            proof: proof.into(),
-        })
+pub fn build_ciphertext_commitment_equality_proof_data(
+    keypair: &ElGamalKeypair,
+    ciphertext: &ElGamalCiphertext,
+    commitment: &PedersenCommitment,
+    opening: &PedersenOpening,
+    amount: u64,
+) -> Result<CiphertextCommitmentEqualityProofData, ProofGenerationError> {
+    // Ciphertext should decrypt to amount
+    let decrypted_point = ciphertext.decrypt(keypair.secret()).target;
+    let expected_point = Scalar::from(amount) * G;
+    if decrypted_point != expected_point {
+        return Err(ProofGenerationError::InconsistentInput);
     }
+
+    // Commitment should match amount and opening
+    let expected_commitment = Pedersen::with(amount, opening);
+    if *commitment != expected_commitment {
+        return Err(ProofGenerationError::InconsistentInput);
+    }
+
+    let context = CiphertextCommitmentEqualityProofContext {
+        pubkey: PodElGamalPubkey(keypair.pubkey().into()),
+        ciphertext: PodElGamalCiphertext(ciphertext.to_bytes()),
+        commitment: PodPedersenCommitment(commitment.to_bytes()),
+    };
+    let mut transcript =
+        Transcript::new_zk_elgamal_transcript(b"ciphertext-commitment-equality-instruction");
+    let proof = CiphertextCommitmentEqualityProof::new(
+        keypair,
+        ciphertext,
+        commitment,
+        opening,
+        amount,
+        &mut transcript,
+    );
+    Ok(CiphertextCommitmentEqualityProofData {
+        context,
+        proof: proof.into(),
+    })
 }
 
 impl ZkProofData<CiphertextCommitmentEqualityProofContext>
@@ -145,7 +143,7 @@ mod test {
         let ciphertext = keypair.pubkey().encrypt(amount);
         let (commitment, opening) = Pedersen::new(amount);
 
-        let proof_data = CiphertextCommitmentEqualityProofData::new(
+        let proof_data = build_ciphertext_commitment_equality_proof_data(
             &keypair,
             &ciphertext,
             &commitment,
@@ -159,7 +157,7 @@ mod test {
         let amount_2 = 77_u64;
         let (commitment_2, opening_2) = Pedersen::new(amount_2);
 
-        let result = CiphertextCommitmentEqualityProofData::new(
+        let result = build_ciphertext_commitment_equality_proof_data(
             &keypair,
             &ciphertext,
             &commitment_2,

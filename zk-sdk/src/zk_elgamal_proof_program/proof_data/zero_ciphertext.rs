@@ -54,30 +54,28 @@ pub struct ZeroCiphertextProofContext {
 }
 
 #[cfg(not(target_os = "solana"))]
-impl ZeroCiphertextProofData {
-    pub fn new(
-        keypair: &ElGamalKeypair,
-        ciphertext: &ElGamalCiphertext,
-    ) -> Result<Self, ProofGenerationError> {
-        // Ciphertext should decrypt to Identity
-        let decrypted_point = ciphertext.decrypt(keypair.secret()).target;
-        if !decrypted_point.is_identity() {
-            return Err(ProofGenerationError::InconsistentInput);
-        }
-
-        let pod_pubkey = PodElGamalPubkey(keypair.pubkey().into());
-        let pod_ciphertext = PodElGamalCiphertext(ciphertext.to_bytes());
-
-        let context = ZeroCiphertextProofContext {
-            pubkey: pod_pubkey,
-            ciphertext: pod_ciphertext,
-        };
-
-        let mut transcript = Transcript::new_zk_elgamal_transcript(b"zero-ciphertext-instruction");
-        let proof = ZeroCiphertextProof::new(keypair, ciphertext, &mut transcript).into();
-
-        Ok(ZeroCiphertextProofData { context, proof })
+pub fn build_zero_ciphertext_proof_data(
+    keypair: &ElGamalKeypair,
+    ciphertext: &ElGamalCiphertext,
+) -> Result<ZeroCiphertextProofData, ProofGenerationError> {
+    // Ciphertext should decrypt to Identity
+    let decrypted_point = ciphertext.decrypt(keypair.secret()).target;
+    if !decrypted_point.is_identity() {
+        return Err(ProofGenerationError::InconsistentInput);
     }
+
+    let pod_pubkey = PodElGamalPubkey(keypair.pubkey().into());
+    let pod_ciphertext = PodElGamalCiphertext(ciphertext.to_bytes());
+
+    let context = ZeroCiphertextProofContext {
+        pubkey: pod_pubkey,
+        ciphertext: pod_ciphertext,
+    };
+
+    let mut transcript = Transcript::new_zk_elgamal_transcript(b"zero-ciphertext-instruction");
+    let proof = ZeroCiphertextProof::new(keypair, ciphertext, &mut transcript).into();
+
+    Ok(ZeroCiphertextProofData { context, proof })
 }
 
 impl ZkProofData<ZeroCiphertextProofContext> for ZeroCiphertextProofData {
@@ -112,12 +110,12 @@ mod test {
         // general case: encryption of 0
         let ciphertext = keypair.pubkey().encrypt(0_u64);
         let zero_ciphertext_proof_data =
-            ZeroCiphertextProofData::new(&keypair, &ciphertext).unwrap();
+            build_zero_ciphertext_proof_data(&keypair, &ciphertext).unwrap();
         assert!(zero_ciphertext_proof_data.verify_proof().is_ok());
 
         // general case: encryption of > 0
         let ciphertext = keypair.pubkey().encrypt(1_u64);
-        let result = ZeroCiphertextProofData::new(&keypair, &ciphertext);
+        let result = build_zero_ciphertext_proof_data(&keypair, &ciphertext);
         assert_eq!(result, Err(ProofGenerationError::InconsistentInput));
     }
 }

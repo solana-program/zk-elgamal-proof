@@ -52,17 +52,17 @@ pub struct PubkeyValidityProofContext {
 }
 
 #[cfg(not(target_os = "solana"))]
-impl PubkeyValidityProofData {
-    pub fn new(keypair: &ElGamalKeypair) -> Result<Self, ProofGenerationError> {
-        let pod_pubkey = PodElGamalPubkey(keypair.pubkey().into());
+pub fn build_pubkey_validity_proof_data(
+    keypair: &ElGamalKeypair,
+) -> Result<PubkeyValidityProofData, ProofGenerationError> {
+    let pod_pubkey = PodElGamalPubkey(keypair.pubkey().into());
 
-        let context = PubkeyValidityProofContext { pubkey: pod_pubkey };
+    let context = PubkeyValidityProofContext { pubkey: pod_pubkey };
 
-        let mut transcript = Transcript::new_zk_elgamal_transcript(b"pubkey-validity-instruction");
-        let proof = PubkeyValidityProof::new(keypair, &mut transcript).into();
+    let mut transcript = Transcript::new_zk_elgamal_transcript(b"pubkey-validity-instruction");
+    let proof = PubkeyValidityProof::new(keypair, &mut transcript).into();
 
-        Ok(PubkeyValidityProofData { context, proof })
-    }
+    Ok(PubkeyValidityProofData { context, proof })
 }
 
 impl ZkProofData<PubkeyValidityProofContext> for PubkeyValidityProofData {
@@ -91,7 +91,7 @@ mod test {
     fn test_pubkey_validity_instruction_correctness() {
         let keypair = ElGamalKeypair::new_rand();
 
-        let pubkey_validity_data = PubkeyValidityProofData::new(&keypair).unwrap();
+        let pubkey_validity_data = build_pubkey_validity_proof_data(&keypair).unwrap();
         assert!(pubkey_validity_data.verify_proof().is_ok());
     }
 }

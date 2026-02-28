@@ -44,42 +44,39 @@ pub struct BatchedRangeProofU256Data {
 }
 
 #[cfg(not(target_os = "solana"))]
-impl BatchedRangeProofU256Data {
-    pub fn new(
-        commitments: Vec<&PedersenCommitment>,
-        amounts: Vec<u64>,
-        bit_lengths: Vec<usize>,
-        openings: Vec<&PedersenOpening>,
-    ) -> Result<Self, ProofGenerationError> {
-        // Range proof on 256 bit length could potentially result in an unexpected behavior and
-        // therefore, restrict the bit length to be at most 128. This check is not needed for the
-        // `BatchedRangeProofU64` or `BatchedRangeProofU128`.
-        if bit_lengths
-            .iter()
-            .any(|length| *length > MAX_SINGLE_BIT_LENGTH)
-        {
-            return Err(ProofGenerationError::IllegalCommitmentLength);
-        }
-
-        // the sum of the bit lengths must be 256
-        let batched_bit_length = bit_lengths
-            .iter()
-            .try_fold(0_usize, |acc, &x| acc.checked_add(x))
-            .ok_or(ProofGenerationError::IllegalAmountBitLength)?;
-        if batched_bit_length != BATCHED_RANGE_PROOF_U256_BIT_LENGTH {
-            return Err(ProofGenerationError::IllegalAmountBitLength);
-        }
-
-        let context =
-            BatchedRangeProofContext::new(&commitments, &amounts, &bit_lengths, &openings)?;
-
-        let mut transcript = context.new_transcript();
-        let proof = RangeProof::new(amounts, bit_lengths, openings, &mut transcript)?
-            .try_into()
-            .map_err(|_| ProofGenerationError::ProofLength)?;
-
-        Ok(Self { context, proof })
+pub fn build_batched_range_proof_u256_data(
+    commitments: Vec<&PedersenCommitment>,
+    amounts: Vec<u64>,
+    bit_lengths: Vec<usize>,
+    openings: Vec<&PedersenOpening>,
+) -> Result<BatchedRangeProofU256Data, ProofGenerationError> {
+    // Range proof on 256 bit length could potentially result in an unexpected behavior and
+    // therefore, restrict the bit length to be at most 128. This check is not needed for the
+    // `BatchedRangeProofU64` or `BatchedRangeProofU128`.
+    if bit_lengths
+        .iter()
+        .any(|length| *length > MAX_SINGLE_BIT_LENGTH)
+    {
+        return Err(ProofGenerationError::IllegalCommitmentLength);
     }
+
+    // the sum of the bit lengths must be 256
+    let batched_bit_length = bit_lengths
+        .iter()
+        .try_fold(0_usize, |acc, &x| acc.checked_add(x))
+        .ok_or(ProofGenerationError::IllegalAmountBitLength)?;
+    if batched_bit_length != BATCHED_RANGE_PROOF_U256_BIT_LENGTH {
+        return Err(ProofGenerationError::IllegalAmountBitLength);
+    }
+
+    let context = BatchedRangeProofContext::new(&commitments, &amounts, &bit_lengths, &openings)?;
+
+    let mut transcript = context.new_transcript();
+    let proof = RangeProof::new(amounts, bit_lengths, openings, &mut transcript)?
+        .try_into()
+        .map_err(|_| ProofGenerationError::ProofLength)?;
+
+    Ok(BatchedRangeProofU256Data { context, proof })
 }
 
 impl ZkProofData<BatchedRangeProofContext> for BatchedRangeProofU256Data {
@@ -148,7 +145,7 @@ mod test {
         let (commitment_7, opening_7) = Pedersen::new(amount_7);
         let (commitment_8, opening_8) = Pedersen::new(amount_8);
 
-        let proof_data = BatchedRangeProofU256Data::new(
+        let proof_data = build_batched_range_proof_u256_data(
             vec![
                 &commitment_1,
                 &commitment_2,
@@ -190,7 +187,7 @@ mod test {
         let (commitment_7, opening_7) = Pedersen::new(amount_7);
         let (commitment_8, opening_8) = Pedersen::new(amount_8);
 
-        let proof_data = BatchedRangeProofU256Data::new(
+        let proof_data = build_batched_range_proof_u256_data(
             vec![
                 &commitment_1,
                 &commitment_2,

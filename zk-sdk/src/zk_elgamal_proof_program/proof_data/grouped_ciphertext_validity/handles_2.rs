@@ -57,46 +57,43 @@ pub struct GroupedCiphertext2HandlesValidityProofContext {
 }
 
 #[cfg(not(target_os = "solana"))]
-impl GroupedCiphertext2HandlesValidityProofData {
-    pub fn new(
-        first_pubkey: &ElGamalPubkey,
-        second_pubkey: &ElGamalPubkey,
-        grouped_ciphertext: &GroupedElGamalCiphertext<2>,
-        amount: u64,
-        opening: &PedersenOpening,
-    ) -> Result<Self, ProofGenerationError> {
-        let expected_ciphertext =
-            GroupedElGamal::encrypt_with([first_pubkey, second_pubkey], amount, opening);
-        if *grouped_ciphertext != expected_ciphertext {
-            return Err(ProofGenerationError::InconsistentInput);
-        }
-
-        let pod_first_pubkey = PodElGamalPubkey(first_pubkey.into());
-        let pod_second_pubkey = PodElGamalPubkey(second_pubkey.into());
-        let pod_grouped_ciphertext = (*grouped_ciphertext).into();
-
-        let context = GroupedCiphertext2HandlesValidityProofContext {
-            first_pubkey: pod_first_pubkey,
-            second_pubkey: pod_second_pubkey,
-            grouped_ciphertext: pod_grouped_ciphertext,
-        };
-
-        let mut transcript = Transcript::new_zk_elgamal_transcript(
-            b"grouped-ciphertext-validity-2-handles-instruction",
-        );
-
-        let proof = GroupedCiphertext2HandlesValidityProof::new(
-            first_pubkey,
-            second_pubkey,
-            grouped_ciphertext,
-            amount,
-            opening,
-            &mut transcript,
-        )
-        .into();
-
-        Ok(Self { context, proof })
+pub fn build_grouped_ciphertext_2_handles_validity_proof_data(
+    first_pubkey: &ElGamalPubkey,
+    second_pubkey: &ElGamalPubkey,
+    grouped_ciphertext: &GroupedElGamalCiphertext<2>,
+    amount: u64,
+    opening: &PedersenOpening,
+) -> Result<GroupedCiphertext2HandlesValidityProofData, ProofGenerationError> {
+    let expected_ciphertext =
+        GroupedElGamal::encrypt_with([first_pubkey, second_pubkey], amount, opening);
+    if *grouped_ciphertext != expected_ciphertext {
+        return Err(ProofGenerationError::InconsistentInput);
     }
+
+    let pod_first_pubkey = PodElGamalPubkey(first_pubkey.into());
+    let pod_second_pubkey = PodElGamalPubkey(second_pubkey.into());
+    let pod_grouped_ciphertext = (*grouped_ciphertext).into();
+
+    let context = GroupedCiphertext2HandlesValidityProofContext {
+        first_pubkey: pod_first_pubkey,
+        second_pubkey: pod_second_pubkey,
+        grouped_ciphertext: pod_grouped_ciphertext,
+    };
+
+    let mut transcript =
+        Transcript::new_zk_elgamal_transcript(b"grouped-ciphertext-validity-2-handles-instruction");
+
+    let proof = GroupedCiphertext2HandlesValidityProof::new(
+        first_pubkey,
+        second_pubkey,
+        grouped_ciphertext,
+        amount,
+        opening,
+        &mut transcript,
+    )
+    .into();
+
+    Ok(GroupedCiphertext2HandlesValidityProofData { context, proof })
 }
 
 impl ZkProofData<GroupedCiphertext2HandlesValidityProofContext>
@@ -157,7 +154,7 @@ mod test {
         let grouped_ciphertext =
             GroupedElGamal::encrypt_with([first_pubkey, second_pubkey], amount, &opening);
 
-        let proof_data = GroupedCiphertext2HandlesValidityProofData::new(
+        let proof_data = build_grouped_ciphertext_2_handles_validity_proof_data(
             first_pubkey,
             second_pubkey,
             &grouped_ciphertext,
@@ -169,7 +166,7 @@ mod test {
         assert!(proof_data.verify_proof().is_ok());
 
         let wrong_amount = 99_u64;
-        let result = GroupedCiphertext2HandlesValidityProofData::new(
+        let result = build_grouped_ciphertext_2_handles_validity_proof_data(
             first_pubkey,
             second_pubkey,
             &grouped_ciphertext,
