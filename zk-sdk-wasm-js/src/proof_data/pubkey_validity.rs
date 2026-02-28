@@ -1,7 +1,7 @@
 use {
     crate::encryption::elgamal::ElGamalKeypair,
     js_sys::Uint8Array,
-    solana_zk_sdk::zk_elgamal_proof_program::proof_data::{pubkey_validity, ZkProofData},
+    solana_zk_sdk::zk_elgamal_proof_program::proof_data::{pubkey_validity, VerifyZkProof},
     wasm_bindgen::prelude::*,
 };
 
@@ -22,7 +22,7 @@ impl PubkeyValidityProofData {
     /// Creates a new public-key validity proof.
     #[wasm_bindgen(constructor)]
     pub fn new(keypair: &ElGamalKeypair) -> Result<PubkeyValidityProofData, JsValue> {
-        pubkey_validity::PubkeyValidityProofData::new(&keypair.inner)
+        pubkey_validity::build_pubkey_validity_proof_data(&keypair.inner)
             .map(|inner| Self { inner })
             .map_err(|e| JsValue::from_str(&e.to_string()))
     }

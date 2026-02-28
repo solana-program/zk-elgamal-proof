@@ -25,7 +25,10 @@ use {
         },
         sigma_proofs::batched_grouped_ciphertext_validity::BatchedGroupedCiphertext3HandlesValidityProof,
         transcript::TranscriptProtocol,
-        zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
+        zk_elgamal_proof_program::{
+            errors::{ProofGenerationError, ProofVerificationError},
+            proof_data::VerifyZkProof,
+        },
     },
     merlin::Transcript,
 };
@@ -58,71 +61,69 @@ pub struct BatchedGroupedCiphertext3HandlesValidityProofContext {
 }
 
 #[cfg(not(target_os = "solana"))]
-impl BatchedGroupedCiphertext3HandlesValidityProofData {
-    #[allow(clippy::too_many_arguments)]
-    pub fn new(
-        first_pubkey: &ElGamalPubkey,
-        second_pubkey: &ElGamalPubkey,
-        third_pubkey: &ElGamalPubkey,
-        grouped_ciphertext_lo: &GroupedElGamalCiphertext<3>,
-        grouped_ciphertext_hi: &GroupedElGamalCiphertext<3>,
-        amount_lo: u64,
-        amount_hi: u64,
-        opening_lo: &PedersenOpening,
-        opening_hi: &PedersenOpening,
-    ) -> Result<Self, ProofGenerationError> {
-        let expected_lo = GroupedElGamal::encrypt_with(
-            [first_pubkey, second_pubkey, third_pubkey],
-            amount_lo,
-            opening_lo,
-        );
-        if *grouped_ciphertext_lo != expected_lo {
-            return Err(ProofGenerationError::InconsistentInput);
-        }
-
-        let expected_hi = GroupedElGamal::encrypt_with(
-            [first_pubkey, second_pubkey, third_pubkey],
-            amount_hi,
-            opening_hi,
-        );
-        if *grouped_ciphertext_hi != expected_hi {
-            return Err(ProofGenerationError::InconsistentInput);
-        }
-
-        let pod_first_pubkey = PodElGamalPubkey(first_pubkey.into());
-        let pod_second_pubkey = PodElGamalPubkey(second_pubkey.into());
-        let pod_third_pubkey = PodElGamalPubkey(third_pubkey.into());
-        let pod_grouped_ciphertext_lo = (*grouped_ciphertext_lo).into();
-        let pod_grouped_ciphertext_hi = (*grouped_ciphertext_hi).into();
-
-        let context = BatchedGroupedCiphertext3HandlesValidityProofContext {
-            first_pubkey: pod_first_pubkey,
-            second_pubkey: pod_second_pubkey,
-            third_pubkey: pod_third_pubkey,
-            grouped_ciphertext_lo: pod_grouped_ciphertext_lo,
-            grouped_ciphertext_hi: pod_grouped_ciphertext_hi,
-        };
-
-        let mut transcript = Transcript::new_zk_elgamal_transcript(
-            b"batched-grouped-ciphertext-validity-3-handles-instruction",
-        );
-
-        let proof = BatchedGroupedCiphertext3HandlesValidityProof::new(
-            first_pubkey,
-            second_pubkey,
-            third_pubkey,
-            grouped_ciphertext_lo,
-            grouped_ciphertext_hi,
-            amount_lo,
-            amount_hi,
-            opening_lo,
-            opening_hi,
-            &mut transcript,
-        )
-        .into();
-
-        Ok(Self { context, proof })
+#[allow(clippy::too_many_arguments)]
+pub fn new_batched_grouped_ciphertext_3_handles_validity_proof_data(
+    first_pubkey: &ElGamalPubkey,
+    second_pubkey: &ElGamalPubkey,
+    third_pubkey: &ElGamalPubkey,
+    grouped_ciphertext_lo: &GroupedElGamalCiphertext<3>,
+    grouped_ciphertext_hi: &GroupedElGamalCiphertext<3>,
+    amount_lo: u64,
+    amount_hi: u64,
+    opening_lo: &PedersenOpening,
+    opening_hi: &PedersenOpening,
+) -> Result<BatchedGroupedCiphertext3HandlesValidityProofData, ProofGenerationError> {
+    let expected_lo = GroupedElGamal::encrypt_with(
+        [first_pubkey, second_pubkey, third_pubkey],
+        amount_lo,
+        opening_lo,
+    );
+    if *grouped_ciphertext_lo != expected_lo {
+        return Err(ProofGenerationError::InconsistentInput);
     }
+
+    let expected_hi = GroupedElGamal::encrypt_with(
+        [first_pubkey, second_pubkey, third_pubkey],
+        amount_hi,
+        opening_hi,
+    );
+    if *grouped_ciphertext_hi != expected_hi {
+        return Err(ProofGenerationError::InconsistentInput);
+    }
+
+    let pod_first_pubkey = PodElGamalPubkey(first_pubkey.into());
+    let pod_second_pubkey = PodElGamalPubkey(second_pubkey.into());
+    let pod_third_pubkey = PodElGamalPubkey(third_pubkey.into());
+    let pod_grouped_ciphertext_lo = (*grouped_ciphertext_lo).into();
+    let pod_grouped_ciphertext_hi = (*grouped_ciphertext_hi).into();
+
+    let context = BatchedGroupedCiphertext3HandlesValidityProofContext {
+        first_pubkey: pod_first_pubkey,
+        second_pubkey: pod_second_pubkey,
+        third_pubkey: pod_third_pubkey,
+        grouped_ciphertext_lo: pod_grouped_ciphertext_lo,
+        grouped_ciphertext_hi: pod_grouped_ciphertext_hi,
+    };
+
+    let mut transcript = Transcript::new_zk_elgamal_transcript(
+        b"batched-grouped-ciphertext-validity-3-handles-instruction",
+    );
+
+    let proof = BatchedGroupedCiphertext3HandlesValidityProof::new(
+        first_pubkey,
+        second_pubkey,
+        third_pubkey,
+        grouped_ciphertext_lo,
+        grouped_ciphertext_hi,
+        amount_lo,
+        amount_hi,
+        opening_lo,
+        opening_hi,
+        &mut transcript,
+    )
+    .into();
+
+    Ok(BatchedGroupedCiphertext3HandlesValidityProofData { context, proof })
 }
 
 impl ZkProofData<BatchedGroupedCiphertext3HandlesValidityProofContext>
@@ -133,8 +134,10 @@ impl ZkProofData<BatchedGroupedCiphertext3HandlesValidityProofContext>
     fn context_data(&self) -> &BatchedGroupedCiphertext3HandlesValidityProofContext {
         &self.context
     }
+}
 
-    #[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "solana"))]
+impl VerifyZkProof for BatchedGroupedCiphertext3HandlesValidityProofData {
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
         let mut transcript = Transcript::new_zk_elgamal_transcript(
             b"batched-grouped-ciphertext-validity-3-handles-instruction",
@@ -201,7 +204,7 @@ mod test {
             &opening_hi,
         );
 
-        let proof_data = BatchedGroupedCiphertext3HandlesValidityProofData::new(
+        let proof_data = new_batched_grouped_ciphertext_3_handles_validity_proof_data(
             first_pubkey,
             second_pubkey,
             third_pubkey,
@@ -217,7 +220,7 @@ mod test {
         assert!(proof_data.verify_proof().is_ok());
 
         let other_keypair = ElGamalKeypair::new_rand();
-        let result = BatchedGroupedCiphertext3HandlesValidityProofData::new(
+        let result = new_batched_grouped_ciphertext_3_handles_validity_proof_data(
             first_keypair.pubkey(),
             second_keypair.pubkey(),
             other_keypair.pubkey(), // Mismatch: Ciphertext was encrypted with `third_keypair`

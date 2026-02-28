@@ -5,7 +5,7 @@ use {
     },
     js_sys::Uint8Array,
     solana_zk_sdk::zk_elgamal_proof_program::proof_data::{
-        batched_grouped_ciphertext_validity, ZkProofData,
+        batched_grouped_ciphertext_validity, VerifyZkProof,
     },
     wasm_bindgen::prelude::*,
 };
@@ -39,7 +39,7 @@ impl BatchedGroupedCiphertext3HandlesValidityProofData {
         opening_lo: &PedersenOpening,
         opening_hi: &PedersenOpening,
     ) -> Result<BatchedGroupedCiphertext3HandlesValidityProofData, JsValue> {
-        batched_grouped_ciphertext_validity::BatchedGroupedCiphertext3HandlesValidityProofData::new(
+        batched_grouped_ciphertext_validity::new_batched_grouped_ciphertext_3_handles_validity_proof_data(
             &first_pubkey.inner,
             &second_pubkey.inner,
             &third_pubkey.inner,
