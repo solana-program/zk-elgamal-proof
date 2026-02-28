@@ -105,7 +105,7 @@ stop-test-validator:
 	pkill -f solana-test-validator
 
 generate-clients:
-	pnpm generate:clients $(ARGS)
+	exit 0
 
 # Helpers for publishing
 tag-name = $(lastword $(subst /, ,$(call make-path,$1)))

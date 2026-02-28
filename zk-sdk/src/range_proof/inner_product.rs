@@ -428,14 +428,14 @@ impl InnerProductProof {
     /// to decompress them, which will fail for invalid points.
     pub fn from_bytes(slice: &[u8]) -> Result<InnerProductProof, RangeProofVerificationError> {
         let b = slice.len();
-        if b % 32 != 0 {
+        if !b.is_multiple_of(32) {
             return Err(RangeProofVerificationError::Deserialization);
         }
         let num_elements = b / 32;
         if num_elements < 2 {
             return Err(RangeProofVerificationError::Deserialization);
         }
-        if (num_elements - 2) % 2 != 0 {
+        if !(num_elements - 2).is_multiple_of(2) {
             return Err(RangeProofVerificationError::Deserialization);
         }
         let lg_n = (num_elements - 2) / 2;

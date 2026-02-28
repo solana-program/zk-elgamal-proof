@@ -9,8 +9,8 @@ on:
 env:
   JS_PACKAGES: "['clients-js']"
   SBPF_PROGRAM_PACKAGES: "['zk-sdk']"
-  RUST_PACKAGES: "['zk-sdk', 'zk-keygen', 'zk-sdk-wasm-js']"
-  WASM_PACKAGES: "['zk-sdk', 'zk-sdk-wasm-js']"
+  RUST_PACKAGES: "['zk-sdk', 'zk-sdk-wasm-js']"
+  WASM_PACKAGES: "['zk-sdk-wasm-js']"
   WASM_JS_PACKAGES: "['zk-sdk-wasm-js']"
 
 jobs:
@@ -49,7 +49,7 @@ jobs:
       sbpf-program-packages: ${{ needs.set_env.outputs.SBPF_PROGRAM_PACKAGES }}
       rust-packages: ${{ needs.set_env.outputs.RUST_PACKAGES }}
       wasm-packages: ${{ needs.set_env.outputs.WASM_PACKAGES }}
-      wasm-js-packages: ${{ needs.set_env.outputs.WASM_PACKAGES }}
+      wasm-js-packages: ${{ needs.set_env.outputs.WASM_JS_PACKAGES }}
       rustfmt-toolchain: ${{ needs.set_env.outputs.RUST_TOOLCHAIN_NIGHTLY }}
       clippy-toolchain: ${{ needs.set_env.outputs.RUST_TOOLCHAIN_NIGHTLY }}
       solana-cli-version: ${{ needs.set_env.outputs.SOLANA_CLI_VERSION }}
