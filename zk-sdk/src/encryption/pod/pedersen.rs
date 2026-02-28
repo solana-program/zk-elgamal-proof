@@ -15,7 +15,7 @@ use {
     std::fmt,
 };
 
-/// Maximum length of a base64 encoded ElGamal public key
+/// Maximum length of a base-64 encoded ElGamal public key
 const PEDERSEN_COMMITMENT_MAX_BASE64_LEN: usize = 44;
 
 /// The `PedersenCommitment` type as a `Pod`.

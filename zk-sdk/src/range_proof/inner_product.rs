@@ -394,8 +394,8 @@ impl InnerProductProof {
 
     /// Serializes the proof into a byte array.
     /// The layout of the inner product proof is:
-    /// - `log(n)` compressed Ristretto points for L_vec
-    /// - `log(n)` compressed Ristretto points for R_vec
+    /// - `log(n)` compressed Ristretto points for `L_vec`
+    /// - `log(n)` compressed Ristretto points for `R_vec`
     /// - a scalar `a`
     /// - a scalar `b`
     pub fn to_bytes(&self) -> Vec<u8> {

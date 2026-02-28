@@ -26,8 +26,8 @@ crate::conversion::impl_inner_conversion!(
 impl BatchedRangeProofU64Data {
     /// Creates a new 64-bit batched range proof.
     ///
-    /// The function takes arrays of Pedersen commitments, amounts (as BigUint64Array),
-    /// bit lengths (as Uint8Array), and Pedersen openings. The sum of bit lengths must be 64.
+    /// The function takes arrays of Pedersen commitments, amounts (as `BigUint64Array`),
+    /// bit lengths (as `Uint8Array`), and Pedersen openings. The sum of bit lengths must be 64.
     ///
     /// # Arguments
     ///
