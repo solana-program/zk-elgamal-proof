@@ -25,7 +25,10 @@ use {
         },
         sigma_proofs::grouped_ciphertext_validity::GroupedCiphertext3HandlesValidityProof,
         transcript::TranscriptProtocol,
-        zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
+        zk_elgamal_proof_program::{
+            errors::{ProofGenerationError, ProofVerificationError},
+            proof_data::VerifyZkProof,
+        },
     },
     merlin::Transcript,
 };
@@ -113,8 +116,10 @@ impl ZkProofData<GroupedCiphertext3HandlesValidityProofContext>
     fn context_data(&self) -> &GroupedCiphertext3HandlesValidityProofContext {
         &self.context
     }
+}
 
-    #[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "solana"))]
+impl VerifyZkProof for GroupedCiphertext3HandlesValidityProofData {
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
         let mut transcript = Transcript::new_zk_elgamal_transcript(
             b"grouped-ciphertext-validity-3-handles-instruction",

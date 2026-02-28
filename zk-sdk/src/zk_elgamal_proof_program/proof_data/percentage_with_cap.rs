@@ -12,7 +12,10 @@ use {
         encryption::pedersen::{Pedersen, PedersenCommitment, PedersenOpening},
         sigma_proofs::percentage_with_cap::PercentageWithCapProof,
         transcript::TranscriptProtocol,
-        zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
+        zk_elgamal_proof_program::{
+            errors::{ProofGenerationError, ProofVerificationError},
+            proof_data::VerifyZkProof,
+        },
     },
     merlin::Transcript,
     std::convert::TryInto,
@@ -128,8 +131,10 @@ impl ZkProofData<PercentageWithCapProofContext> for PercentageWithCapProofData {
     fn context_data(&self) -> &PercentageWithCapProofContext {
         &self.context
     }
+}
 
-    #[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "solana"))]
+impl VerifyZkProof for PercentageWithCapProofData {
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
         let mut transcript =
             Transcript::new_zk_elgamal_transcript(b"percentage-with-cap-instruction");

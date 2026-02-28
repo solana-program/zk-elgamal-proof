@@ -7,7 +7,10 @@ use {
         range_proof::RangeProof,
         zk_elgamal_proof_program::{
             errors::{ProofGenerationError, ProofVerificationError},
-            proof_data::batched_range_proof::{MAX_COMMITMENTS, MAX_SINGLE_BIT_LENGTH},
+            proof_data::{
+                batched_range_proof::{MAX_COMMITMENTS, MAX_SINGLE_BIT_LENGTH},
+                VerifyZkProof,
+            },
         },
     },
     std::convert::TryInto,
@@ -85,8 +88,10 @@ impl ZkProofData<BatchedRangeProofContext> for BatchedRangeProofU256Data {
     fn context_data(&self) -> &BatchedRangeProofContext {
         &self.context
     }
+}
 
-    #[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "solana"))]
+impl VerifyZkProof for BatchedRangeProofU256Data {
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
         let (commitments, bit_lengths) = self.context.try_into()?;
         let num_commitments = commitments.len();

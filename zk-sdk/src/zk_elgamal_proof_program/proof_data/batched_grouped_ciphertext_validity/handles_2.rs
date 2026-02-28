@@ -25,7 +25,10 @@ use {
         },
         sigma_proofs::batched_grouped_ciphertext_validity::BatchedGroupedCiphertext2HandlesValidityProof,
         transcript::TranscriptProtocol,
-        zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
+        zk_elgamal_proof_program::{
+            errors::{ProofGenerationError, ProofVerificationError},
+            proof_data::VerifyZkProof,
+        },
     },
     merlin::Transcript,
 };
@@ -121,8 +124,10 @@ impl ZkProofData<BatchedGroupedCiphertext2HandlesValidityProofContext>
     fn context_data(&self) -> &BatchedGroupedCiphertext2HandlesValidityProofContext {
         &self.context
     }
+}
 
-    #[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "solana"))]
+impl VerifyZkProof for BatchedGroupedCiphertext2HandlesValidityProofData {
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
         let mut transcript = Transcript::new_zk_elgamal_transcript(
             b"batched-grouped-ciphertext-validity-2-handles-instruction",

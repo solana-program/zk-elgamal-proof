@@ -10,7 +10,10 @@ use {
         encryption::elgamal::{ElGamalCiphertext, ElGamalKeypair},
         sigma_proofs::zero_ciphertext::ZeroCiphertextProof,
         transcript::TranscriptProtocol,
-        zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
+        zk_elgamal_proof_program::{
+            errors::{ProofGenerationError, ProofVerificationError},
+            proof_data::VerifyZkProof,
+        },
     },
     curve25519_dalek::traits::IsIdentity,
     merlin::Transcript,
@@ -83,8 +86,10 @@ impl ZkProofData<ZeroCiphertextProofContext> for ZeroCiphertextProofData {
     fn context_data(&self) -> &ZeroCiphertextProofContext {
         &self.context
     }
+}
 
-    #[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "solana"))]
+impl VerifyZkProof for ZeroCiphertextProofData {
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
         let mut transcript = Transcript::new_zk_elgamal_transcript(b"zero-ciphertext-instruction");
         let pubkey = self.context.pubkey.try_into()?;

@@ -25,7 +25,10 @@ use {
         },
         sigma_proofs::grouped_ciphertext_validity::GroupedCiphertext2HandlesValidityProof,
         transcript::TranscriptProtocol,
-        zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
+        zk_elgamal_proof_program::{
+            errors::{ProofGenerationError, ProofVerificationError},
+            proof_data::VerifyZkProof,
+        },
     },
     merlin::Transcript,
 };
@@ -104,8 +107,10 @@ impl ZkProofData<GroupedCiphertext2HandlesValidityProofContext>
     fn context_data(&self) -> &GroupedCiphertext2HandlesValidityProofContext {
         &self.context
     }
+}
 
-    #[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "solana"))]
+impl VerifyZkProof for GroupedCiphertext2HandlesValidityProofData {
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
         let mut transcript = Transcript::new_zk_elgamal_transcript(
             b"grouped-ciphertext-validity-2-handles-instruction",
@@ -135,7 +140,7 @@ mod test {
         super::*,
         crate::{
             encryption::{elgamal::ElGamalKeypair, grouped_elgamal::GroupedElGamal},
-            zk_elgamal_proof_program::proof_data::ZkProofData,
+            zk_elgamal_proof_program::proof_data::VerifyZkProof,
         },
     };
 

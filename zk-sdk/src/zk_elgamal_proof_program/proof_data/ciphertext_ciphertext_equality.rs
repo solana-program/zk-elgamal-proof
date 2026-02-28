@@ -22,7 +22,10 @@ use {
         },
         sigma_proofs::ciphertext_ciphertext_equality::CiphertextCiphertextEqualityProof,
         transcript::TranscriptProtocol,
-        zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
+        zk_elgamal_proof_program::{
+            errors::{ProofGenerationError, ProofVerificationError},
+            proof_data::VerifyZkProof,
+        },
     },
     curve25519_dalek::scalar::Scalar,
     merlin::Transcript,
@@ -117,8 +120,10 @@ impl ZkProofData<CiphertextCiphertextEqualityProofContext>
     fn context_data(&self) -> &CiphertextCiphertextEqualityProofContext {
         &self.context
     }
+}
 
-    #[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "solana"))]
+impl VerifyZkProof for CiphertextCiphertextEqualityProofData {
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
         let mut transcript =
             Transcript::new_zk_elgamal_transcript(b"ciphertext-ciphertext-equality-instruction");

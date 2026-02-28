@@ -66,7 +66,9 @@ pub trait ZkProofData<T: Pod> {
     const PROOF_TYPE: ProofType;
 
     fn context_data(&self) -> &T;
+}
 
-    #[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "solana"))]
+pub trait VerifyZkProof {
     fn verify_proof(&self) -> Result<(), ProofVerificationError>;
 }

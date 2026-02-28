@@ -11,7 +11,10 @@ use {
         encryption::elgamal::ElGamalKeypair,
         sigma_proofs::pubkey_validity::PubkeyValidityProof,
         transcript::TranscriptProtocol,
-        zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
+        zk_elgamal_proof_program::{
+            errors::{ProofGenerationError, ProofVerificationError},
+            proof_data::VerifyZkProof,
+        },
     },
     merlin::Transcript,
     std::convert::TryInto,
@@ -68,8 +71,10 @@ impl ZkProofData<PubkeyValidityProofContext> for PubkeyValidityProofData {
     fn context_data(&self) -> &PubkeyValidityProofContext {
         &self.context
     }
+}
 
-    #[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "solana"))]
+impl VerifyZkProof for PubkeyValidityProofData {
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
         let mut transcript = Transcript::new_zk_elgamal_transcript(b"pubkey-validity-instruction");
         let pubkey = self.context.pubkey.try_into()?;
