@@ -3,7 +3,7 @@
 You must first build the WASM artifacts. From the root directory of the WASM crate (`zk-sdk-wasm-js`):
 
 ```bash
-../../compile-wasm.sh
+make -C ../../.. build-wasm-js-zk-sdk-wasm-js
 ```
 
 Install the dependencies:
