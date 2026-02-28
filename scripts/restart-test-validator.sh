@@ -19,7 +19,7 @@ if [ -n "$PID" ]; then
 fi
 
 echo "Starting Solana test validator..."
-~/solana-cli/bin/solana-test-validator "${ARGS[@]}" &
+solana-test-validator "${ARGS[@]}" &
 VALIDATOR_PID=$!
 
 # Wait for test validator to move past slot 0.
@@ -30,7 +30,7 @@ for i in {1..8}; do
     exit 1
   fi
 
-  SLOT=$(~/solana-cli/bin/solana slot -ul 2>/dev/null)
+  SLOT=$(solana slot -ul 2>/dev/null)
   if [[ "$SLOT" =~ ^[0-9]+$ ]] && [ "$SLOT" -gt 0 ]; then
     echo -e "\nTest validator is ready. Slot: $SLOT"
     exit 0

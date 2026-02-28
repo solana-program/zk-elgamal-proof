@@ -540,7 +540,7 @@ impl ElGamalSecretKey {
     /// Derive an ElGamal secret key from a signature.
     ///
     /// TODO: This function uses a non-standard KDF and should be refactored.
-    /// See: https://github.com/solana-program/zk-elgamal-proof/issues/35
+    /// See: <https://github.com/solana-program/zk-elgamal-proof/issues/35>
     pub fn seed_from_signature(signature: &Signature) -> Vec<u8> {
         let mut hasher = Sha3_512::new();
         hasher.update(signature.as_ref());
