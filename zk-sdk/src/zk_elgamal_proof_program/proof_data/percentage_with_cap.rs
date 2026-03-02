@@ -65,6 +65,7 @@ pub struct PercentageWithCapProofContext {
     pub max_value: PodU64,
 }
 
+#[cfg(not(target_os = "solana"))]
 #[allow(clippy::too_many_arguments)]
 pub fn build_percentage_with_cap_proof_data(
     percentage_commitment: &PedersenCommitment,
