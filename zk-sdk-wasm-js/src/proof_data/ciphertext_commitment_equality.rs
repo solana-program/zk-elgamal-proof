@@ -5,7 +5,7 @@ use {
     },
     js_sys::Uint8Array,
     solana_zk_sdk::zk_elgamal_proof_program::proof_data::{
-        ciphertext_commitment_equality, ZkProofData,
+        ciphertext_commitment_equality, VerifyZkProof,
     },
     wasm_bindgen::prelude::*,
 };
@@ -34,7 +34,7 @@ impl CiphertextCommitmentEqualityProofData {
         opening: &PedersenOpening,
         amount: u64,
     ) -> Result<CiphertextCommitmentEqualityProofData, JsValue> {
-        ciphertext_commitment_equality::CiphertextCommitmentEqualityProofData::new(
+        ciphertext_commitment_equality::build_ciphertext_commitment_equality_proof_data(
             &keypair.inner,
             &ciphertext.inner,
             &commitment.inner,

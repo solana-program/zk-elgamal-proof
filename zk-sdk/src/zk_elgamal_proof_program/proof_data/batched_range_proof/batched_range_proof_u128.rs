@@ -7,7 +7,7 @@ use {
         range_proof::RangeProof,
         zk_elgamal_proof_program::{
             errors::{ProofGenerationError, ProofVerificationError},
-            proof_data::batched_range_proof::MAX_COMMITMENTS,
+            proof_data::{batched_range_proof::MAX_COMMITMENTS, VerifyZkProof},
         },
     },
     std::convert::TryInto,
@@ -38,38 +38,35 @@ pub struct BatchedRangeProofU128Data {
 }
 
 #[cfg(not(target_os = "solana"))]
-impl BatchedRangeProofU128Data {
-    pub fn new(
-        commitments: Vec<&PedersenCommitment>,
-        amounts: Vec<u64>,
-        bit_lengths: Vec<usize>,
-        openings: Vec<&PedersenOpening>,
-    ) -> Result<Self, ProofGenerationError> {
-        // the sum of the bit lengths must be 128
-        let batched_bit_length = bit_lengths
-            .iter()
-            .try_fold(0_usize, |acc, &x| acc.checked_add(x))
-            .ok_or(ProofGenerationError::IllegalAmountBitLength)?;
+pub fn build_batched_range_proof_u128_data(
+    commitments: Vec<&PedersenCommitment>,
+    amounts: Vec<u64>,
+    bit_lengths: Vec<usize>,
+    openings: Vec<&PedersenOpening>,
+) -> Result<BatchedRangeProofU128Data, ProofGenerationError> {
+    // the sum of the bit lengths must be 128
+    let batched_bit_length = bit_lengths
+        .iter()
+        .try_fold(0_usize, |acc, &x| acc.checked_add(x))
+        .ok_or(ProofGenerationError::IllegalAmountBitLength)?;
 
-        // `u128::BITS` is 128, which fits in a single byte and should not overflow to `usize` for
-        // an overwhelming number of platforms. However, to be extra cautious, use `try_from` and
-        // `unwrap` here. A simple case `u128::BITS as usize` can silently overflow.
-        let expected_bit_length = usize::try_from(u128::BITS).unwrap();
-        if batched_bit_length != expected_bit_length {
-            return Err(ProofGenerationError::IllegalAmountBitLength);
-        }
-
-        let context =
-            BatchedRangeProofContext::new(&commitments, &amounts, &bit_lengths, &openings)?;
-
-        let mut transcript = context.new_transcript();
-        let proof: PodRangeProofU128 =
-            RangeProof::new(amounts, bit_lengths, openings, &mut transcript)?
-                .try_into()
-                .map_err(|_| ProofGenerationError::ProofLength)?;
-
-        Ok(Self { context, proof })
+    // `u128::BITS` is 128, which fits in a single byte and should not overflow to `usize` for
+    // an overwhelming number of platforms. However, to be extra cautious, use `try_from` and
+    // `unwrap` here. A simple case `u128::BITS as usize` can silently overflow.
+    let expected_bit_length = usize::try_from(u128::BITS).unwrap();
+    if batched_bit_length != expected_bit_length {
+        return Err(ProofGenerationError::IllegalAmountBitLength);
     }
+
+    let context = BatchedRangeProofContext::new(&commitments, &amounts, &bit_lengths, &openings)?;
+
+    let mut transcript = context.new_transcript();
+    let proof: PodRangeProofU128 =
+        RangeProof::new(amounts, bit_lengths, openings, &mut transcript)?
+            .try_into()
+            .map_err(|_| ProofGenerationError::ProofLength)?;
+
+    Ok(BatchedRangeProofU128Data { context, proof })
 }
 
 impl ZkProofData<BatchedRangeProofContext> for BatchedRangeProofU128Data {
@@ -78,8 +75,10 @@ impl ZkProofData<BatchedRangeProofContext> for BatchedRangeProofU128Data {
     fn context_data(&self) -> &BatchedRangeProofContext {
         &self.context
     }
+}
 
-    #[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "solana"))]
+impl VerifyZkProof for BatchedRangeProofU128Data {
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
         let (commitments, bit_lengths) = self.context.try_into()?;
         let num_commitments = commitments.len();
@@ -137,7 +136,7 @@ mod test {
         let (commitment_7, opening_7) = Pedersen::new(amount_7);
         let (commitment_8, opening_8) = Pedersen::new(amount_8);
 
-        let proof_data = BatchedRangeProofU128Data::new(
+        let proof_data = build_batched_range_proof_u128_data(
             vec![
                 &commitment_1,
                 &commitment_2,
@@ -179,7 +178,7 @@ mod test {
         let (commitment_7, opening_7) = Pedersen::new(amount_7);
         let (commitment_8, opening_8) = Pedersen::new(amount_8);
 
-        let proof_data = BatchedRangeProofU128Data::new(
+        let proof_data = build_batched_range_proof_u128_data(
             vec![
                 &commitment_1,
                 &commitment_2,

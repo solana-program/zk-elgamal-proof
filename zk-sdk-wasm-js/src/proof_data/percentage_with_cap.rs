@@ -1,7 +1,7 @@
 use {
     crate::encryption::pedersen::{PedersenCommitment, PedersenOpening},
     js_sys::Uint8Array,
-    solana_zk_sdk::zk_elgamal_proof_program::proof_data::{percentage_with_cap, ZkProofData},
+    solana_zk_sdk::zk_elgamal_proof_program::proof_data::{percentage_with_cap, VerifyZkProof},
     wasm_bindgen::prelude::*,
 };
 
@@ -33,7 +33,7 @@ impl PercentageWithCapProofData {
         claimed_opening: &PedersenOpening,
         max_value: u64,
     ) -> Result<PercentageWithCapProofData, JsValue> {
-        percentage_with_cap::PercentageWithCapProofData::new(
+        percentage_with_cap::build_percentage_with_cap_proof_data(
             &percentage_commitment.inner,
             &percentage_opening.inner,
             percentage_amount,

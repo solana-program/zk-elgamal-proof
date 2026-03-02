@@ -1,7 +1,7 @@
 use {
     crate::encryption::elgamal::{ElGamalCiphertext, ElGamalKeypair},
     js_sys::Uint8Array,
-    solana_zk_sdk::zk_elgamal_proof_program::proof_data::{zero_ciphertext, ZkProofData},
+    solana_zk_sdk::zk_elgamal_proof_program::proof_data::{zero_ciphertext, VerifyZkProof},
     wasm_bindgen::prelude::*,
 };
 
@@ -25,7 +25,7 @@ impl ZeroCiphertextProofData {
         keypair: &ElGamalKeypair,
         ciphertext: &ElGamalCiphertext,
     ) -> Result<ZeroCiphertextProofData, JsValue> {
-        zero_ciphertext::ZeroCiphertextProofData::new(&keypair.inner, &ciphertext.inner)
+        zero_ciphertext::build_zero_ciphertext_proof_data(&keypair.inner, &ciphertext.inner)
             .map(|inner| Self { inner })
             .map_err(|e| JsValue::from_str(&e.to_string()))
     }

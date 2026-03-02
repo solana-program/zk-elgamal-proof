@@ -22,7 +22,10 @@ use {
         },
         sigma_proofs::ciphertext_ciphertext_equality::CiphertextCiphertextEqualityProof,
         transcript::TranscriptProtocol,
-        zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
+        zk_elgamal_proof_program::{
+            errors::{ProofGenerationError, ProofVerificationError},
+            proof_data::VerifyZkProof,
+        },
     },
     curve25519_dalek::scalar::Scalar,
     merlin::Transcript,
@@ -56,57 +59,55 @@ pub struct CiphertextCiphertextEqualityProofContext {
 }
 
 #[cfg(not(target_os = "solana"))]
-impl CiphertextCiphertextEqualityProofData {
-    pub fn new(
-        first_keypair: &ElGamalKeypair,
-        second_pubkey: &ElGamalPubkey,
-        first_ciphertext: &ElGamalCiphertext,
-        second_ciphertext: &ElGamalCiphertext,
-        second_opening: &PedersenOpening,
-        amount: u64,
-    ) -> Result<Self, ProofGenerationError> {
-        // First ciphertext should decrypt to the expected amount
-        // D_first = C_first - s * H_first. Should equal amount * G.
-        let decrypted_point = first_ciphertext.decrypt(first_keypair.secret()).target;
-        let expected_point = Scalar::from(amount) * G;
-        if decrypted_point != expected_point {
-            return Err(ProofGenerationError::InconsistentInput);
-        }
-
-        // Second ciphertext should match encryption of amount with second_opening
-        let expected_second_ciphertext = second_pubkey.encrypt_with(amount, second_opening);
-        if *second_ciphertext != expected_second_ciphertext {
-            return Err(ProofGenerationError::InconsistentInput);
-        }
-
-        let pod_first_pubkey = PodElGamalPubkey(first_keypair.pubkey().into());
-        let pod_second_pubkey = PodElGamalPubkey(second_pubkey.into());
-        let pod_first_ciphertext = PodElGamalCiphertext(first_ciphertext.to_bytes());
-        let pod_second_ciphertext = PodElGamalCiphertext(second_ciphertext.to_bytes());
-
-        let context = CiphertextCiphertextEqualityProofContext {
-            first_pubkey: pod_first_pubkey,
-            second_pubkey: pod_second_pubkey,
-            first_ciphertext: pod_first_ciphertext,
-            second_ciphertext: pod_second_ciphertext,
-        };
-
-        let mut transcript =
-            Transcript::new_zk_elgamal_transcript(b"ciphertext-ciphertext-equality-instruction");
-
-        let proof = CiphertextCiphertextEqualityProof::new(
-            first_keypair,
-            second_pubkey,
-            first_ciphertext,
-            second_ciphertext,
-            second_opening,
-            amount,
-            &mut transcript,
-        )
-        .into();
-
-        Ok(Self { context, proof })
+pub fn build_ciphertext_ciphertext_equality_proof_data(
+    first_keypair: &ElGamalKeypair,
+    second_pubkey: &ElGamalPubkey,
+    first_ciphertext: &ElGamalCiphertext,
+    second_ciphertext: &ElGamalCiphertext,
+    second_opening: &PedersenOpening,
+    amount: u64,
+) -> Result<CiphertextCiphertextEqualityProofData, ProofGenerationError> {
+    // First ciphertext should decrypt to the expected amount
+    // D_first = C_first - s * H_first. Should equal amount * G.
+    let decrypted_point = first_ciphertext.decrypt(first_keypair.secret()).target;
+    let expected_point = Scalar::from(amount) * G;
+    if decrypted_point != expected_point {
+        return Err(ProofGenerationError::InconsistentInput);
     }
+
+    // Second ciphertext should match encryption of amount with second_opening
+    let expected_second_ciphertext = second_pubkey.encrypt_with(amount, second_opening);
+    if *second_ciphertext != expected_second_ciphertext {
+        return Err(ProofGenerationError::InconsistentInput);
+    }
+
+    let pod_first_pubkey = PodElGamalPubkey(first_keypair.pubkey().into());
+    let pod_second_pubkey = PodElGamalPubkey(second_pubkey.into());
+    let pod_first_ciphertext = PodElGamalCiphertext(first_ciphertext.to_bytes());
+    let pod_second_ciphertext = PodElGamalCiphertext(second_ciphertext.to_bytes());
+
+    let context = CiphertextCiphertextEqualityProofContext {
+        first_pubkey: pod_first_pubkey,
+        second_pubkey: pod_second_pubkey,
+        first_ciphertext: pod_first_ciphertext,
+        second_ciphertext: pod_second_ciphertext,
+    };
+
+    let mut transcript =
+        Transcript::new_zk_elgamal_transcript(b"ciphertext-ciphertext-equality-instruction");
+
+    let proof = CiphertextCiphertextEqualityProof::new(
+        first_keypair,
+        second_pubkey,
+        first_ciphertext,
+        second_ciphertext,
+        second_opening,
+        amount,
+        &mut transcript,
+    )
+    .into();
+
+    Ok(CiphertextCiphertextEqualityProofData { context, proof })
 }
 
 impl ZkProofData<CiphertextCiphertextEqualityProofContext>
@@ -117,8 +118,10 @@ impl ZkProofData<CiphertextCiphertextEqualityProofContext>
     fn context_data(&self) -> &CiphertextCiphertextEqualityProofContext {
         &self.context
     }
+}
 
-    #[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "solana"))]
+impl VerifyZkProof for CiphertextCiphertextEqualityProofData {
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
         let mut transcript =
             Transcript::new_zk_elgamal_transcript(b"ciphertext-ciphertext-equality-instruction");
@@ -158,7 +161,7 @@ mod test {
             .pubkey()
             .encrypt_with(amount, &second_opening);
 
-        let proof_data = CiphertextCiphertextEqualityProofData::new(
+        let proof_data = build_ciphertext_ciphertext_equality_proof_data(
             &first_keypair,
             second_keypair.pubkey(),
             &first_ciphertext,
@@ -178,7 +181,7 @@ mod test {
             .pubkey()
             .encrypt_with(amount, &second_opening);
 
-        let proof_data = CiphertextCiphertextEqualityProofData::new(
+        let proof_data = build_ciphertext_ciphertext_equality_proof_data(
             &first_keypair,
             second_keypair.pubkey(),
             &first_ciphertext,
@@ -198,7 +201,7 @@ mod test {
             .pubkey()
             .encrypt_with(amount, &second_opening);
 
-        let proof_data = CiphertextCiphertextEqualityProofData::new(
+        let proof_data = build_ciphertext_ciphertext_equality_proof_data(
             &first_keypair,
             second_keypair.pubkey(),
             &first_ciphertext,
@@ -217,7 +220,7 @@ mod test {
             .encrypt_with(amount_2, &second_opening_2);
 
         // We try to prove equality between encryption of 55 and encryption of 77
-        let result = CiphertextCiphertextEqualityProofData::new(
+        let result = build_ciphertext_ciphertext_equality_proof_data(
             &first_keypair,
             second_keypair.pubkey(),
             &first_ciphertext,

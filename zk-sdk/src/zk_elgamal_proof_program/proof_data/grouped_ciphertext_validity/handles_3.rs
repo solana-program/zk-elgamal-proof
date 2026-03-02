@@ -25,7 +25,10 @@ use {
         },
         sigma_proofs::grouped_ciphertext_validity::GroupedCiphertext3HandlesValidityProof,
         transcript::TranscriptProtocol,
-        zk_elgamal_proof_program::errors::{ProofGenerationError, ProofVerificationError},
+        zk_elgamal_proof_program::{
+            errors::{ProofGenerationError, ProofVerificationError},
+            proof_data::VerifyZkProof,
+        },
     },
     merlin::Transcript,
 };
@@ -56,53 +59,47 @@ pub struct GroupedCiphertext3HandlesValidityProofContext {
 }
 
 #[cfg(not(target_os = "solana"))]
-impl GroupedCiphertext3HandlesValidityProofData {
-    pub fn new(
-        first_pubkey: &ElGamalPubkey,
-        second_pubkey: &ElGamalPubkey,
-        third_pubkey: &ElGamalPubkey,
-        grouped_ciphertext: &GroupedElGamalCiphertext<3>,
-        amount: u64,
-        opening: &PedersenOpening,
-    ) -> Result<Self, ProofGenerationError> {
-        let expected_ciphertext = GroupedElGamal::encrypt_with(
-            [first_pubkey, second_pubkey, third_pubkey],
-            amount,
-            opening,
-        );
-        if *grouped_ciphertext != expected_ciphertext {
-            return Err(ProofGenerationError::InconsistentInput);
-        }
-
-        let pod_first_pubkey = PodElGamalPubkey(first_pubkey.into());
-        let pod_second_pubkey = PodElGamalPubkey(second_pubkey.into());
-        let pod_third_pubkey = PodElGamalPubkey(third_pubkey.into());
-        let pod_grouped_ciphertext = (*grouped_ciphertext).into();
-
-        let context = GroupedCiphertext3HandlesValidityProofContext {
-            first_pubkey: pod_first_pubkey,
-            second_pubkey: pod_second_pubkey,
-            third_pubkey: pod_third_pubkey,
-            grouped_ciphertext: pod_grouped_ciphertext,
-        };
-
-        let mut transcript = Transcript::new_zk_elgamal_transcript(
-            b"grouped-ciphertext-validity-3-handles-instruction",
-        );
-
-        let proof = GroupedCiphertext3HandlesValidityProof::new(
-            first_pubkey,
-            second_pubkey,
-            third_pubkey,
-            grouped_ciphertext,
-            amount,
-            opening,
-            &mut transcript,
-        )
-        .into();
-
-        Ok(Self { context, proof })
+pub fn build_grouped_ciphertext_3_handles_validity_proof_data(
+    first_pubkey: &ElGamalPubkey,
+    second_pubkey: &ElGamalPubkey,
+    third_pubkey: &ElGamalPubkey,
+    grouped_ciphertext: &GroupedElGamalCiphertext<3>,
+    amount: u64,
+    opening: &PedersenOpening,
+) -> Result<GroupedCiphertext3HandlesValidityProofData, ProofGenerationError> {
+    let expected_ciphertext =
+        GroupedElGamal::encrypt_with([first_pubkey, second_pubkey, third_pubkey], amount, opening);
+    if *grouped_ciphertext != expected_ciphertext {
+        return Err(ProofGenerationError::InconsistentInput);
     }
+
+    let pod_first_pubkey = PodElGamalPubkey(first_pubkey.into());
+    let pod_second_pubkey = PodElGamalPubkey(second_pubkey.into());
+    let pod_third_pubkey = PodElGamalPubkey(third_pubkey.into());
+    let pod_grouped_ciphertext = (*grouped_ciphertext).into();
+
+    let context = GroupedCiphertext3HandlesValidityProofContext {
+        first_pubkey: pod_first_pubkey,
+        second_pubkey: pod_second_pubkey,
+        third_pubkey: pod_third_pubkey,
+        grouped_ciphertext: pod_grouped_ciphertext,
+    };
+
+    let mut transcript =
+        Transcript::new_zk_elgamal_transcript(b"grouped-ciphertext-validity-3-handles-instruction");
+
+    let proof = GroupedCiphertext3HandlesValidityProof::new(
+        first_pubkey,
+        second_pubkey,
+        third_pubkey,
+        grouped_ciphertext,
+        amount,
+        opening,
+        &mut transcript,
+    )
+    .into();
+
+    Ok(GroupedCiphertext3HandlesValidityProofData { context, proof })
 }
 
 impl ZkProofData<GroupedCiphertext3HandlesValidityProofContext>
@@ -113,8 +110,10 @@ impl ZkProofData<GroupedCiphertext3HandlesValidityProofContext>
     fn context_data(&self) -> &GroupedCiphertext3HandlesValidityProofContext {
         &self.context
     }
+}
 
-    #[cfg(not(target_os = "solana"))]
+#[cfg(not(target_os = "solana"))]
+impl VerifyZkProof for GroupedCiphertext3HandlesValidityProofData {
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
         let mut transcript = Transcript::new_zk_elgamal_transcript(
             b"grouped-ciphertext-validity-3-handles-instruction",
@@ -168,7 +167,7 @@ mod test {
             &opening,
         );
 
-        let proof_data = GroupedCiphertext3HandlesValidityProofData::new(
+        let proof_data = build_grouped_ciphertext_3_handles_validity_proof_data(
             first_pubkey,
             second_pubkey,
             third_pubkey,
@@ -181,7 +180,7 @@ mod test {
         assert!(proof_data.verify_proof().is_ok());
 
         let wrong_opening = PedersenOpening::new_rand();
-        let result = GroupedCiphertext3HandlesValidityProofData::new(
+        let result = build_grouped_ciphertext_3_handles_validity_proof_data(
             first_keypair.pubkey(),
             second_keypair.pubkey(),
             third_keypair.pubkey(),
