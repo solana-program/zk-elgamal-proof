@@ -12,7 +12,7 @@ use {
     std::fmt,
 };
 
-/// Maximum length of a base64 encoded authenticated encryption ciphertext
+/// Maximum length of a base-64 encoded authenticated encryption ciphertext
 const AE_CIPHERTEXT_MAX_BASE64_LEN: usize = 48;
 
 /// The `AeCiphertext` type as a `Pod`.

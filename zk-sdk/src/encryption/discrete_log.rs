@@ -9,7 +9,7 @@
 //!
 //! The implementation is NOT intended to run in constant-time. There are some measures to prevent
 //! straightforward timing attacks. For instance, it does not short-circuit the search when a
-//! solution is found. However, the use of hashtables, batching, and threads make the
+//! solution is found. However, the use of hash tables, batching, and threads make the
 //! implementation inherently not constant-time. This may theoretically allow an adversary to gain
 //! information on a discrete log solution depending on the execution time of the implementation.
 //!
@@ -44,7 +44,7 @@ pub enum DiscreteLogError {
 
 /// Type that captures a discrete log challenge.
 ///
-/// The goal of discrete log is to find x such that x * generator = target.
+/// The goal of discrete log is to find x such that `x * generator = target`.
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, Eq, PartialEq)]
 pub struct DiscreteLog {
     /// Generator point for discrete log
@@ -69,7 +69,7 @@ pub struct DiscreteLog {
 #[derive(Serialize, Deserialize, Default)]
 pub struct DecodePrecomputation(HashMap<[u8; RISTRETTO_POINT_LEN], u16>);
 
-/// Builds a HashMap of 2^16 elements
+/// Builds a `HashMap` of `2^16` elements
 #[allow(dead_code)]
 fn decode_u32_precomputation() -> DecodePrecomputation {
     let mut hashmap = HashMap::new();
@@ -88,7 +88,7 @@ fn decode_u32_precomputation() -> DecodePrecomputation {
     DecodePrecomputation(hashmap)
 }
 
-/// Pre-computed HashMap needed for decryption. The HashMap is independent of (works for) any key.
+/// Pre-computed `HashMap` needed for decryption. The `HashMap` is independent of (works for) any key.
 pub static DECODE_PRECOMPUTATION_FOR_G: std::sync::LazyLock<DecodePrecomputation> =
     std::sync::LazyLock::new(|| {
         static DECODE_PRECOMPUTATION_FOR_G_BINCODE: &[u8] =
@@ -248,7 +248,7 @@ impl DiscreteLog {
 /// Hashable Ristretto iterator.
 ///
 /// Given an initial point X and a stepping point P, the iterator iterates through
-/// X + 0*P, X + 1*P, X + 2*P, X + 3*P, ...
+/// `X + 0*P, X + 1*P, X + 2*P, X + 3*P, ...`
 struct RistrettoIterator {
     pub current: (RistrettoPoint, u64),
     pub step: (RistrettoPoint, u64),

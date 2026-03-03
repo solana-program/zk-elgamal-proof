@@ -21,7 +21,7 @@ impl AeKey {
         }
     }
 
-    /// Deserializes an AeKey from a byte slice.
+    /// Deserializes an `AeKey` from a byte slice.
     #[wasm_bindgen(js_name = "fromBytes")]
     pub fn from_bytes(uint8_array: Uint8Array) -> Result<AeKey, JsValue> {
         if uint8_array.length() as usize != AE_KEY_LEN {
@@ -40,7 +40,7 @@ impl AeKey {
             .map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
-    /// Serializes the AeKey to a byte array.
+    /// Serializes the `AeKey` to a byte array.
     #[wasm_bindgen(js_name = "toBytes")]
     pub fn to_bytes(&self) -> Vec<u8> {
         // Clone is needed here because the zk-sdk implements only `From<AeKey>` for
@@ -76,7 +76,7 @@ crate::conversion::impl_inner_conversion!(AeCiphertext, auth_encryption::AeCiphe
 
 #[wasm_bindgen]
 impl AeCiphertext {
-    /// Deserializes an AeCiphertext from a byte slice.
+    /// Deserializes an `AeCiphertext` from a byte slice.
     #[wasm_bindgen(js_name = "fromBytes")]
     pub fn from_bytes(uint8_array: Uint8Array) -> Option<AeCiphertext> {
         if uint8_array.length() as usize != AE_CIPHERTEXT_LEN {
@@ -89,7 +89,7 @@ impl AeCiphertext {
         auth_encryption::AeCiphertext::from_bytes(&bytes).map(|inner| Self { inner })
     }
 
-    /// Serializes the AeCiphertext to a byte array.
+    /// Serializes the `AeCiphertext` to a byte array.
     #[wasm_bindgen(js_name = "toBytes")]
     pub fn to_bytes(&self) -> Vec<u8> {
         self.inner.to_bytes().to_vec()

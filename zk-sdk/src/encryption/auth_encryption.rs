@@ -1,7 +1,7 @@
 //! Authenticated encryption implementation.
 //!
 //! This module is a simple wrapper of the `Aes128GcmSiv` implementation
-//! specialized for SPL Token2022 program where the plaintext is always a `u64`
+//! specialized for SPL Token-2022 program where the plaintext is always a `u64`
 //! number.
 use {
     crate::{
@@ -94,7 +94,7 @@ impl AeKey {
     ///
     /// This function exists for applications where a user may not wish to maintain a Solana signer
     /// and an authenticated encryption key separately. Instead, a user can derive the ElGamal
-    /// keypair on-the-fly whenever encrytion/decryption is needed.
+    /// keypair on-the-fly whenever encryption / decryption is needed.
     pub fn new_from_signer(
         signer: &dyn Signer,
         public_seed: &[u8],

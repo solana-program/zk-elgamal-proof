@@ -18,13 +18,13 @@ use {
     std::fmt,
 };
 
-/// Maximum length of a base64 encoded ElGamal public key
+/// Maximum length of a base-64 encoded ElGamal public key
 const ELGAMAL_PUBKEY_MAX_BASE64_LEN: usize = 44;
 
-/// Maximum length of a base64 encoded ElGamal ciphertext
+/// Maximum length of a base-64 encoded ElGamal ciphertext
 const ELGAMAL_CIPHERTEXT_MAX_BASE64_LEN: usize = 88;
 
-/// Maximum length of a base64 encoded ElGamal decrypt handle
+/// Maximum length of a base-64 encoded ElGamal decrypt handle
 const DECRYPT_HANDLE_MAX_BASE64_LEN: usize = 44;
 
 /// The `ElGamalCiphertext` type as a `Pod`.

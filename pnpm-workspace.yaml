@@ -1,4 +1,4 @@
 packages:
-  - "clients/js"
+  - "clients-js"
   - "zk-sdk-wasm-js"
   - "zk-sdk-wasm-js/examples/*"

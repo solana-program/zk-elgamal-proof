@@ -52,7 +52,7 @@ impl PubkeyValidityProof {
     /// This function panics if the provided keypair is not valid (i.e. secret key is not
     /// invertible).
     ///
-    /// * `elgamal_keypair` = The ElGamal keypair that pertains to the ElGamal public key to be
+    /// * `elgamal_keypair` - The ElGamal keypair that pertains to the ElGamal public key to be
     ///   proved
     /// * `transcript` - The transcript that does the bookkeeping for the Fiat-Shamir heuristic
     pub fn new(elgamal_keypair: &ElGamalKeypair, transcript: &mut Transcript) -> Self {

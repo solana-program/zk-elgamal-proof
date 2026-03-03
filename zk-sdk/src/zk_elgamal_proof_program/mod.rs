@@ -1,7 +1,7 @@
 //! The native ZK ElGamal proof program.
 //!
 //! The program verifies a number of zero-knowledge proofs that are tailored to work with Pedersen
-//! commitments and ElGamal encryption over the elliptic curve curve25519. A general overview of
+//! commitments and ElGamal encryption over the elliptic curve Curve25519. A general overview of
 //! the program as well as the technical details of some of the proof instructions can be found in
 //! the [`ZK ElGamal proof`] documentation.
 //!

@@ -109,7 +109,7 @@ impl ElGamalSecretKey {
     }
 
     /// Decrypts an ElGamal ciphertext.
-    /// Returns the decrypted amount as a u64, or `undefined` if decryption fails.
+    /// Returns the decrypted amount as a `u64`, or `undefined` if decryption fails.
     #[wasm_bindgen(js_name = "decrypt")]
     pub fn decrypt(&self, ciphertext: &ElGamalCiphertext) -> Result<u64, JsValue> {
         self.inner

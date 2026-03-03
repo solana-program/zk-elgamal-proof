@@ -16,10 +16,10 @@ use {
     std::fmt,
 };
 
-/// Maximum length of a base64 encoded grouped ElGamal ciphertext with 2 handles
+/// Maximum length of a base-64 encoded grouped ElGamal ciphertext with 2 handles
 const GROUPED_ELGAMAL_CIPHERTEXT_2_HANDLES_MAX_BASE64_LEN: usize = 132;
 
-/// Maximum length of a base64 encoded grouped ElGamal ciphertext with 3 handles
+/// Maximum length of a base-64 encoded grouped ElGamal ciphertext with 3 handles
 const GROUPED_ELGAMAL_CIPHERTEXT_3_HANDLES_MAX_BASE64_LEN: usize = 176;
 
 macro_rules! impl_extract {

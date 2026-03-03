@@ -56,7 +56,7 @@ impl GroupedElGamalCiphertext2Handles {
     }
 
     /// Decrypts the ciphertext using a secret key and a handle index.
-    /// Returns the decrypted amount as a u64, or `undefined` if decryption fails.
+    /// Returns the decrypted amount as a `u64`, or `undefined` if decryption fails.
     #[wasm_bindgen(js_name = "decrypt")]
     pub fn decrypt(&self, secret_key: &ElGamalSecretKey, index: usize) -> Result<u64, JsValue> {
         match self.inner.decrypt_u32(&secret_key.inner, index) {
@@ -149,7 +149,7 @@ impl GroupedElGamalCiphertext3Handles {
     }
 
     /// Decrypts the ciphertext using a secret key and a handle index.
-    /// Returns the decrypted amount as a u64, or `undefined` if decryption fails.
+    /// Returns the decrypted amount as a `u64`, or `undefined` if decryption fails.
     #[wasm_bindgen(js_name = "decrypt")]
     pub fn decrypt(&self, secret_key: &ElGamalSecretKey, index: usize) -> Result<u64, JsValue> {
         match self.inner.decrypt_u32(&secret_key.inner, index) {
