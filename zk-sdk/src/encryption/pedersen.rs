@@ -1,7 +1,12 @@
 //! Pedersen commitment implementation using the Ristretto prime-order group.
 
 use {
-    crate::encryption::{PEDERSEN_COMMITMENT_LEN, PEDERSEN_OPENING_LEN},
+    crate::{
+        encryption::{
+            pod::pedersen::PodPedersenCommitment, PEDERSEN_COMMITMENT_LEN, PEDERSEN_OPENING_LEN,
+        },
+        errors::ElGamalError,
+    },
     core::ops::{Add, Mul, Sub},
     curve25519_dalek::{
         constants::{RISTRETTO_BASEPOINT_COMPRESSED, RISTRETTO_BASEPOINT_POINT},
@@ -213,6 +218,27 @@ impl PedersenCommitment {
         };
 
         compressed_ristretto.decompress().map(PedersenCommitment)
+    }
+}
+
+impl From<PedersenCommitment> for PodPedersenCommitment {
+    fn from(decoded_commitment: PedersenCommitment) -> Self {
+        Self(decoded_commitment.to_bytes())
+    }
+}
+
+// For proof verification, interpret pod::PedersenCommitment directly as CompressedRistretto
+impl From<PodPedersenCommitment> for CompressedRistretto {
+    fn from(pod_commitment: PodPedersenCommitment) -> Self {
+        Self(pod_commitment.0)
+    }
+}
+
+impl TryFrom<PodPedersenCommitment> for PedersenCommitment {
+    type Error = ElGamalError;
+
+    fn try_from(pod_commitment: PodPedersenCommitment) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_commitment.0).ok_or(ElGamalError::CiphertextDeserialization)
     }
 }
 
