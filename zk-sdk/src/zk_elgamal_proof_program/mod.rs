@@ -13,9 +13,7 @@
 //! [`program`]: https://github.com/anza-xyz/agave/blob/master/programs/zk-elgamal-proof/src/lib.rs
 
 pub mod errors;
-pub mod instruction;
 pub mod proof_data;
-pub mod state;
 
 // Program Id of the ZK ElGamal Proof program
 pub use solana_sdk_ids::zk_elgamal_proof_program::{check_id, id, ID};
