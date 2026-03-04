@@ -9,6 +9,7 @@ on:
         default: 'zk-sdk'
         type: choice
         options:
+          - program
           - zk-keygen
           - zk-sdk
           - zk-sdk-wasm-js
