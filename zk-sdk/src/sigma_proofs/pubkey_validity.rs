@@ -3,7 +3,6 @@
 //! The protocol guarantees computational soundness (by the hardness of discrete log) and perfect
 //! zero-knowledge in the random oracle model.
 
-#[cfg(not(target_os = "solana"))]
 use {
     crate::{
         encryption::{
@@ -11,18 +10,13 @@ use {
             pedersen::H,
         },
         sigma_proofs::{
-            canonical_scalar_from_optional_slice, pod::PodPubkeyValidityProof,
+            canonical_scalar_from_optional_slice,
+            errors::{PubkeyValidityProofVerificationError, SigmaProofVerificationError},
+            pod::PodPubkeyValidityProof,
             ristretto_point_from_optional_slice,
         },
-        UNIT_LEN,
-    },
-    rand::rngs::OsRng,
-    zeroize::Zeroize,
-};
-use {
-    crate::{
-        sigma_proofs::errors::{PubkeyValidityProofVerificationError, SigmaProofVerificationError},
         transcript::TranscriptProtocol,
+        UNIT_LEN,
     },
     curve25519_dalek::{
         ristretto::{CompressedRistretto, RistrettoPoint},
@@ -30,6 +24,8 @@ use {
         traits::{IsIdentity, VartimeMultiscalarMul},
     },
     merlin::Transcript,
+    rand::rngs::OsRng,
+    zeroize::Zeroize,
 };
 
 /// Byte length of a public key validity proof.
@@ -46,7 +42,6 @@ pub struct PubkeyValidityProof {
 }
 
 #[allow(non_snake_case)]
-#[cfg(not(target_os = "solana"))]
 impl PubkeyValidityProof {
     /// Creates a public key validity proof.
     ///

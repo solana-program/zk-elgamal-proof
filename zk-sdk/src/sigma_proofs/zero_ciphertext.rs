@@ -3,7 +3,6 @@
 //! The protocol guarantees computational soundness (by the hardness of discrete log) and perfect
 //! zero-knowledge in the random oracle model.
 
-#[cfg(not(target_os = "solana"))]
 use {
     crate::{
         encryption::{
@@ -11,26 +10,22 @@ use {
             pedersen::H,
         },
         sigma_proofs::{
-            canonical_scalar_from_optional_slice, pod::PodZeroCiphertextProof,
+            canonical_scalar_from_optional_slice,
+            errors::{SigmaProofVerificationError, ZeroCiphertextProofVerificationError},
+            pod::PodZeroCiphertextProof,
             ristretto_point_from_optional_slice,
         },
-        UNIT_LEN,
-    },
-    curve25519_dalek::traits::MultiscalarMul,
-    rand::rngs::OsRng,
-    zeroize::Zeroize,
-};
-use {
-    crate::{
-        sigma_proofs::errors::{SigmaProofVerificationError, ZeroCiphertextProofVerificationError},
         transcript::TranscriptProtocol,
+        UNIT_LEN,
     },
     curve25519_dalek::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
-        traits::IsIdentity,
+        traits::{IsIdentity, MultiscalarMul},
     },
     merlin::Transcript,
+    rand::rngs::OsRng,
+    zeroize::Zeroize,
 };
 
 /// Byte length of a zero-ciphertext proof.
@@ -48,7 +43,6 @@ pub struct ZeroCiphertextProof {
 }
 
 #[allow(non_snake_case)]
-#[cfg(not(target_os = "solana"))]
 impl ZeroCiphertextProof {
     /// Creates a zero-ciphertext proof.
     ///
