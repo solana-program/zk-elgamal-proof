@@ -19,9 +19,12 @@
 
 #[cfg(not(target_os = "solana"))]
 use {
-    crate::encryption::{
-        elgamal::ElGamalPubkey, grouped_elgamal::GroupedElGamalCiphertext,
-        pedersen::PedersenOpening,
+    crate::{
+        encryption::{
+            elgamal::ElGamalPubkey, grouped_elgamal::GroupedElGamalCiphertext,
+            pedersen::PedersenOpening,
+        },
+        sigma_proofs::pod::PodBatchedGroupedCiphertext2HandlesValidityProof,
     },
     zeroize::Zeroize,
 };
@@ -179,6 +182,26 @@ impl BatchedGroupedCiphertext2HandlesValidityProof {
 
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, ValidityProofVerificationError> {
         GroupedCiphertext2HandlesValidityProof::from_bytes(bytes).map(Self)
+    }
+}
+
+impl From<BatchedGroupedCiphertext2HandlesValidityProof>
+    for PodBatchedGroupedCiphertext2HandlesValidityProof
+{
+    fn from(decoded_proof: BatchedGroupedCiphertext2HandlesValidityProof) -> Self {
+        Self(decoded_proof.to_bytes())
+    }
+}
+
+impl TryFrom<PodBatchedGroupedCiphertext2HandlesValidityProof>
+    for BatchedGroupedCiphertext2HandlesValidityProof
+{
+    type Error = ValidityProofVerificationError;
+
+    fn try_from(
+        pod_proof: PodBatchedGroupedCiphertext2HandlesValidityProof,
+    ) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_proof.0)
     }
 }
 

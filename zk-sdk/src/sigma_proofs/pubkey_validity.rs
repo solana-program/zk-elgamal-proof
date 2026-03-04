@@ -10,7 +10,10 @@ use {
             elgamal::{ElGamalKeypair, ElGamalPubkey},
             pedersen::H,
         },
-        sigma_proofs::{canonical_scalar_from_optional_slice, ristretto_point_from_optional_slice},
+        sigma_proofs::{
+            canonical_scalar_from_optional_slice, pod::PodPubkeyValidityProof,
+            ristretto_point_from_optional_slice,
+        },
         UNIT_LEN,
     },
     rand::rngs::OsRng,
@@ -146,6 +149,20 @@ impl PubkeyValidityProof {
         let Y = ristretto_point_from_optional_slice(chunks.next())?;
         let z = canonical_scalar_from_optional_slice(chunks.next())?;
         Ok(PubkeyValidityProof { Y, z })
+    }
+}
+
+impl From<PubkeyValidityProof> for PodPubkeyValidityProof {
+    fn from(decoded_proof: PubkeyValidityProof) -> Self {
+        Self(decoded_proof.to_bytes())
+    }
+}
+
+impl TryFrom<PodPubkeyValidityProof> for PubkeyValidityProof {
+    type Error = PubkeyValidityProofVerificationError;
+
+    fn try_from(pod_proof: PodPubkeyValidityProof) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_proof.0)
     }
 }
 

@@ -10,7 +10,10 @@ use {
             elgamal::{ElGamalCiphertext, ElGamalKeypair, ElGamalPubkey},
             pedersen::H,
         },
-        sigma_proofs::{canonical_scalar_from_optional_slice, ristretto_point_from_optional_slice},
+        sigma_proofs::{
+            canonical_scalar_from_optional_slice, pod::PodZeroCiphertextProof,
+            ristretto_point_from_optional_slice,
+        },
         UNIT_LEN,
     },
     curve25519_dalek::traits::MultiscalarMul,
@@ -192,6 +195,20 @@ impl ZeroCiphertextProof {
         let Y_D = ristretto_point_from_optional_slice(chunks.next())?;
         let z = canonical_scalar_from_optional_slice(chunks.next())?;
         Ok(ZeroCiphertextProof { Y_P, Y_D, z })
+    }
+}
+
+impl From<ZeroCiphertextProof> for PodZeroCiphertextProof {
+    fn from(decoded_proof: ZeroCiphertextProof) -> Self {
+        Self(decoded_proof.to_bytes())
+    }
+}
+
+impl TryFrom<PodZeroCiphertextProof> for ZeroCiphertextProof {
+    type Error = ZeroCiphertextProofVerificationError;
+
+    fn try_from(pod_proof: PodZeroCiphertextProof) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_proof.0)
     }
 }
 

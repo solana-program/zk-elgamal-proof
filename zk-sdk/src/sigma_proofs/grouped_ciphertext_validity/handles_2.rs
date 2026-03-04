@@ -16,7 +16,10 @@ use {
             grouped_elgamal::GroupedElGamalCiphertext,
             pedersen::{PedersenOpening, G, H},
         },
-        sigma_proofs::{canonical_scalar_from_optional_slice, ristretto_point_from_optional_slice},
+        sigma_proofs::{
+            canonical_scalar_from_optional_slice, pod::PodGroupedCiphertext2HandlesValidityProof,
+            ristretto_point_from_optional_slice,
+        },
         UNIT_LEN,
     },
     curve25519_dalek::traits::MultiscalarMul,
@@ -291,6 +294,20 @@ impl GroupedCiphertext2HandlesValidityProof {
             z_r,
             z_x,
         })
+    }
+}
+
+impl From<GroupedCiphertext2HandlesValidityProof> for PodGroupedCiphertext2HandlesValidityProof {
+    fn from(decoded_proof: GroupedCiphertext2HandlesValidityProof) -> Self {
+        Self(decoded_proof.to_bytes())
+    }
+}
+
+impl TryFrom<PodGroupedCiphertext2HandlesValidityProof> for GroupedCiphertext2HandlesValidityProof {
+    type Error = ValidityProofVerificationError;
+
+    fn try_from(pod_proof: PodGroupedCiphertext2HandlesValidityProof) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_proof.0)
     }
 }
 

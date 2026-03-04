@@ -15,7 +15,10 @@ use {
             elgamal::{ElGamalCiphertext, ElGamalKeypair, ElGamalPubkey},
             pedersen::{PedersenCommitment, PedersenOpening, G, H},
         },
-        sigma_proofs::{canonical_scalar_from_optional_slice, ristretto_point_from_optional_slice},
+        sigma_proofs::{
+            canonical_scalar_from_optional_slice, pod::PodCiphertextCommitmentEqualityProof,
+            ristretto_point_from_optional_slice,
+        },
         UNIT_LEN,
     },
     curve25519_dalek::traits::MultiscalarMul,
@@ -270,6 +273,20 @@ impl CiphertextCommitmentEqualityProof {
             z_x,
             z_r,
         })
+    }
+}
+
+impl From<CiphertextCommitmentEqualityProof> for PodCiphertextCommitmentEqualityProof {
+    fn from(decoded_proof: CiphertextCommitmentEqualityProof) -> Self {
+        Self(decoded_proof.to_bytes())
+    }
+}
+
+impl TryFrom<PodCiphertextCommitmentEqualityProof> for CiphertextCommitmentEqualityProof {
+    type Error = EqualityProofVerificationError;
+
+    fn try_from(pod_proof: PodCiphertextCommitmentEqualityProof) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_proof.0)
     }
 }
 
