@@ -14,11 +14,10 @@ use {
         UNIT_LEN,
     },
     core::iter,
-    curve25519_dalek::traits::MultiscalarMul,
     curve25519_dalek::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
-        traits::{IsIdentity, VartimeMultiscalarMul},
+        traits::{IsIdentity, MultiscalarMul, VartimeMultiscalarMul},
     },
     merlin::Transcript,
     rand::rngs::OsRng,
