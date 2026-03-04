@@ -22,12 +22,12 @@ pub mod generators;
 #[cfg(not(target_os = "solana"))]
 pub mod inner_product;
 #[cfg(not(target_os = "solana"))]
-pub mod range_proof;
+pub mod range;
 #[cfg(not(target_os = "solana"))]
 pub mod util;
 
 #[cfg(not(target_os = "solana"))]
-pub use range_proof::*;
+pub use range::*;
 
 /// Byte length of a range proof excluding the inner-product proof component
 pub const RANGE_PROOF_MODULO_INNER_PRODUCT_PROOF_LEN: usize =
