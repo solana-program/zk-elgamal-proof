@@ -20,12 +20,13 @@ use {
     curve25519_dalek::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
-        traits::{MultiscalarMul, VartimeMultiscalarMul},
+        traits::MultiscalarMul,
     },
     merlin::Transcript,
-    std::borrow::Borrow,
     zeroize::Zeroize,
 };
+#[cfg(test)]
+use {curve25519_dalek::traits::VartimeMultiscalarMul, std::borrow::Borrow};
 
 /// An inner-product proof.
 ///
@@ -307,8 +308,9 @@ impl InnerProductProof {
     /// This is a standalone verification function for testing. In a real protocol,
     /// the `verification_scalars` method would be used to integrate the check into
     /// a larger, single multiscalar multiplication.
+    #[cfg(test)]
     #[allow(clippy::too_many_arguments)]
-    pub fn verify<IG, IH>(
+    fn verify<IG, IH>(
         &self,
         n: usize,
         G_factors: IG,
