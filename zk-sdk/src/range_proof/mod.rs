@@ -26,6 +26,7 @@ pub mod range_proof;
 #[cfg(not(target_os = "solana"))]
 pub mod util;
 
+#[cfg(not(target_os = "solana"))]
 pub use range_proof::*;
 
 /// Byte length of a range proof excluding the inner-product proof component
