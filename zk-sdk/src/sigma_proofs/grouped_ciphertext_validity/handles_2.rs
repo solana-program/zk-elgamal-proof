@@ -8,7 +8,6 @@
 //! The protocol guarantees computational soundness (by the hardness of discrete log) and perfect
 //! zero-knowledge in the random oracle model.
 
-#[cfg(not(target_os = "solana"))]
 use {
     crate::{
         encryption::{
@@ -16,24 +15,23 @@ use {
             grouped_elgamal::GroupedElGamalCiphertext,
             pedersen::{PedersenOpening, G, H},
         },
-        sigma_proofs::{canonical_scalar_from_optional_slice, ristretto_point_from_optional_slice},
-        UNIT_LEN,
-    },
-    curve25519_dalek::traits::MultiscalarMul,
-    rand::rngs::OsRng,
-    zeroize::Zeroize,
-};
-use {
-    crate::{
-        sigma_proofs::errors::{SigmaProofVerificationError, ValidityProofVerificationError},
+        sigma_proofs::{
+            canonical_scalar_from_optional_slice,
+            errors::{SigmaProofVerificationError, ValidityProofVerificationError},
+            pod::PodGroupedCiphertext2HandlesValidityProof,
+            ristretto_point_from_optional_slice,
+        },
         transcript::TranscriptProtocol,
+        UNIT_LEN,
     },
     curve25519_dalek::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
-        traits::{IsIdentity, VartimeMultiscalarMul},
+        traits::{IsIdentity, MultiscalarMul, VartimeMultiscalarMul},
     },
     merlin::Transcript,
+    rand::rngs::OsRng,
+    zeroize::Zeroize,
 };
 
 /// Byte length of a grouped ciphertext validity proof for 2 handles
@@ -53,7 +51,6 @@ pub struct GroupedCiphertext2HandlesValidityProof {
 }
 
 #[allow(non_snake_case)]
-#[cfg(not(target_os = "solana"))]
 impl GroupedCiphertext2HandlesValidityProof {
     /// Creates a grouped ciphertext validity proof for 2 handles.
     ///
@@ -291,6 +288,20 @@ impl GroupedCiphertext2HandlesValidityProof {
             z_r,
             z_x,
         })
+    }
+}
+
+impl From<GroupedCiphertext2HandlesValidityProof> for PodGroupedCiphertext2HandlesValidityProof {
+    fn from(decoded_proof: GroupedCiphertext2HandlesValidityProof) -> Self {
+        Self(decoded_proof.to_bytes())
+    }
+}
+
+impl TryFrom<PodGroupedCiphertext2HandlesValidityProof> for GroupedCiphertext2HandlesValidityProof {
+    type Error = ValidityProofVerificationError;
+
+    fn try_from(pod_proof: PodGroupedCiphertext2HandlesValidityProof) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_proof.0)
     }
 }
 

@@ -19,6 +19,7 @@ use {
         encryption::{
             discrete_log::DiscreteLog,
             pedersen::{Pedersen, PedersenCommitment, PedersenOpening, G, H},
+            pod::elgamal::{PodDecryptHandle, PodElGamalCiphertext, PodElGamalPubkey},
             DECRYPT_HANDLE_LEN, ELGAMAL_CIPHERTEXT_LEN, ELGAMAL_KEYPAIR_LEN, ELGAMAL_PUBKEY_LEN,
             ELGAMAL_SECRET_KEY_LEN, PEDERSEN_COMMITMENT_LEN,
         },
@@ -446,6 +447,20 @@ impl From<&ElGamalPubkey> for [u8; ELGAMAL_PUBKEY_LEN] {
     }
 }
 
+impl From<ElGamalPubkey> for PodElGamalPubkey {
+    fn from(decoded_pubkey: ElGamalPubkey) -> Self {
+        Self(decoded_pubkey.into())
+    }
+}
+
+impl TryFrom<PodElGamalPubkey> for ElGamalPubkey {
+    type Error = ElGamalError;
+
+    fn try_from(pod_pubkey: PodElGamalPubkey) -> Result<Self, Self::Error> {
+        Self::try_from(pod_pubkey.0.as_slice())
+    }
+}
+
 /// Secret key for the ElGamal encryption scheme.
 ///
 /// Instances of ElGamal secret key are zeroized on drop.
@@ -723,6 +738,20 @@ impl<'b> Add<&'b ElGamalCiphertext> for &ElGamalCiphertext {
     }
 }
 
+impl From<ElGamalCiphertext> for PodElGamalCiphertext {
+    fn from(decoded_ciphertext: ElGamalCiphertext) -> Self {
+        Self(decoded_ciphertext.to_bytes())
+    }
+}
+
+impl TryFrom<PodElGamalCiphertext> for ElGamalCiphertext {
+    type Error = ElGamalError;
+
+    fn try_from(pod_ciphertext: PodElGamalCiphertext) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_ciphertext.0).ok_or(ElGamalError::CiphertextDeserialization)
+    }
+}
+
 define_add_variants!(
     LHS = ElGamalCiphertext,
     RHS = ElGamalCiphertext,
@@ -805,6 +834,27 @@ impl DecryptHandle {
         };
 
         compressed_ristretto.decompress().map(DecryptHandle)
+    }
+}
+
+impl From<DecryptHandle> for PodDecryptHandle {
+    fn from(decoded_handle: DecryptHandle) -> Self {
+        Self(decoded_handle.to_bytes())
+    }
+}
+
+// For proof verification, interpret pod::DecryptHandle as CompressedRistretto
+impl From<PodDecryptHandle> for CompressedRistretto {
+    fn from(pod_handle: PodDecryptHandle) -> Self {
+        Self(pod_handle.0)
+    }
+}
+
+impl TryFrom<PodDecryptHandle> for DecryptHandle {
+    type Error = ElGamalError;
+
+    fn try_from(pod_handle: PodDecryptHandle) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_handle.0).ok_or(ElGamalError::CiphertextDeserialization)
     }
 }
 

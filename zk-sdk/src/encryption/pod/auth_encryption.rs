@@ -1,7 +1,5 @@
 //! Plain Old Data types for the AES128-GCM-SIV authenticated encryption scheme.
 
-#[cfg(not(target_os = "solana"))]
-use crate::{encryption::auth_encryption::AeCiphertext, errors::AuthenticatedEncryptionError};
 use {
     crate::{
         encryption::AE_CIPHERTEXT_LEN,
@@ -49,22 +47,6 @@ impl_from_bytes!(TYPE = PodAeCiphertext, BYTES_LEN = AE_CIPHERTEXT_LEN);
 impl Default for PodAeCiphertext {
     fn default() -> Self {
         Self::zeroed()
-    }
-}
-
-#[cfg(not(target_os = "solana"))]
-impl From<AeCiphertext> for PodAeCiphertext {
-    fn from(decoded_ciphertext: AeCiphertext) -> Self {
-        Self(decoded_ciphertext.to_bytes())
-    }
-}
-
-#[cfg(not(target_os = "solana"))]
-impl TryFrom<PodAeCiphertext> for AeCiphertext {
-    type Error = AuthenticatedEncryptionError;
-
-    fn try_from(pod_ciphertext: PodAeCiphertext) -> Result<Self, Self::Error> {
-        Self::from_bytes(&pod_ciphertext.0).ok_or(AuthenticatedEncryptionError::Deserialization)
     }
 }
 

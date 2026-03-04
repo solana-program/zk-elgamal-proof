@@ -3,31 +3,29 @@
 //! The protocol guarantees computational soundness (by the hardness of discrete log) and perfect
 //! zero-knowledge in the random oracle model.
 
-#[cfg(not(target_os = "solana"))]
 use {
     crate::{
         encryption::{
             elgamal::{ElGamalCiphertext, ElGamalKeypair, ElGamalPubkey},
             pedersen::{PedersenOpening, G, H},
         },
-        sigma_proofs::{canonical_scalar_from_optional_slice, ristretto_point_from_optional_slice},
-        UNIT_LEN,
-    },
-    curve25519_dalek::traits::MultiscalarMul,
-    rand::rngs::OsRng,
-    zeroize::Zeroize,
-};
-use {
-    crate::{
-        sigma_proofs::errors::{EqualityProofVerificationError, SigmaProofVerificationError},
+        sigma_proofs::{
+            canonical_scalar_from_optional_slice,
+            errors::{EqualityProofVerificationError, SigmaProofVerificationError},
+            pod::PodCiphertextCiphertextEqualityProof,
+            ristretto_point_from_optional_slice,
+        },
         transcript::TranscriptProtocol,
+        UNIT_LEN,
     },
     curve25519_dalek::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
-        traits::{IsIdentity, VartimeMultiscalarMul},
+        traits::{IsIdentity, MultiscalarMul, VartimeMultiscalarMul},
     },
     merlin::Transcript,
+    rand::rngs::OsRng,
+    zeroize::Zeroize,
 };
 
 /// Byte length of a ciphertext-ciphertext equality proof.
@@ -49,7 +47,6 @@ pub struct CiphertextCiphertextEqualityProof {
 }
 
 #[allow(non_snake_case)]
-#[cfg(not(target_os = "solana"))]
 impl CiphertextCiphertextEqualityProof {
     /// Creates a ciphertext-ciphertext equality proof.
     ///
@@ -312,6 +309,20 @@ impl CiphertextCiphertextEqualityProof {
             z_x,
             z_r,
         })
+    }
+}
+
+impl From<CiphertextCiphertextEqualityProof> for PodCiphertextCiphertextEqualityProof {
+    fn from(decoded_proof: CiphertextCiphertextEqualityProof) -> Self {
+        Self(decoded_proof.to_bytes())
+    }
+}
+
+impl TryFrom<PodCiphertextCiphertextEqualityProof> for CiphertextCiphertextEqualityProof {
+    type Error = EqualityProofVerificationError;
+
+    fn try_from(pod_proof: PodCiphertextCiphertextEqualityProof) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_proof.0)
     }
 }
 

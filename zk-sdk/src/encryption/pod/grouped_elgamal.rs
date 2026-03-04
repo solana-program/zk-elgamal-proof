@@ -1,7 +1,5 @@
 //! Plain Old Data types for the Grouped ElGamal encryption scheme.
 
-#[cfg(not(target_os = "solana"))]
-use crate::encryption::grouped_elgamal::GroupedElGamalCiphertext;
 use {
     crate::{
         encryption::{
@@ -104,22 +102,6 @@ impl_from_bytes!(
     BYTES_LEN = GROUPED_ELGAMAL_CIPHERTEXT_2_HANDLES
 );
 
-#[cfg(not(target_os = "solana"))]
-impl From<GroupedElGamalCiphertext<2>> for PodGroupedElGamalCiphertext2Handles {
-    fn from(decoded_ciphertext: GroupedElGamalCiphertext<2>) -> Self {
-        Self(decoded_ciphertext.to_bytes().try_into().unwrap())
-    }
-}
-
-#[cfg(not(target_os = "solana"))]
-impl TryFrom<PodGroupedElGamalCiphertext2Handles> for GroupedElGamalCiphertext<2> {
-    type Error = ElGamalError;
-
-    fn try_from(pod_ciphertext: PodGroupedElGamalCiphertext2Handles) -> Result<Self, Self::Error> {
-        Self::from_bytes(&pod_ciphertext.0).ok_or(ElGamalError::CiphertextDeserialization)
-    }
-}
-
 impl_extract!(TYPE = PodGroupedElGamalCiphertext2Handles);
 
 /// The `GroupedElGamalCiphertext` type with three decryption handles as a `Pod`
@@ -157,22 +139,6 @@ impl_from_bytes!(
     TYPE = PodGroupedElGamalCiphertext3Handles,
     BYTES_LEN = GROUPED_ELGAMAL_CIPHERTEXT_3_HANDLES
 );
-
-#[cfg(not(target_os = "solana"))]
-impl From<GroupedElGamalCiphertext<3>> for PodGroupedElGamalCiphertext3Handles {
-    fn from(decoded_ciphertext: GroupedElGamalCiphertext<3>) -> Self {
-        Self(decoded_ciphertext.to_bytes().try_into().unwrap())
-    }
-}
-
-#[cfg(not(target_os = "solana"))]
-impl TryFrom<PodGroupedElGamalCiphertext3Handles> for GroupedElGamalCiphertext<3> {
-    type Error = ElGamalError;
-
-    fn try_from(pod_ciphertext: PodGroupedElGamalCiphertext3Handles) -> Result<Self, Self::Error> {
-        Self::from_bytes(&pod_ciphertext.0).ok_or(ElGamalError::CiphertextDeserialization)
-    }
-}
 
 impl_extract!(TYPE = PodGroupedElGamalCiphertext3Handles);
 

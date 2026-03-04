@@ -5,7 +5,7 @@
 //! number.
 use {
     crate::{
-        encryption::{AE_CIPHERTEXT_LEN, AE_KEY_LEN},
+        encryption::{pod::auth_encryption::PodAeCiphertext, AE_CIPHERTEXT_LEN, AE_KEY_LEN},
         errors::AuthenticatedEncryptionError,
     },
     aes_gcm_siv::{
@@ -276,6 +276,20 @@ impl AeCiphertext {
 impl fmt::Display for AeCiphertext {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", BASE64_STANDARD.encode(self.to_bytes()))
+    }
+}
+
+impl From<AeCiphertext> for PodAeCiphertext {
+    fn from(decoded_ciphertext: AeCiphertext) -> Self {
+        Self(decoded_ciphertext.to_bytes())
+    }
+}
+
+impl TryFrom<PodAeCiphertext> for AeCiphertext {
+    type Error = AuthenticatedEncryptionError;
+
+    fn try_from(pod_ciphertext: PodAeCiphertext) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_ciphertext.0).ok_or(AuthenticatedEncryptionError::Deserialization)
     }
 }
 

@@ -1,13 +1,5 @@
 //! Plain Old Data types for the ElGamal encryption scheme.
 
-#[cfg(not(target_os = "solana"))]
-use {
-    crate::{
-        encryption::elgamal::{DecryptHandle, ElGamalCiphertext, ElGamalPubkey},
-        errors::ElGamalError,
-    },
-    curve25519_dalek::ristretto::CompressedRistretto,
-};
 use {
     crate::{
         encryption::{DECRYPT_HANDLE_LEN, ELGAMAL_CIPHERTEXT_LEN, ELGAMAL_PUBKEY_LEN},
@@ -61,22 +53,6 @@ impl_from_bytes!(
     BYTES_LEN = ELGAMAL_CIPHERTEXT_LEN
 );
 
-#[cfg(not(target_os = "solana"))]
-impl From<ElGamalCiphertext> for PodElGamalCiphertext {
-    fn from(decoded_ciphertext: ElGamalCiphertext) -> Self {
-        Self(decoded_ciphertext.to_bytes())
-    }
-}
-
-#[cfg(not(target_os = "solana"))]
-impl TryFrom<PodElGamalCiphertext> for ElGamalCiphertext {
-    type Error = ElGamalError;
-
-    fn try_from(pod_ciphertext: PodElGamalCiphertext) -> Result<Self, Self::Error> {
-        Self::from_bytes(&pod_ciphertext.0).ok_or(ElGamalError::CiphertextDeserialization)
-    }
-}
-
 /// The `ElGamalPubkey` type as a `Pod`.
 #[derive(Clone, Copy, Default, bytemuck_derive::Pod, bytemuck_derive::Zeroable, PartialEq, Eq)]
 #[repr(transparent)]
@@ -102,22 +78,6 @@ impl_from_str!(
 
 impl_from_bytes!(TYPE = PodElGamalPubkey, BYTES_LEN = ELGAMAL_PUBKEY_LEN);
 
-#[cfg(not(target_os = "solana"))]
-impl From<ElGamalPubkey> for PodElGamalPubkey {
-    fn from(decoded_pubkey: ElGamalPubkey) -> Self {
-        Self(decoded_pubkey.into())
-    }
-}
-
-#[cfg(not(target_os = "solana"))]
-impl TryFrom<PodElGamalPubkey> for ElGamalPubkey {
-    type Error = ElGamalError;
-
-    fn try_from(pod_pubkey: PodElGamalPubkey) -> Result<Self, Self::Error> {
-        Self::try_from(pod_pubkey.0.as_slice())
-    }
-}
-
 /// The `DecryptHandle` type as a `Pod`.
 #[derive(Clone, Copy, Default, bytemuck_derive::Pod, bytemuck_derive::Zeroable, PartialEq, Eq)]
 #[repr(transparent)]
@@ -126,30 +86,6 @@ pub struct PodDecryptHandle(pub(crate) [u8; DECRYPT_HANDLE_LEN]);
 impl fmt::Debug for PodDecryptHandle {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{:?}", self.0)
-    }
-}
-
-#[cfg(not(target_os = "solana"))]
-impl From<DecryptHandle> for PodDecryptHandle {
-    fn from(decoded_handle: DecryptHandle) -> Self {
-        Self(decoded_handle.to_bytes())
-    }
-}
-
-// For proof verification, interpret pod::DecryptHandle as CompressedRistretto
-#[cfg(not(target_os = "solana"))]
-impl From<PodDecryptHandle> for CompressedRistretto {
-    fn from(pod_handle: PodDecryptHandle) -> Self {
-        Self(pod_handle.0)
-    }
-}
-
-#[cfg(not(target_os = "solana"))]
-impl TryFrom<PodDecryptHandle> for DecryptHandle {
-    type Error = ElGamalError;
-
-    fn try_from(pod_handle: PodDecryptHandle) -> Result<Self, Self::Error> {
-        Self::from_bytes(&pod_handle.0).ok_or(ElGamalError::CiphertextDeserialization)
     }
 }
 

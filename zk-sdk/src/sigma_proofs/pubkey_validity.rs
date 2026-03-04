@@ -3,23 +3,20 @@
 //! The protocol guarantees computational soundness (by the hardness of discrete log) and perfect
 //! zero-knowledge in the random oracle model.
 
-#[cfg(not(target_os = "solana"))]
 use {
     crate::{
         encryption::{
             elgamal::{ElGamalKeypair, ElGamalPubkey},
             pedersen::H,
         },
-        sigma_proofs::{canonical_scalar_from_optional_slice, ristretto_point_from_optional_slice},
-        UNIT_LEN,
-    },
-    rand::rngs::OsRng,
-    zeroize::Zeroize,
-};
-use {
-    crate::{
-        sigma_proofs::errors::{PubkeyValidityProofVerificationError, SigmaProofVerificationError},
+        sigma_proofs::{
+            canonical_scalar_from_optional_slice,
+            errors::{PubkeyValidityProofVerificationError, SigmaProofVerificationError},
+            pod::PodPubkeyValidityProof,
+            ristretto_point_from_optional_slice,
+        },
         transcript::TranscriptProtocol,
+        UNIT_LEN,
     },
     curve25519_dalek::{
         ristretto::{CompressedRistretto, RistrettoPoint},
@@ -27,6 +24,8 @@ use {
         traits::{IsIdentity, VartimeMultiscalarMul},
     },
     merlin::Transcript,
+    rand::rngs::OsRng,
+    zeroize::Zeroize,
 };
 
 /// Byte length of a public key validity proof.
@@ -43,7 +42,6 @@ pub struct PubkeyValidityProof {
 }
 
 #[allow(non_snake_case)]
-#[cfg(not(target_os = "solana"))]
 impl PubkeyValidityProof {
     /// Creates a public key validity proof.
     ///
@@ -146,6 +144,20 @@ impl PubkeyValidityProof {
         let Y = ristretto_point_from_optional_slice(chunks.next())?;
         let z = canonical_scalar_from_optional_slice(chunks.next())?;
         Ok(PubkeyValidityProof { Y, z })
+    }
+}
+
+impl From<PubkeyValidityProof> for PodPubkeyValidityProof {
+    fn from(decoded_proof: PubkeyValidityProof) -> Self {
+        Self(decoded_proof.to_bytes())
+    }
+}
+
+impl TryFrom<PodPubkeyValidityProof> for PubkeyValidityProof {
+    type Error = PubkeyValidityProofVerificationError;
+
+    fn try_from(pod_proof: PodPubkeyValidityProof) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_proof.0)
     }
 }
 

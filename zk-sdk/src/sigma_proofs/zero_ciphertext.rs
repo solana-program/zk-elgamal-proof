@@ -3,31 +3,29 @@
 //! The protocol guarantees computational soundness (by the hardness of discrete log) and perfect
 //! zero-knowledge in the random oracle model.
 
-#[cfg(not(target_os = "solana"))]
 use {
     crate::{
         encryption::{
             elgamal::{ElGamalCiphertext, ElGamalKeypair, ElGamalPubkey},
             pedersen::H,
         },
-        sigma_proofs::{canonical_scalar_from_optional_slice, ristretto_point_from_optional_slice},
-        UNIT_LEN,
-    },
-    curve25519_dalek::traits::MultiscalarMul,
-    rand::rngs::OsRng,
-    zeroize::Zeroize,
-};
-use {
-    crate::{
-        sigma_proofs::errors::{SigmaProofVerificationError, ZeroCiphertextProofVerificationError},
+        sigma_proofs::{
+            canonical_scalar_from_optional_slice,
+            errors::{SigmaProofVerificationError, ZeroCiphertextProofVerificationError},
+            pod::PodZeroCiphertextProof,
+            ristretto_point_from_optional_slice,
+        },
         transcript::TranscriptProtocol,
+        UNIT_LEN,
     },
     curve25519_dalek::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
-        traits::IsIdentity,
+        traits::{IsIdentity, MultiscalarMul},
     },
     merlin::Transcript,
+    rand::rngs::OsRng,
+    zeroize::Zeroize,
 };
 
 /// Byte length of a zero-ciphertext proof.
@@ -45,7 +43,6 @@ pub struct ZeroCiphertextProof {
 }
 
 #[allow(non_snake_case)]
-#[cfg(not(target_os = "solana"))]
 impl ZeroCiphertextProof {
     /// Creates a zero-ciphertext proof.
     ///
@@ -192,6 +189,20 @@ impl ZeroCiphertextProof {
         let Y_D = ristretto_point_from_optional_slice(chunks.next())?;
         let z = canonical_scalar_from_optional_slice(chunks.next())?;
         Ok(ZeroCiphertextProof { Y_P, Y_D, z })
+    }
+}
+
+impl From<ZeroCiphertextProof> for PodZeroCiphertextProof {
+    fn from(decoded_proof: ZeroCiphertextProof) -> Self {
+        Self(decoded_proof.to_bytes())
+    }
+}
+
+impl TryFrom<PodZeroCiphertextProof> for ZeroCiphertextProof {
+    type Error = ZeroCiphertextProofVerificationError;
+
+    fn try_from(pod_proof: PodZeroCiphertextProof) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_proof.0)
     }
 }
 

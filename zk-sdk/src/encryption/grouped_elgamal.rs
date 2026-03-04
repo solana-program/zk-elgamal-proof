@@ -18,7 +18,11 @@ use {
             discrete_log::DiscreteLog,
             elgamal::{DecryptHandle, ElGamalCiphertext, ElGamalPubkey, ElGamalSecretKey},
             pedersen::{Pedersen, PedersenCommitment, PedersenOpening},
+            pod::grouped_elgamal::{
+                PodGroupedElGamalCiphertext2Handles, PodGroupedElGamalCiphertext3Handles,
+            },
         },
+        errors::ElGamalError,
         RISTRETTO_POINT_LEN,
     },
     curve25519_dalek::scalar::Scalar,
@@ -214,6 +218,34 @@ impl<const N: usize> GroupedElGamalCiphertext<N> {
         index: usize,
     ) -> Result<Option<u64>, GroupedElGamalError> {
         GroupedElGamal::decrypt_u32(self, secret, index)
+    }
+}
+
+impl From<GroupedElGamalCiphertext<2>> for PodGroupedElGamalCiphertext2Handles {
+    fn from(decoded_ciphertext: GroupedElGamalCiphertext<2>) -> Self {
+        Self(decoded_ciphertext.to_bytes().try_into().unwrap())
+    }
+}
+
+impl TryFrom<PodGroupedElGamalCiphertext2Handles> for GroupedElGamalCiphertext<2> {
+    type Error = ElGamalError;
+
+    fn try_from(pod_ciphertext: PodGroupedElGamalCiphertext2Handles) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_ciphertext.0).ok_or(ElGamalError::CiphertextDeserialization)
+    }
+}
+
+impl From<GroupedElGamalCiphertext<3>> for PodGroupedElGamalCiphertext3Handles {
+    fn from(decoded_ciphertext: GroupedElGamalCiphertext<3>) -> Self {
+        Self(decoded_ciphertext.to_bytes().try_into().unwrap())
+    }
+}
+
+impl TryFrom<PodGroupedElGamalCiphertext3Handles> for GroupedElGamalCiphertext<3> {
+    type Error = ElGamalError;
+
+    fn try_from(pod_ciphertext: PodGroupedElGamalCiphertext3Handles) -> Result<Self, Self::Error> {
+        Self::from_bytes(&pod_ciphertext.0).ok_or(ElGamalError::CiphertextDeserialization)
     }
 }
 
