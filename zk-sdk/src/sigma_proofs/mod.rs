@@ -6,7 +6,6 @@
 //! [`ZK Token proof`]: https://docs.solanalabs.com/runtime/zk-token-proof
 
 pub mod errors;
-pub mod pod;
 
 #[cfg(not(target_os = "solana"))]
 pub mod batched_grouped_ciphertext_validity;
@@ -25,8 +24,9 @@ pub mod zero_ciphertext;
 
 #[cfg(not(target_os = "solana"))]
 use {
-    crate::{sigma_proofs::errors::SigmaProofVerificationError, RISTRETTO_POINT_LEN, SCALAR_LEN},
+    crate::sigma_proofs::errors::SigmaProofVerificationError,
     curve25519_dalek::{ristretto::CompressedRistretto, scalar::Scalar},
+    solana_zk_sdk_pod::{RISTRETTO_POINT_LEN, SCALAR_LEN},
 };
 
 /// Deserializes an optional slice of bytes to a compressed Ristretto point.

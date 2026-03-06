@@ -10,8 +10,6 @@
 //! - Basic type-wrapper around the AES-GCM-SIV symmetric authenticated encryption scheme
 //!   implemented by [aes-gcm-siv](https://docs.rs/aes-gcm-siv/latest/aes_gcm_siv/) crate.
 
-use crate::{RISTRETTO_POINT_LEN, SCALAR_LEN};
-
 #[cfg(not(target_os = "solana"))]
 #[macro_use]
 pub(crate) mod macros;
@@ -25,4 +23,3 @@ pub mod elgamal;
 pub mod grouped_elgamal;
 #[cfg(not(target_os = "solana"))]
 pub mod pedersen;
-pub mod pod;

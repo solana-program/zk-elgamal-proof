@@ -5,13 +5,9 @@ use {
             errors::{RangeProofGenerationError, RangeProofVerificationError},
             generators::RangeProofGens,
             inner_product::InnerProductProof,
-            pod::{PodRangeProofU128, PodRangeProofU256, PodRangeProofU64},
-            util, INNER_PRODUCT_PROOF_U128_LEN, INNER_PRODUCT_PROOF_U256_LEN,
-            INNER_PRODUCT_PROOF_U64_LEN, RANGE_PROOF_MODULO_INNER_PRODUCT_PROOF_LEN,
-            RANGE_PROOF_U128_LEN, RANGE_PROOF_U256_LEN, RANGE_PROOF_U64_LEN,
+            util,
         },
         transcript::TranscriptProtocol,
-        UNIT_LEN,
     },
     core::iter,
     curve25519_dalek::{
@@ -21,6 +17,14 @@ use {
     },
     merlin::Transcript,
     rand::rngs::OsRng,
+    solana_zk_sdk_pod::{
+        range_proof::{
+            PodRangeProofU128, PodRangeProofU256, PodRangeProofU64, INNER_PRODUCT_PROOF_U128_LEN,
+            INNER_PRODUCT_PROOF_U256_LEN, INNER_PRODUCT_PROOF_U64_LEN, RANGE_PROOF_U128_LEN,
+            RANGE_PROOF_U256_LEN, RANGE_PROOF_U64_LEN,
+        },
+        UNIT_LEN,
+    },
     subtle::{Choice, ConditionallySelectable},
     zeroize::Zeroize,
 };

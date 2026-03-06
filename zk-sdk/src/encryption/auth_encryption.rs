@@ -4,10 +4,7 @@
 //! specialized for SPL Token-2022 program where the plaintext is always a `u64`
 //! number.
 use {
-    crate::{
-        encryption::{pod::auth_encryption::PodAeCiphertext, AE_CIPHERTEXT_LEN, AE_KEY_LEN},
-        errors::AuthenticatedEncryptionError,
-    },
+    crate::errors::AuthenticatedEncryptionError,
     aes_gcm_siv::{
         aead::{Aead, KeyInit},
         Aes128GcmSiv,
@@ -20,6 +17,9 @@ use {
     solana_seed_phrase::generate_seed_from_seed_phrase_and_passphrase,
     solana_signature::Signature,
     solana_signer::{EncodableKey, Signer, SignerError},
+    solana_zk_sdk_pod::encryption::{
+        auth_encryption::PodAeCiphertext, AE_CIPHERTEXT_LEN, AE_KEY_LEN,
+    },
     std::{
         convert::TryInto,
         error, fmt,

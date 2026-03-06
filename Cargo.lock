@@ -1164,6 +1164,7 @@ dependencies = [
  "solana-seed-phrase",
  "solana-signature",
  "solana-signer",
+ "solana-zk-sdk-pod",
  "subtle",
  "thiserror 2.0.18",
  "tiny-bip39",
