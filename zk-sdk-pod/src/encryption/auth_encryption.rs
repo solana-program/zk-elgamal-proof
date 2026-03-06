@@ -3,7 +3,7 @@
 use {
     crate::{
         encryption::AE_CIPHERTEXT_LEN,
-        pod::{impl_from_bytes, impl_from_str},
+        macros::{impl_from_bytes, impl_from_str},
     },
     base64::{prelude::BASE64_STANDARD, Engine},
     bytemuck::{Pod, Zeroable},

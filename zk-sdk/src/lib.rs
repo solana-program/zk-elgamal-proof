@@ -34,10 +34,3 @@ pub mod zk_elgamal_proof_program;
 /// This string MUST be changed for any fork or separate deployment to prevent
 /// cross-chain proof replay attacks.
 pub const TRANSCRIPT_DOMAIN: &[u8] = b"solana-zk-elgamal-proof-program-v1";
-
-/// Byte length of a compressed Ristretto point or scalar in Curve25519
-const UNIT_LEN: usize = 32;
-/// Byte length of a compressed Ristretto point in Curve25519
-const RISTRETTO_POINT_LEN: usize = UNIT_LEN;
-/// Byte length of a scalar in Curve25519
-const SCALAR_LEN: usize = UNIT_LEN;

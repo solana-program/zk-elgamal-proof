@@ -3,11 +3,11 @@
 use {
     crate::{
         encryption::{
-            pod::{elgamal::PodElGamalCiphertext, pedersen::PodPedersenCommitment},
             DECRYPT_HANDLE_LEN, ELGAMAL_CIPHERTEXT_LEN, PEDERSEN_COMMITMENT_LEN,
+            {elgamal::PodElGamalCiphertext, pedersen::PodPedersenCommitment},
         },
-        errors::ElGamalError,
-        pod::{impl_from_bytes, impl_from_str},
+        errors::ParseError,
+        macros::{impl_from_bytes, impl_from_str},
     },
     base64::{prelude::BASE64_STANDARD, Engine},
     bytemuck::Zeroable,
@@ -34,7 +34,7 @@ macro_rules! impl_extract {
             pub fn try_extract_ciphertext(
                 &self,
                 index: usize,
-            ) -> Result<PodElGamalCiphertext, ElGamalError> {
+            ) -> Result<PodElGamalCiphertext, ParseError> {
                 let mut ciphertext_bytes = [0u8; ELGAMAL_CIPHERTEXT_LEN];
                 ciphertext_bytes[..PEDERSEN_COMMITMENT_LEN]
                     .copy_from_slice(&self.0[..PEDERSEN_COMMITMENT_LEN]);
@@ -42,14 +42,14 @@ macro_rules! impl_extract {
                 let handle_start = DECRYPT_HANDLE_LEN
                     .checked_mul(index)
                     .and_then(|n| n.checked_add(PEDERSEN_COMMITMENT_LEN))
-                    .ok_or(ElGamalError::CiphertextDeserialization)?;
+                    .ok_or(ParseError::WrongSize)?;
                 let handle_end = handle_start
                     .checked_add(DECRYPT_HANDLE_LEN)
-                    .ok_or(ElGamalError::CiphertextDeserialization)?;
+                    .ok_or(ParseError::WrongSize)?;
                 ciphertext_bytes[PEDERSEN_COMMITMENT_LEN..].copy_from_slice(
                     self.0
                         .get(handle_start..handle_end)
-                        .ok_or(ElGamalError::CiphertextDeserialization)?,
+                        .ok_or(ParseError::WrongSize)?,
                 );
 
                 Ok(PodElGamalCiphertext(ciphertext_bytes))

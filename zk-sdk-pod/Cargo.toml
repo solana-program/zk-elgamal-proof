@@ -1,5 +1,5 @@
 [package]
-name = "solana-zk-pod"
+name = "solana-zk-sdk-pod"
 description = "Solana ZK SDK Plain Old Data (Pod)"
 documentation = "https://docs.rs/solana-zk-sdk-pod"
 version = "0.0.0"
@@ -13,6 +13,10 @@ edition = { workspace = true }
 crate-type = ["rlib"]
 
 [dependencies]
+base64 = { workspace = true }
+bytemuck = { workspace = true }
+bytemuck_derive = { workspace = true }
+thiserror = { workspace = true }
 
 [lints]
 workspace = true

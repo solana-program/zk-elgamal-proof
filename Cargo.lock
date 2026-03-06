@@ -1137,10 +1137,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "solana-zk-pod"
-version = "0.0.0"
-
-[[package]]
 name = "solana-zk-sdk"
 version = "5.0.1"
 dependencies = [
@@ -1172,6 +1168,16 @@ dependencies = [
  "thiserror 2.0.18",
  "tiny-bip39",
  "zeroize",
+]
+
+[[package]]
+name = "solana-zk-sdk-pod"
+version = "0.0.0"
+dependencies = [
+ "base64",
+ "bytemuck",
+ "bytemuck_derive",
+ "thiserror 2.0.18",
 ]
 
 [[package]]

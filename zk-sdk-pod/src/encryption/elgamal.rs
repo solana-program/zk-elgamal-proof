@@ -3,7 +3,7 @@
 use {
     crate::{
         encryption::{DECRYPT_HANDLE_LEN, ELGAMAL_CIPHERTEXT_LEN, ELGAMAL_PUBKEY_LEN},
-        pod::{impl_from_bytes, impl_from_str},
+        macros::{impl_from_bytes, impl_from_str},
     },
     base64::{prelude::BASE64_STANDARD, Engine},
     bytemuck::Zeroable,
