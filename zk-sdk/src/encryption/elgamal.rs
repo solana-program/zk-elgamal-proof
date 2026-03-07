@@ -19,9 +19,6 @@ use {
         encryption::{
             discrete_log::DiscreteLog,
             pedersen::{Pedersen, PedersenCommitment, PedersenOpening, G, H},
-            pod::elgamal::{PodDecryptHandle, PodElGamalCiphertext, PodElGamalPubkey},
-            DECRYPT_HANDLE_LEN, ELGAMAL_CIPHERTEXT_LEN, ELGAMAL_KEYPAIR_LEN, ELGAMAL_PUBKEY_LEN,
-            ELGAMAL_SECRET_KEY_LEN, PEDERSEN_COMMITMENT_LEN,
         },
         errors::ElGamalError,
     },
@@ -40,6 +37,11 @@ use {
     solana_seed_phrase::generate_seed_from_seed_phrase_and_passphrase,
     solana_signature::Signature,
     solana_signer::{EncodableKey, EncodableKeypair, Signer, SignerError},
+    solana_zk_sdk_pod::encryption::{
+        elgamal::{PodDecryptHandle, PodElGamalCiphertext, PodElGamalPubkey},
+        DECRYPT_HANDLE_LEN, ELGAMAL_CIPHERTEXT_LEN, ELGAMAL_KEYPAIR_LEN, ELGAMAL_PUBKEY_LEN,
+        ELGAMAL_SECRET_KEY_LEN, PEDERSEN_COMMITMENT_LEN,
+    },
     std::{
         convert::TryInto,
         error, fmt,

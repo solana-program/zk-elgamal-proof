@@ -15,7 +15,6 @@
 //!
 
 use {
-    crate::RISTRETTO_POINT_LEN,
     curve25519_dalek::{
         constants::RISTRETTO_BASEPOINT_POINT as G,
         ristretto::RistrettoPoint,
@@ -24,6 +23,7 @@ use {
     },
     itertools::Itertools,
     serde::{Deserialize, Serialize},
+    solana_zk_sdk_pod::RISTRETTO_POINT_LEN,
     std::{collections::HashMap, num::NonZeroUsize, thread},
     thiserror::Error,
 };

@@ -1,14 +1,38 @@
 //! Plain Old Data types for sigma proofs.
 
 use {
-    crate::{
-        pod::{impl_from_bytes, impl_from_str},
-        sigma_proofs::*,
-    },
+    crate::macros::{impl_from_bytes, impl_from_str},
     base64::{prelude::BASE64_STANDARD, Engine},
     bytemuck::{Pod, Zeroable},
     std::fmt,
 };
+
+/// Byte length of a ciphertext-commitment equality proof
+pub const CIPHERTEXT_COMMITMENT_EQUALITY_PROOF_LEN: usize = 192;
+
+/// Byte length of a ciphertext-ciphertext equality proof
+pub const CIPHERTEXT_CIPHERTEXT_EQUALITY_PROOF_LEN: usize = 224;
+
+/// Byte length of a grouped ciphertext for 2 handles validity proof
+pub const GROUPED_CIPHERTEXT_2_HANDLES_VALIDITY_PROOF_LEN: usize = 160;
+
+/// Byte length of a grouped ciphertext for 3 handles validity proof
+pub const GROUPED_CIPHERTEXT_3_HANDLES_VALIDITY_PROOF_LEN: usize = 192;
+
+/// Byte length of a batched grouped ciphertext for 2 handles validity proof
+pub const BATCHED_GROUPED_CIPHERTEXT_2_HANDLES_VALIDITY_PROOF_LEN: usize = 160;
+
+/// Byte length of a batched grouped ciphertext for 3 handles validity proof
+pub const BATCHED_GROUPED_CIPHERTEXT_3_HANDLES_VALIDITY_PROOF_LEN: usize = 192;
+
+/// Byte length of a zero-ciphertext proof
+pub const ZERO_CIPHERTEXT_PROOF_LEN: usize = 96;
+
+/// Byte length of a percentage with cap proof
+pub const PERCENTAGE_WITH_CAP_PROOF_LEN: usize = 256;
+
+/// Byte length of a public key validity proof
+pub const PUBKEY_VALIDITY_PROOF_LEN: usize = 64;
 
 /// The `CiphertextCommitmentEqualityProof` type as a `Pod`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

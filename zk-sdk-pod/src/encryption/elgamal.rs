@@ -3,7 +3,7 @@
 use {
     crate::{
         encryption::{DECRYPT_HANDLE_LEN, ELGAMAL_CIPHERTEXT_LEN, ELGAMAL_PUBKEY_LEN},
-        pod::{impl_from_bytes, impl_from_str},
+        macros::{impl_from_bytes, impl_from_str},
     },
     base64::{prelude::BASE64_STANDARD, Engine},
     bytemuck::Zeroable,
@@ -22,7 +22,7 @@ const DECRYPT_HANDLE_MAX_BASE64_LEN: usize = 44;
 /// The `ElGamalCiphertext` type as a `Pod`.
 #[derive(Clone, Copy, bytemuck_derive::Pod, bytemuck_derive::Zeroable, PartialEq, Eq)]
 #[repr(transparent)]
-pub struct PodElGamalCiphertext(pub(crate) [u8; ELGAMAL_CIPHERTEXT_LEN]);
+pub struct PodElGamalCiphertext(pub [u8; ELGAMAL_CIPHERTEXT_LEN]);
 
 impl fmt::Debug for PodElGamalCiphertext {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -56,7 +56,7 @@ impl_from_bytes!(
 /// The `ElGamalPubkey` type as a `Pod`.
 #[derive(Clone, Copy, Default, bytemuck_derive::Pod, bytemuck_derive::Zeroable, PartialEq, Eq)]
 #[repr(transparent)]
-pub struct PodElGamalPubkey(pub(crate) [u8; ELGAMAL_PUBKEY_LEN]);
+pub struct PodElGamalPubkey(pub [u8; ELGAMAL_PUBKEY_LEN]);
 
 impl fmt::Debug for PodElGamalPubkey {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -81,7 +81,7 @@ impl_from_bytes!(TYPE = PodElGamalPubkey, BYTES_LEN = ELGAMAL_PUBKEY_LEN);
 /// The `DecryptHandle` type as a `Pod`.
 #[derive(Clone, Copy, Default, bytemuck_derive::Pod, bytemuck_derive::Zeroable, PartialEq, Eq)]
 #[repr(transparent)]
-pub struct PodDecryptHandle(pub(crate) [u8; DECRYPT_HANDLE_LEN]);
+pub struct PodDecryptHandle(pub [u8; DECRYPT_HANDLE_LEN]);
 
 impl fmt::Debug for PodDecryptHandle {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
