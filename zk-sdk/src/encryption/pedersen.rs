@@ -227,13 +227,6 @@ impl From<PedersenCommitment> for PodPedersenCommitment {
     }
 }
 
-// For proof verification, interpret pod::PedersenCommitment directly as CompressedRistretto
-impl From<PodPedersenCommitment> for CompressedRistretto {
-    fn from(pod_commitment: PodPedersenCommitment) -> Self {
-        Self(pod_commitment.0)
-    }
-}
-
 impl TryFrom<PodPedersenCommitment> for PedersenCommitment {
     type Error = ElGamalError;
 
