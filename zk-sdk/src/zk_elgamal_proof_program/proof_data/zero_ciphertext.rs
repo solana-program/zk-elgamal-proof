@@ -4,6 +4,14 @@
 //! certifies that a given ciphertext encrypts the message 0 in the field (`Scalar::zero()`). To
 //! generate the proof, a prover must provide the decryption key for the ciphertext.
 
+use {
+    crate::zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
+    bytemuck_derive::{Pod, Zeroable},
+    solana_zk_sdk_pod::{
+        encryption::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
+        sigma_proofs::PodZeroCiphertextProof,
+    },
+};
 #[cfg(not(target_os = "solana"))]
 use {
     crate::{
@@ -18,14 +26,6 @@ use {
     curve25519_dalek::traits::IsIdentity,
     merlin::Transcript,
     std::convert::TryInto,
-};
-use {
-    crate::{
-        encryption::pod::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
-        sigma_proofs::pod::PodZeroCiphertextProof,
-        zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
-    },
-    bytemuck_derive::{Pod, Zeroable},
 };
 
 /// The instruction data that is needed for the `ProofInstruction::VerifyZeroCiphertext` instruction.

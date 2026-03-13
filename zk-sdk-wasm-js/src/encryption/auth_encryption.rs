@@ -1,6 +1,7 @@
 use {
     js_sys::Uint8Array,
-    solana_zk_sdk::encryption::{auth_encryption, AE_CIPHERTEXT_LEN, AE_KEY_LEN},
+    solana_zk_sdk::encryption::auth_encryption,
+    solana_zk_sdk_pod::encryption::{AE_CIPHERTEXT_LEN, AE_KEY_LEN},
     wasm_bindgen::prelude::{wasm_bindgen, JsValue},
 };
 

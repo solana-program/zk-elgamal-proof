@@ -4,7 +4,8 @@ use {
         pedersen::PedersenOpening,
     },
     js_sys::Uint8Array,
-    solana_zk_sdk::encryption::{grouped_elgamal, DECRYPT_HANDLE_LEN, PEDERSEN_COMMITMENT_LEN},
+    solana_zk_sdk::encryption::grouped_elgamal,
+    solana_zk_sdk_pod::encryption::{DECRYPT_HANDLE_LEN, PEDERSEN_COMMITMENT_LEN},
     wasm_bindgen::prelude::*,
 };
 

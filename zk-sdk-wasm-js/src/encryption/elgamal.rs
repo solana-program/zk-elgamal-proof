@@ -1,9 +1,9 @@
 use {
     crate::encryption::pedersen::{PedersenCommitment, PedersenOpening},
     js_sys::Uint8Array,
-    solana_zk_sdk::encryption::{
-        elgamal, DECRYPT_HANDLE_LEN, ELGAMAL_CIPHERTEXT_LEN, ELGAMAL_PUBKEY_LEN,
-        ELGAMAL_SECRET_KEY_LEN,
+    solana_zk_sdk::encryption::elgamal,
+    solana_zk_sdk_pod::encryption::{
+        DECRYPT_HANDLE_LEN, ELGAMAL_CIPHERTEXT_LEN, ELGAMAL_PUBKEY_LEN, ELGAMAL_SECRET_KEY_LEN,
     },
     wasm_bindgen::prelude::{wasm_bindgen, JsValue},
 };

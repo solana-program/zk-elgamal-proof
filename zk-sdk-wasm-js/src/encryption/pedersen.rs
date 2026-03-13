@@ -1,6 +1,7 @@
 use {
     js_sys::Uint8Array,
-    solana_zk_sdk::encryption::{pedersen, PEDERSEN_COMMITMENT_LEN},
+    solana_zk_sdk::encryption::pedersen,
+    solana_zk_sdk_pod::encryption::PEDERSEN_COMMITMENT_LEN,
     wasm_bindgen::prelude::{wasm_bindgen, JsValue},
 };
 

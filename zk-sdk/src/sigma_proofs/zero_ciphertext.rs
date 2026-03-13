@@ -12,11 +12,9 @@ use {
         sigma_proofs::{
             canonical_scalar_from_optional_slice,
             errors::{SigmaProofVerificationError, ZeroCiphertextProofVerificationError},
-            pod::PodZeroCiphertextProof,
             ristretto_point_from_optional_slice,
         },
         transcript::TranscriptProtocol,
-        UNIT_LEN,
     },
     curve25519_dalek::{
         ristretto::{CompressedRistretto, RistrettoPoint},
@@ -25,6 +23,7 @@ use {
     },
     merlin::Transcript,
     rand::rngs::OsRng,
+    solana_zk_sdk_pod::{sigma_proofs::PodZeroCiphertextProof, UNIT_LEN},
     zeroize::Zeroize,
 };
 
@@ -210,13 +209,13 @@ impl TryFrom<PodZeroCiphertextProof> for ZeroCiphertextProof {
 mod test {
     use {
         super::*,
-        crate::{
-            encryption::{
-                elgamal::ElGamalKeypair,
-                pedersen::{PedersenCommitment, PedersenOpening},
-                pod::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
-            },
-            sigma_proofs::pod::PodZeroCiphertextProof,
+        crate::encryption::{
+            elgamal::ElGamalKeypair,
+            pedersen::{PedersenCommitment, PedersenOpening},
+        },
+        solana_zk_sdk_pod::{
+            encryption::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
+            sigma_proofs::PodZeroCiphertextProof,
         },
         std::str::FromStr,
     };

@@ -18,11 +18,9 @@ use {
         sigma_proofs::{
             canonical_scalar_from_optional_slice,
             errors::{SigmaProofVerificationError, ValidityProofVerificationError},
-            pod::PodGroupedCiphertext2HandlesValidityProof,
             ristretto_point_from_optional_slice,
         },
         transcript::TranscriptProtocol,
-        UNIT_LEN,
     },
     curve25519_dalek::{
         ristretto::{CompressedRistretto, RistrettoPoint},
@@ -31,6 +29,7 @@ use {
     },
     merlin::Transcript,
     rand::rngs::OsRng,
+    solana_zk_sdk_pod::{sigma_proofs::PodGroupedCiphertext2HandlesValidityProof, UNIT_LEN},
     zeroize::Zeroize,
 };
 
@@ -309,15 +308,15 @@ impl TryFrom<PodGroupedCiphertext2HandlesValidityProof> for GroupedCiphertext2Ha
 mod test {
     use {
         super::*,
-        crate::{
+        crate::encryption::{
+            elgamal::ElGamalKeypair,
+            pedersen::{Pedersen, PedersenCommitment},
+        },
+        solana_zk_sdk_pod::{
             encryption::{
-                elgamal::ElGamalKeypair,
-                pedersen::{Pedersen, PedersenCommitment},
-                pod::{
-                    elgamal::PodElGamalPubkey, grouped_elgamal::PodGroupedElGamalCiphertext2Handles,
-                },
+                elgamal::PodElGamalPubkey, grouped_elgamal::PodGroupedElGamalCiphertext2Handles,
             },
-            sigma_proofs::pod::PodGroupedCiphertext2HandlesValidityProof,
+            sigma_proofs::PodGroupedCiphertext2HandlesValidityProof,
         },
         std::str::FromStr,
     };
