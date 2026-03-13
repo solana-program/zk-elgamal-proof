@@ -105,12 +105,12 @@ impl_from_bytes!(TYPE = PodDecryptHandle, BYTES_LEN = DECRYPT_HANDLE_LEN);
 
 #[cfg(test)]
 mod tests {
-    use {super::*, crate::encryption::elgamal::ElGamalKeypair, std::str::FromStr};
+    use {super::*, solana_zk_sdk::encryption::elgamal::ElGamalKeypair, std::str::FromStr};
 
     #[test]
     fn elgamal_pubkey_fromstr() {
         let elgamal_keypair = ElGamalKeypair::new_rand();
-        let expected_elgamal_pubkey: PodElGamalPubkey = (*elgamal_keypair.pubkey()).into();
+        let expected_elgamal_pubkey = PodElGamalPubkey(elgamal_keypair.pubkey().to_bytes());
 
         let elgamal_pubkey_base64_str = format!("{}", expected_elgamal_pubkey);
         let computed_elgamal_pubkey =
@@ -122,8 +122,8 @@ mod tests {
     #[test]
     fn elgamal_ciphertext_fromstr() {
         let elgamal_keypair = ElGamalKeypair::new_rand();
-        let expected_elgamal_ciphertext: PodElGamalCiphertext =
-            elgamal_keypair.pubkey().encrypt(0_u64).into();
+        let expected_elgamal_ciphertext =
+            PodElGamalCiphertext(elgamal_keypair.pubkey().encrypt(0_u64).to_bytes());
 
         let elgamal_ciphertext_base64_str = format!("{}", expected_elgamal_ciphertext);
         let computed_elgamal_ciphertext =

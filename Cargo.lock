@@ -1179,6 +1179,7 @@ dependencies = [
  "base64",
  "bytemuck",
  "bytemuck_derive",
+ "solana-zk-sdk",
  "thiserror 2.0.18",
 ]
 

@@ -18,5 +18,8 @@ bytemuck = { workspace = true }
 bytemuck_derive = { workspace = true }
 thiserror = { workspace = true }
 
+[dev-dependencies]
+solana-zk-sdk = { workspace = true }
+
 [lints]
 workspace = true

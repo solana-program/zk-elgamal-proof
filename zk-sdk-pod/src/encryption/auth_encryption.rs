@@ -52,12 +52,12 @@ impl Default for PodAeCiphertext {
 
 #[cfg(test)]
 mod tests {
-    use {super::*, crate::encryption::auth_encryption::AeKey, std::str::FromStr};
+    use {super::*, solana_zk_sdk::encryption::auth_encryption::AeKey, std::str::FromStr};
 
     #[test]
     fn ae_ciphertext_fromstr() {
         let ae_key = AeKey::new_rand();
-        let expected_ae_ciphertext: PodAeCiphertext = ae_key.encrypt(0_u64).into();
+        let expected_ae_ciphertext = PodAeCiphertext(ae_key.encrypt(0_u64).to_bytes());
 
         let ae_ciphertext_base64_str = format!("{}", expected_ae_ciphertext);
         let computed_ae_ciphertext = PodAeCiphertext::from_str(&ae_ciphertext_base64_str).unwrap();

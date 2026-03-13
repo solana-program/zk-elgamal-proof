@@ -142,9 +142,8 @@ impl_extract!(TYPE = PodGroupedElGamalCiphertext3Handles);
 mod tests {
     use {
         super::*,
-        crate::encryption::{
+        solana_zk_sdk::encryption::{
             elgamal::ElGamalKeypair, grouped_elgamal::GroupedElGamal, pedersen::Pedersen,
-            pod::pedersen::PodPedersenCommitment,
         },
     };
 
@@ -161,26 +160,28 @@ mod tests {
             amount,
             &opening,
         );
-        let pod_grouped_ciphertext: PodGroupedElGamalCiphertext2Handles = grouped_ciphertext.into();
 
-        let expected_pod_commitment: PodPedersenCommitment = commitment.into();
+        let pod_grouped_ciphertext =
+            PodGroupedElGamalCiphertext2Handles(grouped_ciphertext.to_bytes().try_into().unwrap());
+
+        let expected_pod_commitment = PodPedersenCommitment(commitment.to_bytes());
         let actual_pod_commitment = pod_grouped_ciphertext.extract_commitment();
         assert_eq!(expected_pod_commitment, actual_pod_commitment);
 
         let expected_ciphertext_0 = elgamal_keypair_0.pubkey().encrypt_with(amount, &opening);
-        let expected_pod_ciphertext_0: PodElGamalCiphertext = expected_ciphertext_0.into();
+        let expected_pod_ciphertext_0 = PodElGamalCiphertext(expected_ciphertext_0.to_bytes());
         let actual_pod_ciphertext_0 = pod_grouped_ciphertext.try_extract_ciphertext(0).unwrap();
         assert_eq!(expected_pod_ciphertext_0, actual_pod_ciphertext_0);
 
         let expected_ciphertext_1 = elgamal_keypair_1.pubkey().encrypt_with(amount, &opening);
-        let expected_pod_ciphertext_1: PodElGamalCiphertext = expected_ciphertext_1.into();
+        let expected_pod_ciphertext_1 = PodElGamalCiphertext(expected_ciphertext_1.to_bytes());
         let actual_pod_ciphertext_1 = pod_grouped_ciphertext.try_extract_ciphertext(1).unwrap();
         assert_eq!(expected_pod_ciphertext_1, actual_pod_ciphertext_1);
 
         let err = pod_grouped_ciphertext
             .try_extract_ciphertext(2)
             .unwrap_err();
-        assert_eq!(err, ElGamalError::CiphertextDeserialization);
+        assert_eq!(err, ParseError::WrongSize);
     }
 
     #[test]
@@ -201,30 +202,31 @@ mod tests {
             amount,
             &opening,
         );
-        let pod_grouped_ciphertext: PodGroupedElGamalCiphertext3Handles = grouped_ciphertext.into();
+        let pod_grouped_ciphertext =
+            PodGroupedElGamalCiphertext3Handles(grouped_ciphertext.to_bytes().try_into().unwrap());
 
-        let expected_pod_commitment: PodPedersenCommitment = commitment.into();
+        let expected_pod_commitment = PodPedersenCommitment(commitment.to_bytes());
         let actual_pod_commitment = pod_grouped_ciphertext.extract_commitment();
         assert_eq!(expected_pod_commitment, actual_pod_commitment);
 
         let expected_ciphertext_0 = elgamal_keypair_0.pubkey().encrypt_with(amount, &opening);
-        let expected_pod_ciphertext_0: PodElGamalCiphertext = expected_ciphertext_0.into();
+        let expected_pod_ciphertext_0 = PodElGamalCiphertext(expected_ciphertext_0.to_bytes());
         let actual_pod_ciphertext_0 = pod_grouped_ciphertext.try_extract_ciphertext(0).unwrap();
         assert_eq!(expected_pod_ciphertext_0, actual_pod_ciphertext_0);
 
         let expected_ciphertext_1 = elgamal_keypair_1.pubkey().encrypt_with(amount, &opening);
-        let expected_pod_ciphertext_1: PodElGamalCiphertext = expected_ciphertext_1.into();
+        let expected_pod_ciphertext_1 = PodElGamalCiphertext(expected_ciphertext_1.to_bytes());
         let actual_pod_ciphertext_1 = pod_grouped_ciphertext.try_extract_ciphertext(1).unwrap();
         assert_eq!(expected_pod_ciphertext_1, actual_pod_ciphertext_1);
 
         let expected_ciphertext_2 = elgamal_keypair_2.pubkey().encrypt_with(amount, &opening);
-        let expected_pod_ciphertext_2: PodElGamalCiphertext = expected_ciphertext_2.into();
+        let expected_pod_ciphertext_2 = PodElGamalCiphertext(expected_ciphertext_2.to_bytes());
         let actual_pod_ciphertext_2 = pod_grouped_ciphertext.try_extract_ciphertext(2).unwrap();
         assert_eq!(expected_pod_ciphertext_2, actual_pod_ciphertext_2);
 
         let err = pod_grouped_ciphertext
             .try_extract_ciphertext(3)
             .unwrap_err();
-        assert_eq!(err, ElGamalError::CiphertextDeserialization);
+        assert_eq!(err, ParseError::WrongSize);
     }
 }
