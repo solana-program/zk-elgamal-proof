@@ -843,13 +843,6 @@ impl From<DecryptHandle> for PodDecryptHandle {
     }
 }
 
-// For proof verification, interpret pod::DecryptHandle as CompressedRistretto
-impl From<PodDecryptHandle> for CompressedRistretto {
-    fn from(pod_handle: PodDecryptHandle) -> Self {
-        Self(pod_handle.0)
-    }
-}
-
 impl TryFrom<PodDecryptHandle> for DecryptHandle {
     type Error = ElGamalError;
 
