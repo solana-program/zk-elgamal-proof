@@ -6,12 +6,12 @@
 //! used to generate the second ciphertext.
 
 use {
-    crate::{
-        encryption::pod::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
-        sigma_proofs::pod::PodCiphertextCiphertextEqualityProof,
-        zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
-    },
+    crate::zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
     bytemuck_derive::{Pod, Zeroable},
+    solana_zk_sdk_pod::{
+        encryption::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
+        sigma_proofs::PodCiphertextCiphertextEqualityProof,
+    },
 };
 #[cfg(not(target_os = "solana"))]
 use {

@@ -6,15 +6,15 @@
 //! key for the first ciphertext and the Pedersen opening for the commitment.
 
 use {
-    crate::{
-        encryption::pod::{
+    crate::zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
+    bytemuck_derive::{Pod, Zeroable},
+    solana_zk_sdk_pod::{
+        encryption::{
             elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
             pedersen::PodPedersenCommitment,
         },
-        sigma_proofs::pod::PodCiphertextCommitmentEqualityProof,
-        zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
+        sigma_proofs::PodCiphertextCommitmentEqualityProof,
     },
-    bytemuck_derive::{Pod, Zeroable},
 };
 #[cfg(not(target_os = "solana"))]
 use {

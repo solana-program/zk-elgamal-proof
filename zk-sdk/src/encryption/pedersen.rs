@@ -1,12 +1,7 @@
 //! Pedersen commitment implementation using the Ristretto prime-order group.
 
 use {
-    crate::{
-        encryption::{
-            pod::pedersen::PodPedersenCommitment, PEDERSEN_COMMITMENT_LEN, PEDERSEN_OPENING_LEN,
-        },
-        errors::ElGamalError,
-    },
+    crate::errors::ElGamalError,
     core::ops::{Add, Mul, Sub},
     curve25519_dalek::{
         constants::{RISTRETTO_BASEPOINT_COMPRESSED, RISTRETTO_BASEPOINT_POINT},
@@ -17,6 +12,9 @@ use {
     rand::rngs::OsRng,
     serde::{Deserialize, Serialize},
     sha3::Sha3_512,
+    solana_zk_sdk_pod::encryption::{
+        pedersen::PodPedersenCommitment, PEDERSEN_COMMITMENT_LEN, PEDERSEN_OPENING_LEN,
+    },
     std::{convert::TryInto, fmt},
     subtle::{Choice, ConstantTimeEq},
     zeroize::Zeroize,
@@ -224,13 +222,6 @@ impl PedersenCommitment {
 impl From<PedersenCommitment> for PodPedersenCommitment {
     fn from(decoded_commitment: PedersenCommitment) -> Self {
         Self(decoded_commitment.to_bytes())
-    }
-}
-
-// For proof verification, interpret pod::PedersenCommitment directly as CompressedRistretto
-impl From<PodPedersenCommitment> for CompressedRistretto {
-    fn from(pod_commitment: PodPedersenCommitment) -> Self {
-        Self(pod_commitment.0)
     }
 }
 

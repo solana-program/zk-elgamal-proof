@@ -42,11 +42,9 @@ use {
         sigma_proofs::{
             canonical_scalar_from_optional_slice,
             errors::{PercentageWithCapProofVerificationError, SigmaProofVerificationError},
-            pod::PodPercentageWithCapProof,
             ristretto_point_from_optional_slice,
         },
         transcript::TranscriptProtocol,
-        UNIT_LEN,
     },
     curve25519_dalek::{
         ristretto::{CompressedRistretto, RistrettoPoint},
@@ -55,6 +53,7 @@ use {
     },
     merlin::Transcript,
     rand::rngs::OsRng,
+    solana_zk_sdk_pod::{sigma_proofs::PodPercentageWithCapProof, UNIT_LEN},
     subtle::{Choice, ConditionallySelectable, ConstantTimeGreater},
     zeroize::Zeroize,
 };
@@ -678,9 +677,9 @@ impl TryFrom<PodPercentageWithCapProof> for PercentageWithCapProof {
 mod test {
     use {
         super::*,
-        crate::{
-            encryption::{pedersen::Pedersen, pod::pedersen::PodPedersenCommitment},
-            sigma_proofs::pod::PodPercentageWithCapProof,
+        crate::encryption::pedersen::Pedersen,
+        solana_zk_sdk_pod::{
+            encryption::pedersen::PodPedersenCommitment, sigma_proofs::PodPercentageWithCapProof,
         },
         std::str::FromStr,
     };

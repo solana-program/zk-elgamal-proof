@@ -6,6 +6,14 @@
 //! - the `percentage` amount is equal to a constant (referred to as the `max_value`)
 //! - the `delta` and `claimed` amounts are equal
 
+use {
+    crate::zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
+    bytemuck_derive::{Pod, Zeroable},
+    solana_zk_sdk_pod::{
+        encryption::pedersen::PodPedersenCommitment, primitive_types::PodU64,
+        sigma_proofs::PodPercentageWithCapProof,
+    },
+};
 #[cfg(not(target_os = "solana"))]
 use {
     crate::{
@@ -19,15 +27,6 @@ use {
     },
     merlin::Transcript,
     std::convert::TryInto,
-};
-use {
-    crate::{
-        encryption::pod::pedersen::PodPedersenCommitment,
-        pod::PodU64,
-        sigma_proofs::pod::PodPercentageWithCapProof,
-        zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
-    },
-    bytemuck_derive::{Pod, Zeroable},
 };
 
 /// The instruction data that is needed for the `ProofInstruction::VerifyPercentageWithCap`

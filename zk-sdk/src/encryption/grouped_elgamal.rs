@@ -18,14 +18,16 @@ use {
             discrete_log::DiscreteLog,
             elgamal::{DecryptHandle, ElGamalCiphertext, ElGamalPubkey, ElGamalSecretKey},
             pedersen::{Pedersen, PedersenCommitment, PedersenOpening},
-            pod::grouped_elgamal::{
-                PodGroupedElGamalCiphertext2Handles, PodGroupedElGamalCiphertext3Handles,
-            },
         },
         errors::ElGamalError,
-        RISTRETTO_POINT_LEN,
     },
     curve25519_dalek::scalar::Scalar,
+    solana_zk_sdk_pod::{
+        encryption::grouped_elgamal::{
+            PodGroupedElGamalCiphertext2Handles, PodGroupedElGamalCiphertext3Handles,
+        },
+        RISTRETTO_POINT_LEN,
+    },
     thiserror::Error,
 };
 
