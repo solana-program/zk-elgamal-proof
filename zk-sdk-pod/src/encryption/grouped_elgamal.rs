@@ -3,8 +3,8 @@
 use {
     crate::{
         encryption::{
-            DECRYPT_HANDLE_LEN, ELGAMAL_CIPHERTEXT_LEN, PEDERSEN_COMMITMENT_LEN,
-            {elgamal::PodElGamalCiphertext, pedersen::PodPedersenCommitment},
+            elgamal::PodElGamalCiphertext, pedersen::PodPedersenCommitment, DECRYPT_HANDLE_LEN,
+            ELGAMAL_CIPHERTEXT_LEN, PEDERSEN_COMMITMENT_LEN,
         },
         errors::ParseError,
         macros::{impl_from_bytes, impl_from_str},
