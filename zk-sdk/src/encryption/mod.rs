@@ -10,16 +10,10 @@
 //! - Basic type-wrapper around the AES-GCM-SIV symmetric authenticated encryption scheme
 //!   implemented by [aes-gcm-siv](https://docs.rs/aes-gcm-siv/latest/aes_gcm_siv/) crate.
 
-#[cfg(not(target_os = "solana"))]
 #[macro_use]
 pub(crate) mod macros;
-#[cfg(not(target_os = "solana"))]
 pub mod auth_encryption;
-#[cfg(not(target_os = "solana"))]
 pub mod discrete_log;
-#[cfg(not(target_os = "solana"))]
 pub mod elgamal;
-#[cfg(not(target_os = "solana"))]
 pub mod grouped_elgamal;
-#[cfg(not(target_os = "solana"))]
 pub mod pedersen;

@@ -1,4 +1,3 @@
-#[cfg(not(target_os = "solana"))]
 use {
     crate::{
         encryption::elgamal::ElGamalKeypair,
@@ -6,7 +5,7 @@ use {
         transcript::TranscriptProtocol,
         zk_elgamal_proof_program::{
             errors::{ProofGenerationError, ProofVerificationError},
-            proof_data::VerifyZkProof,
+            VerifyZkProof,
         },
     },
     merlin::Transcript,
@@ -17,7 +16,6 @@ use {
     std::convert::TryInto,
 };
 
-#[cfg(not(target_os = "solana"))]
 pub fn build_pubkey_validity_proof_data(
     keypair: &ElGamalKeypair,
 ) -> Result<PubkeyValidityProofData, ProofGenerationError> {
@@ -31,7 +29,6 @@ pub fn build_pubkey_validity_proof_data(
     Ok(PubkeyValidityProofData { context, proof })
 }
 
-#[cfg(not(target_os = "solana"))]
 impl VerifyZkProof for PubkeyValidityProofData {
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
         let mut transcript = Transcript::new_zk_elgamal_transcript(b"pubkey-validity-instruction");

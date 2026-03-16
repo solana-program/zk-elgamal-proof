@@ -1,24 +1,20 @@
-#[cfg(not(target_os = "solana"))]
 use {
     crate::{
         encryption::pedersen::{PedersenCommitment, PedersenOpening},
         range_proof::range::RangeProof,
         zk_elgamal_proof_program::{
-            errors::{ProofGenerationError, ProofVerificationError},
-            proof_data::{
-                batched_range_proof::{
-                    batched_range_proof_transcript, build_batched_range_proof_context,
-                    verify_batched_range_proof_context, MAX_COMMITMENTS,
-                },
-                VerifyZkProof,
+            batched_range_proof::{
+                batched_range_proof_transcript, build_batched_range_proof_context,
+                verify_batched_range_proof_context, MAX_COMMITMENTS,
             },
+            errors::{ProofGenerationError, ProofVerificationError},
+            VerifyZkProof,
         },
     },
     solana_zk_elgamal_proof_program::proof_data::BatchedRangeProofU128Data,
     std::convert::TryInto,
 };
 
-#[cfg(not(target_os = "solana"))]
 pub fn build_batched_range_proof_u128_data(
     commitments: Vec<&PedersenCommitment>,
     amounts: Vec<u64>,
@@ -50,7 +46,6 @@ pub fn build_batched_range_proof_u128_data(
     Ok(BatchedRangeProofU128Data { context, proof })
 }
 
-#[cfg(not(target_os = "solana"))]
 impl VerifyZkProof for BatchedRangeProofU128Data {
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
         let (commitments, bit_lengths) = verify_batched_range_proof_context(&self.context)?;

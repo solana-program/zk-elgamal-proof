@@ -2,7 +2,6 @@ pub mod batched_range_proof_u128;
 pub mod batched_range_proof_u256;
 pub mod batched_range_proof_u64;
 
-#[cfg(not(target_os = "solana"))]
 use {
     crate::{
         encryption::pedersen::{PedersenCommitment, PedersenOpening},
@@ -21,10 +20,8 @@ use {
 ///
 /// Although the batched proof supports a total of 256 bits, individual components are restricted
 /// to `u64` amounts (64 bits).
-#[cfg(not(target_os = "solana"))]
 const MAX_SINGLE_BIT_LENGTH: usize = 64;
 
-#[cfg(not(target_os = "solana"))]
 pub(crate) fn batched_range_proof_transcript(context: &BatchedRangeProofContext) -> Transcript {
     let mut transcript = Transcript::new_zk_elgamal_transcript(b"batched-range-proof-instruction");
     transcript.append_message(b"commitments", bytes_of(&context.commitments));
@@ -33,7 +30,6 @@ pub(crate) fn batched_range_proof_transcript(context: &BatchedRangeProofContext)
 }
 
 #[allow(non_snake_case)]
-#[cfg(not(target_os = "solana"))]
 pub(crate) fn build_batched_range_proof_context(
     commitments: &[&PedersenCommitment],
     amounts: &[u64],
@@ -75,7 +71,6 @@ pub(crate) fn build_batched_range_proof_context(
     })
 }
 
-#[cfg(not(target_os = "solana"))]
 pub(crate) fn verify_batched_range_proof_context(
     context: &BatchedRangeProofContext,
 ) -> Result<(Vec<PedersenCommitment>, Vec<usize>), ProofVerificationError> {

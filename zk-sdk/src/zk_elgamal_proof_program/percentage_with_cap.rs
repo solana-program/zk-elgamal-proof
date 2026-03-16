@@ -1,4 +1,3 @@
-#[cfg(not(target_os = "solana"))]
 use {
     crate::{
         encryption::pedersen::{Pedersen, PedersenCommitment, PedersenOpening},
@@ -6,7 +5,7 @@ use {
         transcript::TranscriptProtocol,
         zk_elgamal_proof_program::{
             errors::{ProofGenerationError, ProofVerificationError},
-            proof_data::VerifyZkProof,
+            VerifyZkProof,
         },
     },
     merlin::Transcript,
@@ -17,7 +16,6 @@ use {
     std::convert::TryInto,
 };
 
-#[cfg(not(target_os = "solana"))]
 #[allow(clippy::too_many_arguments)]
 pub fn build_percentage_with_cap_proof_data(
     percentage_commitment: &PedersenCommitment,
@@ -74,7 +72,6 @@ pub fn build_percentage_with_cap_proof_data(
     Ok(PercentageWithCapProofData { context, proof })
 }
 
-#[cfg(not(target_os = "solana"))]
 impl VerifyZkProof for PercentageWithCapProofData {
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
         let mut transcript =

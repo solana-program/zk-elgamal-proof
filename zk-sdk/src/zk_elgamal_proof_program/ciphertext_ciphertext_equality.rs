@@ -1,4 +1,3 @@
-#[cfg(not(target_os = "solana"))]
 use {
     crate::{
         encryption::{
@@ -9,7 +8,7 @@ use {
         transcript::TranscriptProtocol,
         zk_elgamal_proof_program::{
             errors::{ProofGenerationError, ProofVerificationError},
-            proof_data::VerifyZkProof,
+            VerifyZkProof,
         },
     },
     curve25519_dalek::scalar::Scalar,
@@ -21,7 +20,6 @@ use {
     std::convert::TryInto,
 };
 
-#[cfg(not(target_os = "solana"))]
 pub fn build_ciphertext_ciphertext_equality_proof_data(
     first_keypair: &ElGamalKeypair,
     second_pubkey: &ElGamalPubkey,
@@ -73,7 +71,6 @@ pub fn build_ciphertext_ciphertext_equality_proof_data(
     Ok(CiphertextCiphertextEqualityProofData { context, proof })
 }
 
-#[cfg(not(target_os = "solana"))]
 impl VerifyZkProof for CiphertextCiphertextEqualityProofData {
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
         let mut transcript =

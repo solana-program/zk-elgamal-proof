@@ -1,19 +1,21 @@
-//! The native ZK ElGamal proof program.
-//!
-//! The program verifies a number of zero-knowledge proofs that are tailored to work with Pedersen
-//! commitments and ElGamal encryption over the elliptic curve Curve25519. A general overview of
-//! the program as well as the technical details of some of the proof instructions can be found in
-//! the [`ZK ElGamal proof`] documentation.
-//!
-//! This module contains the instruction types, the proof context state, and the proof instruction
-//! data types. For the precise processor logic, see the ZK ElGamal Proof [`program`].
-//! implementation.
-//!
-//! [`ZK ElGamal proof`]: https://docs.solanalabs.com/runtime/zk-token-proof
-//! [`program`]: https://github.com/anza-xyz/agave/blob/master/programs/zk-elgamal-proof/src/lib.rs
+use crate::zk_elgamal_proof_program::errors::ProofVerificationError;
 
+pub mod batched_grouped_ciphertext_validity;
+pub mod batched_range_proof;
+pub mod ciphertext_ciphertext_equality;
+pub mod ciphertext_commitment_equality;
 pub mod errors;
-pub mod proof_data;
+pub mod grouped_ciphertext_validity;
+pub mod percentage_with_cap;
+pub mod pubkey_validity;
+pub mod zero_ciphertext;
 
-// Program Id of the ZK ElGamal Proof program
-pub use solana_sdk_ids::zk_elgamal_proof_program::{check_id, id, ID};
+pub use {
+    batched_grouped_ciphertext_validity::*, batched_range_proof::*,
+    ciphertext_ciphertext_equality::*, ciphertext_commitment_equality::*,
+    grouped_ciphertext_validity::*, percentage_with_cap::*, pubkey_validity::*, zero_ciphertext::*,
+};
+
+pub trait VerifyZkProof {
+    fn verify_proof(&self) -> Result<(), ProofVerificationError>;
+}
