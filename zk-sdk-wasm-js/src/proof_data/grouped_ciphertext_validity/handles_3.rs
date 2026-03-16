@@ -4,9 +4,8 @@ use {
         pedersen::PedersenOpening,
     },
     js_sys::Uint8Array,
-    solana_zk_sdk::zk_elgamal_proof_program::proof_data::{
-        grouped_ciphertext_validity, VerifyZkProof,
-    },
+    solana_zk_elgamal_proof_program::proof_data,
+    solana_zk_sdk::zk_elgamal_proof_program::{self, VerifyZkProof},
     wasm_bindgen::prelude::*,
 };
 
@@ -14,12 +13,12 @@ use {
 /// that a given grouped ElGamal ciphertext with three handles is well-formed.
 #[wasm_bindgen]
 pub struct GroupedCiphertext3HandlesValidityProofData {
-    pub(crate) inner: grouped_ciphertext_validity::GroupedCiphertext3HandlesValidityProofData,
+    pub(crate) inner: proof_data::GroupedCiphertext3HandlesValidityProofData,
 }
 
 crate::conversion::impl_inner_conversion!(
     GroupedCiphertext3HandlesValidityProofData,
-    grouped_ciphertext_validity::GroupedCiphertext3HandlesValidityProofData
+    proof_data::GroupedCiphertext3HandlesValidityProofData
 );
 
 #[wasm_bindgen]
@@ -35,7 +34,7 @@ impl GroupedCiphertext3HandlesValidityProofData {
         amount: u64,
         opening: &PedersenOpening,
     ) -> Result<GroupedCiphertext3HandlesValidityProofData, JsValue> {
-        grouped_ciphertext_validity::build_grouped_ciphertext_3_handles_validity_proof_data(
+        zk_elgamal_proof_program::build_grouped_ciphertext_3_handles_validity_proof_data(
             &first_pubkey.inner,
             &second_pubkey.inner,
             &third_pubkey.inner,
@@ -68,9 +67,8 @@ impl GroupedCiphertext3HandlesValidityProofData {
     pub fn from_bytes(
         bytes: &Uint8Array,
     ) -> Result<GroupedCiphertext3HandlesValidityProofData, JsValue> {
-        let expected_len = std::mem::size_of::<
-            grouped_ciphertext_validity::GroupedCiphertext3HandlesValidityProofData,
-        >();
+        let expected_len =
+            std::mem::size_of::<proof_data::GroupedCiphertext3HandlesValidityProofData>();
         if bytes.length() as usize != expected_len {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for GroupedCiphertext3HandlesValidityProof: expected {}, got {}",
@@ -84,9 +82,7 @@ impl GroupedCiphertext3HandlesValidityProofData {
 
         bytemuck::try_from_bytes(&data)
             .map(
-                |pod: &grouped_ciphertext_validity::GroupedCiphertext3HandlesValidityProofData| {
-                    Self { inner: *pod }
-                },
+                |pod: &proof_data::GroupedCiphertext3HandlesValidityProofData| Self { inner: *pod },
             )
             .map_err(|_| {
                 JsValue::from_str("Invalid bytes for GroupedCiphertext3HandlesValidityProof")
@@ -103,12 +99,12 @@ impl GroupedCiphertext3HandlesValidityProofData {
 /// The context data needed to verify a grouped ciphertext 3-handles validity proof.
 #[wasm_bindgen]
 pub struct GroupedCiphertext3HandlesValidityProofContext {
-    pub(crate) inner: grouped_ciphertext_validity::GroupedCiphertext3HandlesValidityProofContext,
+    pub(crate) inner: proof_data::GroupedCiphertext3HandlesValidityProofContext,
 }
 
 crate::conversion::impl_inner_conversion!(
     GroupedCiphertext3HandlesValidityProofContext,
-    grouped_ciphertext_validity::GroupedCiphertext3HandlesValidityProofContext
+    proof_data::GroupedCiphertext3HandlesValidityProofContext
 );
 
 #[wasm_bindgen]
@@ -120,9 +116,8 @@ impl GroupedCiphertext3HandlesValidityProofContext {
         bytes: &Uint8Array,
     ) -> Result<GroupedCiphertext3HandlesValidityProofContext, JsValue> {
         // Define expected length as a constant for stack allocation
-        const EXPECTED_LEN: usize = std::mem::size_of::<
-            grouped_ciphertext_validity::GroupedCiphertext3HandlesValidityProofContext,
-        >();
+        const EXPECTED_LEN: usize =
+            std::mem::size_of::<proof_data::GroupedCiphertext3HandlesValidityProofContext>();
         if bytes.length() as usize != EXPECTED_LEN {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for GroupedCiphertext3HandlesValidityProofContext: expected {}, got {}",
@@ -133,7 +128,11 @@ impl GroupedCiphertext3HandlesValidityProofContext {
         let mut data = [0u8; EXPECTED_LEN];
         bytes.copy_to(&mut data);
         bytemuck::try_from_bytes(&data)
-            .map(|pod: &grouped_ciphertext_validity::GroupedCiphertext3HandlesValidityProofContext| Self { inner: *pod })
+            .map(
+                |pod: &proof_data::GroupedCiphertext3HandlesValidityProofContext| Self {
+                    inner: *pod,
+                },
+            )
             .map_err(|_| {
                 JsValue::from_str("Invalid bytes for GroupedCiphertext3HandlesValidityProofContext")
             })

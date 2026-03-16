@@ -4,9 +4,8 @@ use {
         proof_data::batched_range_proof::BatchedRangeProofContext,
     },
     js_sys::{BigUint64Array, Uint8Array},
-    solana_zk_sdk::zk_elgamal_proof_program::proof_data::{
-        self, batched_range_proof::batched_range_proof_u64, VerifyZkProof,
-    },
+    solana_zk_elgamal_proof_program::proof_data,
+    solana_zk_sdk::zk_elgamal_proof_program::{self, VerifyZkProof},
     wasm_bindgen::prelude::*,
 };
 
@@ -61,7 +60,7 @@ impl BatchedRangeProofU64Data {
             .collect();
         let openings_inner: Vec<_> = openings.iter().map(|o| &o.inner).collect();
 
-        batched_range_proof_u64::build_batched_range_proof_u64_data(
+        zk_elgamal_proof_program::build_batched_range_proof_u64_data(
             commitments_inner,
             amounts_vec,
             bit_lengths_vec,

@@ -8,7 +8,7 @@ on:
 
 env:
   JS_PACKAGES: "['clients-js']"
-  SBPF_PROGRAM_PACKAGES: "['program', 'zk-sdk', 'zk-sdk-pod']"
+  SBPF_PROGRAM_PACKAGES: "['program', 'zk-sdk-pod']"
   RUST_PACKAGES: "['program', 'zk-sdk', 'zk-sdk-pod', 'zk-sdk-wasm-js']"
   WASM_PACKAGES: "['zk-sdk-wasm-js']"
   WASM_JS_PACKAGES: "['zk-sdk-wasm-js']"

@@ -1,7 +1,8 @@
 use {
     crate::encryption::pedersen::{PedersenCommitment, PedersenOpening},
     js_sys::Uint8Array,
-    solana_zk_sdk::zk_elgamal_proof_program::proof_data::{percentage_with_cap, VerifyZkProof},
+    solana_zk_elgamal_proof_program::proof_data,
+    solana_zk_sdk::zk_elgamal_proof_program::{self, VerifyZkProof},
     wasm_bindgen::prelude::*,
 };
 
@@ -9,12 +10,12 @@ use {
 /// amount is within a certain percentage of a base amount, with a cap.
 #[wasm_bindgen]
 pub struct PercentageWithCapProofData {
-    pub(crate) inner: percentage_with_cap::PercentageWithCapProofData,
+    pub(crate) inner: proof_data::PercentageWithCapProofData,
 }
 
 crate::conversion::impl_inner_conversion!(
     PercentageWithCapProofData,
-    percentage_with_cap::PercentageWithCapProofData
+    proof_data::PercentageWithCapProofData
 );
 
 #[wasm_bindgen]
@@ -33,7 +34,7 @@ impl PercentageWithCapProofData {
         claimed_opening: &PedersenOpening,
         max_value: u64,
     ) -> Result<PercentageWithCapProofData, JsValue> {
-        percentage_with_cap::build_percentage_with_cap_proof_data(
+        zk_elgamal_proof_program::build_percentage_with_cap_proof_data(
             &percentage_commitment.inner,
             &percentage_opening.inner,
             percentage_amount,
@@ -68,8 +69,7 @@ impl PercentageWithCapProofData {
     #[wasm_bindgen(js_name = "fromBytes")]
     pub fn from_bytes(bytes: &Uint8Array) -> Result<PercentageWithCapProofData, JsValue> {
         // Define expected length as a constant for stack allocation
-        const EXPECTED_LEN: usize =
-            std::mem::size_of::<percentage_with_cap::PercentageWithCapProofData>();
+        const EXPECTED_LEN: usize = std::mem::size_of::<proof_data::PercentageWithCapProofData>();
         if bytes.length() as usize != EXPECTED_LEN {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for PercentageWithCapProof: expected {}, got {}",
@@ -82,7 +82,7 @@ impl PercentageWithCapProofData {
         bytes.copy_to(&mut data);
 
         bytemuck::try_from_bytes(&data)
-            .map(|pod: &percentage_with_cap::PercentageWithCapProofData| Self { inner: *pod })
+            .map(|pod: &proof_data::PercentageWithCapProofData| Self { inner: *pod })
             .map_err(|_| JsValue::from_str("Invalid bytes for PercentageWithCapProof"))
     }
 
@@ -96,12 +96,12 @@ impl PercentageWithCapProofData {
 /// The context data needed to verify a percentage-with-cap proof.
 #[wasm_bindgen]
 pub struct PercentageWithCapProofContext {
-    pub(crate) inner: percentage_with_cap::PercentageWithCapProofContext,
+    pub(crate) inner: proof_data::PercentageWithCapProofContext,
 }
 
 crate::conversion::impl_inner_conversion!(
     PercentageWithCapProofContext,
-    percentage_with_cap::PercentageWithCapProofContext
+    proof_data::PercentageWithCapProofContext
 );
 
 #[wasm_bindgen]
@@ -110,8 +110,7 @@ impl PercentageWithCapProofContext {
     /// Throws an error if the bytes are invalid.
     #[wasm_bindgen(js_name = "fromBytes")]
     pub fn from_bytes(bytes: &Uint8Array) -> Result<PercentageWithCapProofContext, JsValue> {
-        let expected_len =
-            std::mem::size_of::<percentage_with_cap::PercentageWithCapProofContext>();
+        let expected_len = std::mem::size_of::<proof_data::PercentageWithCapProofContext>();
         if bytes.length() as usize != expected_len {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for PercentageWithCapProofContext: expected {}, got {}",
@@ -122,7 +121,7 @@ impl PercentageWithCapProofContext {
         let mut data = vec![0u8; expected_len];
         bytes.copy_to(&mut data);
         bytemuck::try_from_bytes(&data)
-            .map(|pod: &percentage_with_cap::PercentageWithCapProofContext| Self { inner: *pod })
+            .map(|pod: &proof_data::PercentageWithCapProofContext| Self { inner: *pod })
             .map_err(|_| JsValue::from_str("Invalid bytes for PercentageWithCapProofContext"))
     }
 

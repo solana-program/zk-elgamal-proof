@@ -4,9 +4,8 @@ use {
         pedersen::PedersenOpening,
     },
     js_sys::Uint8Array,
-    solana_zk_sdk::zk_elgamal_proof_program::proof_data::{
-        grouped_ciphertext_validity, VerifyZkProof,
-    },
+    solana_zk_elgamal_proof_program::proof_data,
+    solana_zk_sdk::zk_elgamal_proof_program::{self, VerifyZkProof},
     wasm_bindgen::prelude::*,
 };
 
@@ -14,12 +13,12 @@ use {
 /// that a given grouped ElGamal ciphertext with two handles is well-formed.
 #[wasm_bindgen]
 pub struct GroupedCiphertext2HandlesValidityProofData {
-    pub(crate) inner: grouped_ciphertext_validity::GroupedCiphertext2HandlesValidityProofData,
+    pub(crate) inner: proof_data::GroupedCiphertext2HandlesValidityProofData,
 }
 
 crate::conversion::impl_inner_conversion!(
     GroupedCiphertext2HandlesValidityProofData,
-    grouped_ciphertext_validity::GroupedCiphertext2HandlesValidityProofData
+    proof_data::GroupedCiphertext2HandlesValidityProofData
 );
 
 #[wasm_bindgen]
@@ -33,7 +32,7 @@ impl GroupedCiphertext2HandlesValidityProofData {
         amount: u64,
         opening: &PedersenOpening,
     ) -> Result<GroupedCiphertext2HandlesValidityProofData, JsValue> {
-        grouped_ciphertext_validity::build_grouped_ciphertext_2_handles_validity_proof_data(
+        zk_elgamal_proof_program::build_grouped_ciphertext_2_handles_validity_proof_data(
             &first_pubkey.inner,
             &second_pubkey.inner,
             &grouped_ciphertext.inner,
@@ -65,9 +64,8 @@ impl GroupedCiphertext2HandlesValidityProofData {
     pub fn from_bytes(
         bytes: &Uint8Array,
     ) -> Result<GroupedCiphertext2HandlesValidityProofData, JsValue> {
-        let expected_len = std::mem::size_of::<
-            grouped_ciphertext_validity::GroupedCiphertext2HandlesValidityProofData,
-        >();
+        let expected_len =
+            std::mem::size_of::<proof_data::GroupedCiphertext2HandlesValidityProofData>();
         if bytes.length() as usize != expected_len {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for GroupedCiphertext2HandlesValidityProof: expected {}, got {}",
@@ -81,9 +79,7 @@ impl GroupedCiphertext2HandlesValidityProofData {
 
         bytemuck::try_from_bytes(&data)
             .map(
-                |pod: &grouped_ciphertext_validity::GroupedCiphertext2HandlesValidityProofData| {
-                    Self { inner: *pod }
-                },
+                |pod: &proof_data::GroupedCiphertext2HandlesValidityProofData| Self { inner: *pod },
             )
             .map_err(|_| {
                 JsValue::from_str("Invalid bytes for GroupedCiphertext2HandlesValidityProof")
@@ -100,12 +96,12 @@ impl GroupedCiphertext2HandlesValidityProofData {
 /// The context data needed to verify a grouped ciphertext 2-handles validity proof.
 #[wasm_bindgen]
 pub struct GroupedCiphertext2HandlesValidityProofContext {
-    pub(crate) inner: grouped_ciphertext_validity::GroupedCiphertext2HandlesValidityProofContext,
+    pub(crate) inner: proof_data::GroupedCiphertext2HandlesValidityProofContext,
 }
 
 crate::conversion::impl_inner_conversion!(
     GroupedCiphertext2HandlesValidityProofContext,
-    grouped_ciphertext_validity::GroupedCiphertext2HandlesValidityProofContext
+    proof_data::GroupedCiphertext2HandlesValidityProofContext
 );
 
 #[wasm_bindgen]
@@ -117,9 +113,8 @@ impl GroupedCiphertext2HandlesValidityProofContext {
         bytes: &Uint8Array,
     ) -> Result<GroupedCiphertext2HandlesValidityProofContext, JsValue> {
         // Define expected length as a constant for stack allocation
-        const EXPECTED_LEN: usize = std::mem::size_of::<
-            grouped_ciphertext_validity::GroupedCiphertext2HandlesValidityProofContext,
-        >();
+        const EXPECTED_LEN: usize =
+            std::mem::size_of::<proof_data::GroupedCiphertext2HandlesValidityProofContext>();
         if bytes.length() as usize != EXPECTED_LEN {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for GroupedCiphertext2HandlesValidityProofContext: expected {}, got {}",
@@ -130,7 +125,11 @@ impl GroupedCiphertext2HandlesValidityProofContext {
         let mut data = [0u8; EXPECTED_LEN];
         bytes.copy_to(&mut data);
         bytemuck::try_from_bytes(&data)
-            .map(|pod: &grouped_ciphertext_validity::GroupedCiphertext2HandlesValidityProofContext| Self { inner: *pod })
+            .map(
+                |pod: &proof_data::GroupedCiphertext2HandlesValidityProofContext| Self {
+                    inner: *pod,
+                },
+            )
             .map_err(|_| {
                 JsValue::from_str("Invalid bytes for GroupedCiphertext2HandlesValidityProofContext")
             })

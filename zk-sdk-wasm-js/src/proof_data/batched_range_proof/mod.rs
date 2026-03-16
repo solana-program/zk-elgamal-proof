@@ -1,7 +1,4 @@
-use {
-    js_sys::Uint8Array, solana_zk_sdk::zk_elgamal_proof_program::proof_data::batched_range_proof,
-    wasm_bindgen::prelude::*,
-};
+use {js_sys::Uint8Array, solana_zk_elgamal_proof_program::proof_data, wasm_bindgen::prelude::*};
 
 pub mod batched_range_proof_u128;
 pub mod batched_range_proof_u256;
@@ -11,12 +8,12 @@ pub mod batched_range_proof_u64;
 /// batched range proof instructions.
 #[wasm_bindgen]
 pub struct BatchedRangeProofContext {
-    pub(crate) inner: batched_range_proof::BatchedRangeProofContext,
+    pub(crate) inner: proof_data::BatchedRangeProofContext,
 }
 
 crate::conversion::impl_inner_conversion!(
     BatchedRangeProofContext,
-    batched_range_proof::BatchedRangeProofContext
+    proof_data::BatchedRangeProofContext
 );
 
 #[wasm_bindgen]
@@ -26,8 +23,7 @@ impl BatchedRangeProofContext {
     #[wasm_bindgen(js_name = "fromBytes")]
     pub fn from_bytes(bytes: &Uint8Array) -> Result<BatchedRangeProofContext, JsValue> {
         // Define expected length as a constant for stack allocation
-        const EXPECTED_LEN: usize =
-            std::mem::size_of::<batched_range_proof::BatchedRangeProofContext>();
+        const EXPECTED_LEN: usize = std::mem::size_of::<proof_data::BatchedRangeProofContext>();
         if bytes.length() as usize != EXPECTED_LEN {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for BatchedRangeProofContext: expected {}, got {}",
@@ -40,7 +36,7 @@ impl BatchedRangeProofContext {
         bytes.copy_to(&mut data);
 
         bytemuck::try_from_bytes(&data)
-            .map(|pod: &batched_range_proof::BatchedRangeProofContext| Self { inner: *pod })
+            .map(|pod: &proof_data::BatchedRangeProofContext| Self { inner: *pod })
             .map_err(|_| JsValue::from_str("Invalid bytes for BatchedRangeProofContext"))
     }
 
@@ -58,7 +54,7 @@ mod tests {
     #[wasm_bindgen_test]
     fn test_batched_range_proof_context_bytes_roundtrip() {
         let context = BatchedRangeProofContext {
-            inner: batched_range_proof::BatchedRangeProofContext::zeroed(),
+            inner: proof_data::BatchedRangeProofContext::zeroed(),
         };
 
         let bytes = context.to_bytes();

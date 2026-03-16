@@ -1190,6 +1190,7 @@ dependencies = [
  "bytemuck",
  "getrandom 0.2.17",
  "js-sys",
+ "solana-zk-elgamal-proof-program",
  "solana-zk-sdk",
  "solana-zk-sdk-pod",
  "wasm-bindgen",
