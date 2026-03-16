@@ -30,13 +30,12 @@ use {
         sigma_proofs::{
             errors::{SigmaProofVerificationError, ValidityProofVerificationError},
             grouped_ciphertext_validity::GroupedCiphertext3HandlesValidityProof,
-            pod::PodBatchedGroupedCiphertext3HandlesValidityProof,
         },
         transcript::TranscriptProtocol,
-        UNIT_LEN,
     },
     curve25519_dalek::{scalar::Scalar, traits::IsIdentity},
     merlin::Transcript,
+    solana_zk_sdk_pod::{sigma_proofs::PodBatchedGroupedCiphertext3HandlesValidityProof, UNIT_LEN},
     zeroize::Zeroize,
 };
 
@@ -222,15 +221,12 @@ impl TryFrom<PodBatchedGroupedCiphertext3HandlesValidityProof>
 mod test {
     use {
         super::*,
-        crate::{
+        crate::encryption::{elgamal::ElGamalKeypair, pedersen::Pedersen},
+        solana_zk_sdk_pod::{
             encryption::{
-                elgamal::ElGamalKeypair,
-                pedersen::Pedersen,
-                pod::{
-                    elgamal::PodElGamalPubkey, grouped_elgamal::PodGroupedElGamalCiphertext3Handles,
-                },
+                elgamal::PodElGamalPubkey, grouped_elgamal::PodGroupedElGamalCiphertext3Handles,
             },
-            sigma_proofs::pod::PodBatchedGroupedCiphertext3HandlesValidityProof,
+            sigma_proofs::PodBatchedGroupedCiphertext3HandlesValidityProof,
         },
         std::str::FromStr,
     };

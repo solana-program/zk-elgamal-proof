@@ -17,11 +17,9 @@ use {
         sigma_proofs::{
             canonical_scalar_from_optional_slice,
             errors::{EqualityProofVerificationError, SigmaProofVerificationError},
-            pod::PodCiphertextCommitmentEqualityProof,
             ristretto_point_from_optional_slice,
         },
         transcript::TranscriptProtocol,
-        UNIT_LEN,
     },
     curve25519_dalek::{
         ristretto::{CompressedRistretto, RistrettoPoint},
@@ -30,6 +28,7 @@ use {
     },
     merlin::Transcript,
     rand::rngs::OsRng,
+    solana_zk_sdk_pod::{sigma_proofs::PodCiphertextCommitmentEqualityProof, UNIT_LEN},
     zeroize::Zeroize,
 };
 
@@ -288,16 +287,13 @@ impl TryFrom<PodCiphertextCommitmentEqualityProof> for CiphertextCommitmentEqual
 mod test {
     use {
         super::*,
-        crate::{
+        crate::encryption::{elgamal::ElGamalSecretKey, pedersen::Pedersen},
+        solana_zk_sdk_pod::{
             encryption::{
-                elgamal::ElGamalSecretKey,
-                pedersen::Pedersen,
-                pod::{
-                    elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
-                    pedersen::PodPedersenCommitment,
-                },
+                elgamal::{PodElGamalCiphertext, PodElGamalPubkey},
+                pedersen::PodPedersenCommitment,
             },
-            sigma_proofs::pod::PodCiphertextCommitmentEqualityProof,
+            sigma_proofs::PodCiphertextCommitmentEqualityProof,
         },
         std::str::FromStr,
     };

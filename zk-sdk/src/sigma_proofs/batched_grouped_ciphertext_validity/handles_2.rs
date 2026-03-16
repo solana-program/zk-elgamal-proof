@@ -26,12 +26,12 @@ use {
         sigma_proofs::{
             errors::{SigmaProofVerificationError, ValidityProofVerificationError},
             grouped_ciphertext_validity::GroupedCiphertext2HandlesValidityProof,
-            pod::PodBatchedGroupedCiphertext2HandlesValidityProof,
         },
         transcript::TranscriptProtocol,
     },
     curve25519_dalek::{scalar::Scalar, traits::IsIdentity},
     merlin::Transcript,
+    solana_zk_sdk_pod::sigma_proofs::PodBatchedGroupedCiphertext2HandlesValidityProof,
     zeroize::Zeroize,
 };
 
@@ -203,15 +203,12 @@ impl TryFrom<PodBatchedGroupedCiphertext2HandlesValidityProof>
 mod test {
     use {
         super::*,
-        crate::{
+        crate::encryption::{elgamal::ElGamalKeypair, pedersen::Pedersen},
+        solana_zk_sdk_pod::{
             encryption::{
-                elgamal::ElGamalKeypair,
-                pedersen::Pedersen,
-                pod::{
-                    elgamal::PodElGamalPubkey, grouped_elgamal::PodGroupedElGamalCiphertext2Handles,
-                },
+                elgamal::PodElGamalPubkey, grouped_elgamal::PodGroupedElGamalCiphertext2Handles,
             },
-            sigma_proofs::pod::PodBatchedGroupedCiphertext2HandlesValidityProof,
+            sigma_proofs::PodBatchedGroupedCiphertext2HandlesValidityProof,
         },
         std::str::FromStr,
     };

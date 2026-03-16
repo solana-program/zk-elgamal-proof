@@ -1,10 +1,17 @@
 //! The 256-bit batched range proof instruction.
 
+use {
+    crate::zk_elgamal_proof_program::proof_data::{
+        batched_range_proof::BatchedRangeProofContext, ProofType, ZkProofData,
+    },
+    bytemuck_derive::{Pod, Zeroable},
+    solana_zk_sdk_pod::range_proof::PodRangeProofU256,
+};
 #[cfg(not(target_os = "solana"))]
 use {
     crate::{
         encryption::pedersen::{PedersenCommitment, PedersenOpening},
-        range_proof::RangeProof,
+        range_proof::range::RangeProof,
         zk_elgamal_proof_program::{
             errors::{ProofGenerationError, ProofVerificationError},
             proof_data::{
@@ -14,15 +21,6 @@ use {
         },
     },
     std::convert::TryInto,
-};
-use {
-    crate::{
-        range_proof::pod::PodRangeProofU256,
-        zk_elgamal_proof_program::proof_data::{
-            batched_range_proof::BatchedRangeProofContext, ProofType, ZkProofData,
-        },
-    },
-    bytemuck_derive::{Pod, Zeroable},
 };
 
 #[cfg(not(target_os = "solana"))]

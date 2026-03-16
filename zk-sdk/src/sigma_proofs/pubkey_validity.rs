@@ -12,11 +12,9 @@ use {
         sigma_proofs::{
             canonical_scalar_from_optional_slice,
             errors::{PubkeyValidityProofVerificationError, SigmaProofVerificationError},
-            pod::PodPubkeyValidityProof,
             ristretto_point_from_optional_slice,
         },
         transcript::TranscriptProtocol,
-        UNIT_LEN,
     },
     curve25519_dalek::{
         ristretto::{CompressedRistretto, RistrettoPoint},
@@ -25,6 +23,7 @@ use {
     },
     merlin::Transcript,
     rand::rngs::OsRng,
+    solana_zk_sdk_pod::{sigma_proofs::PodPubkeyValidityProof, UNIT_LEN},
     zeroize::Zeroize,
 };
 
@@ -165,13 +164,13 @@ impl TryFrom<PodPubkeyValidityProof> for PubkeyValidityProof {
 mod test {
     use {
         super::*,
-        crate::{
-            encryption::pod::elgamal::PodElGamalPubkey, sigma_proofs::pod::PodPubkeyValidityProof,
-        },
         bytemuck::Zeroable,
         curve25519_dalek::traits::Identity,
         solana_address::Address,
         solana_keypair::Keypair,
+        solana_zk_sdk_pod::{
+            encryption::elgamal::PodElGamalPubkey, sigma_proofs::PodPubkeyValidityProof,
+        },
         std::str::FromStr,
     };
 
