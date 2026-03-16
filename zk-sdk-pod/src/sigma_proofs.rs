@@ -4,7 +4,7 @@ use {
     crate::macros::{impl_from_bytes, impl_from_str},
     base64::{prelude::BASE64_STANDARD, Engine},
     bytemuck::{Pod, Zeroable},
-    std::fmt,
+    core::fmt,
 };
 
 /// Byte length of a ciphertext-commitment equality proof
