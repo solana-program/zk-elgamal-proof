@@ -15,7 +15,6 @@ use {
     solana_zk_sdk_pod::encryption::pedersen::PodPedersenCommitment,
     std::convert::TryInto,
 };
-
 pub use {batched_range_proof_u128::*, batched_range_proof_u256::*, batched_range_proof_u64::*};
 
 /// A bit length in a batched range proof must be at most 64.
