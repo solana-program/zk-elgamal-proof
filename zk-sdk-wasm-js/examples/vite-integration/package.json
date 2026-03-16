@@ -10,6 +10,6 @@
   },
   "devDependencies": {
     "vite": "^8.0.0",
-    "vite-plugin-wasm": "^3.3.0"
+    "vite-plugin-wasm": "^3.6.0"
   }
 }
