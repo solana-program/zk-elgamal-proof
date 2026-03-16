@@ -1133,7 +1133,6 @@ dependencies = [
  "solana-address 2.3.0",
  "solana-instruction",
  "solana-sdk-ids",
- "solana-zk-sdk",
  "solana-zk-sdk-pod",
 ]
 
@@ -1165,6 +1164,7 @@ dependencies = [
  "solana-seed-phrase",
  "solana-signature",
  "solana-signer",
+ "solana-zk-elgamal-proof-program",
  "solana-zk-sdk-pod",
  "subtle",
  "thiserror 2.0.18",

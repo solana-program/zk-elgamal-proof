@@ -1,21 +1,3 @@
-//! The batched grouped-ciphertext validity proof instruction.
-//!
-//! A batched grouped-ciphertext validity proof certifies the validity of two grouped ElGamal
-//! ciphertext that are encrypted using the same set of ElGamal public keys. A batched
-//! grouped-ciphertext validity proof is shorter and more efficient than two individual
-//! grouped-ciphertext validity proofs.
-
-use {
-    crate::zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
-    bytemuck_derive::{Pod, Zeroable},
-    solana_zk_sdk_pod::{
-        encryption::{
-            elgamal::PodElGamalPubkey, grouped_elgamal::PodGroupedElGamalCiphertext2Handles,
-        },
-        sigma_proofs::PodBatchedGroupedCiphertext2HandlesValidityProof,
-    },
-};
-#[cfg(not(target_os = "solana"))]
 use {
     crate::{
         encryption::{
@@ -31,34 +13,13 @@ use {
         },
     },
     merlin::Transcript,
+    solana_zk_elgamal_proof_program::proof_data::{
+        BatchedGroupedCiphertext2HandlesValidityProofContext,
+        BatchedGroupedCiphertext2HandlesValidityProofData,
+    },
+    solana_zk_sdk_pod::encryption::elgamal::PodElGamalPubkey,
 };
 
-/// The instruction data that is needed for the
-/// `ProofInstruction::VerifyBatchedGroupedCiphertextValidity` instruction.
-///
-/// It includes the cryptographic proof as well as the context data information needed to verify
-/// the proof.
-#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
-#[repr(C)]
-pub struct BatchedGroupedCiphertext2HandlesValidityProofData {
-    pub context: BatchedGroupedCiphertext2HandlesValidityProofContext,
-
-    pub proof: PodBatchedGroupedCiphertext2HandlesValidityProof,
-}
-
-#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
-#[repr(C)]
-pub struct BatchedGroupedCiphertext2HandlesValidityProofContext {
-    pub first_pubkey: PodElGamalPubkey, // 32 bytes
-
-    pub second_pubkey: PodElGamalPubkey, // 32 bytes
-
-    pub grouped_ciphertext_lo: PodGroupedElGamalCiphertext2Handles, // 96 bytes
-
-    pub grouped_ciphertext_hi: PodGroupedElGamalCiphertext2Handles, // 96 bytes
-}
-
-#[cfg(not(target_os = "solana"))]
 #[allow(clippy::too_many_arguments)]
 pub fn new_batched_grouped_ciphertext_2_handles_validity_proof_data(
     first_pubkey: &ElGamalPubkey,
@@ -114,17 +75,6 @@ pub fn new_batched_grouped_ciphertext_2_handles_validity_proof_data(
     Ok(BatchedGroupedCiphertext2HandlesValidityProofData { context, proof })
 }
 
-impl ZkProofData<BatchedGroupedCiphertext2HandlesValidityProofContext>
-    for BatchedGroupedCiphertext2HandlesValidityProofData
-{
-    const PROOF_TYPE: ProofType = ProofType::BatchedGroupedCiphertext2HandlesValidity;
-
-    fn context_data(&self) -> &BatchedGroupedCiphertext2HandlesValidityProofContext {
-        &self.context
-    }
-}
-
-#[cfg(not(target_os = "solana"))]
 impl VerifyZkProof for BatchedGroupedCiphertext2HandlesValidityProofData {
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
         let mut transcript = Transcript::new_zk_elgamal_transcript(

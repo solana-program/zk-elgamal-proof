@@ -1,12 +1,3 @@
-//! The 64-bit batched range proof instruction.
-
-use {
-    crate::zk_elgamal_proof_program::proof_data::{
-        batched_range_proof::BatchedRangeProofContext, ProofType, ZkProofData,
-    },
-    bytemuck_derive::{Pod, Zeroable},
-    solana_zk_sdk_pod::range_proof::PodRangeProofU64,
-};
 #[cfg(not(target_os = "solana"))]
 use {
     crate::{
@@ -14,26 +5,18 @@ use {
         range_proof::range::RangeProof,
         zk_elgamal_proof_program::{
             errors::{ProofGenerationError, ProofVerificationError},
-            proof_data::{batched_range_proof::MAX_COMMITMENTS, VerifyZkProof},
+            proof_data::{
+                batched_range_proof::{
+                    batched_range_proof_transcript, build_batched_range_proof_context,
+                    verify_batched_range_proof_context, MAX_COMMITMENTS,
+                },
+                VerifyZkProof,
+            },
         },
     },
+    solana_zk_elgamal_proof_program::proof_data::BatchedRangeProofU64Data,
     std::convert::TryInto,
 };
-
-/// The instruction data that is needed for the
-/// `ProofInstruction::VerifyBatchedRangeProofU64` instruction.
-///
-/// It includes the cryptographic proof as well as the context data information needed to verify
-/// the proof.
-#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
-#[repr(C)]
-pub struct BatchedRangeProofU64Data {
-    /// The context data for a batched range proof
-    pub context: BatchedRangeProofContext,
-
-    /// The batched range proof
-    pub proof: PodRangeProofU64,
-}
 
 #[cfg(not(target_os = "solana"))]
 pub fn build_batched_range_proof_u64_data(
@@ -56,9 +39,10 @@ pub fn build_batched_range_proof_u64_data(
         return Err(ProofGenerationError::IllegalAmountBitLength);
     }
 
-    let context = BatchedRangeProofContext::new(&commitments, &amounts, &bit_lengths, &openings)?;
+    let context =
+        build_batched_range_proof_context(&commitments, &amounts, &bit_lengths, &openings)?;
 
-    let mut transcript = context.new_transcript();
+    let mut transcript = batched_range_proof_transcript(&context);
     let proof = RangeProof::new(amounts, bit_lengths, openings, &mut transcript)?
         .try_into()
         .map_err(|_| ProofGenerationError::ProofLength)?;
@@ -66,18 +50,10 @@ pub fn build_batched_range_proof_u64_data(
     Ok(BatchedRangeProofU64Data { context, proof })
 }
 
-impl ZkProofData<BatchedRangeProofContext> for BatchedRangeProofU64Data {
-    const PROOF_TYPE: ProofType = ProofType::BatchedRangeProofU64;
-
-    fn context_data(&self) -> &BatchedRangeProofContext {
-        &self.context
-    }
-}
-
 #[cfg(not(target_os = "solana"))]
 impl VerifyZkProof for BatchedRangeProofU64Data {
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
-        let (commitments, bit_lengths) = self.context.try_into()?;
+        let (commitments, bit_lengths) = verify_batched_range_proof_context(&self.context)?;
         let num_commitments = commitments.len();
 
         if num_commitments > MAX_COMMITMENTS {
@@ -94,7 +70,7 @@ impl VerifyZkProof for BatchedRangeProofU64Data {
             return Err(ProofVerificationError::IllegalCommitmentLength);
         }
 
-        let mut transcript = self.context_data().new_transcript();
+        let mut transcript = batched_range_proof_transcript(&self.context);
         let proof: RangeProof = self.proof.try_into()?;
 
         proof
