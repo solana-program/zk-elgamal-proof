@@ -13,20 +13,10 @@ edition = { workspace = true }
 crate-type = ["rlib"]
 
 [dependencies]
-base64 = { workspace = true }
-bytemuck = { workspace = true }
-bytemuck_derive = { workspace = true }
-num-derive = { workspace = true }
-num-traits = { workspace = true }
-solana-instruction = { workspace = true, features = ["std"] }
-solana-address = { workspace = true, features = ["bytemuck"] }
-solana-sdk-ids = { workspace = true }
-solana-zk-sdk-pod = { workspace = true }
-thiserror = { workspace = true }
-
-[target.'cfg(not(target_os = "solana"))'.dependencies]
 aes-gcm-siv = { workspace = true }
+base64 = { workspace = true }
 bincode = { workspace = true }
+bytemuck = { workspace = true }
 curve25519-dalek = { workspace = true, features = ["serde"] }
 itertools = { workspace = true }
 merlin = { workspace = true }
@@ -35,13 +25,16 @@ serde = { workspace = true }
 serde_derive = { workspace = true }
 serde_json = { workspace = true }
 sha3 = { workspace = true }
+solana-address = { workspace = true, features = ["bytemuck"] }
 solana-derivation-path = { workspace = true }
 solana-seed-derivable = { workspace = true }
 solana-seed-phrase = { workspace = true }
 solana-signature = { workspace = true }
 solana-signer = { workspace = true }
 solana-zk-elgamal-proof-program = { workspace = true }
+solana-zk-sdk-pod = { workspace = true }
 subtle = { workspace = true }
+thiserror = { workspace = true }
 zeroize = { workspace = true, features = ["zeroize_derive"] }
 
 [dev-dependencies]
