@@ -10,7 +10,7 @@
   },
   "devDependencies": {
     "webpack": "^5.105.4",
-    "webpack-cli": "^7.0.1",
+    "webpack-cli": "^7.0.2",
     "webpack-dev-server": "^5.2.3",
     "html-webpack-plugin": "^5.6.6"
   }
