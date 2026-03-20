@@ -51,7 +51,9 @@ impl From<ProofType> for PodProofType {
 
 /// Error returned when attempting to parse an invalid proof type byte.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct ProofTypeError;
+pub enum ProofTypeError {
+    InvalidProofType,
+}
 
 impl fmt::Display for ProofTypeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -65,7 +67,7 @@ impl TryFrom<PodProofType> for ProofType {
     type Error = ProofTypeError;
 
     fn try_from(pod: PodProofType) -> Result<Self, Self::Error> {
-        FromPrimitive::from_u8(pod.0).ok_or(ProofTypeError)
+        FromPrimitive::from_u8(pod.0).ok_or(ProofTypeError::InvalidProofType)
     }
 }
 
