@@ -9,7 +9,7 @@
 //! data types. For the precise processor logic, see the ZK ElGamal Proof [`program`].
 //! implementation.
 //!
-//! [`ZK ElGamal proof`]: https://docs.solanalabs.com/runtime/zk-token-proof
+//! [`ZK ElGamal proof`]: https://docs.anza.xyz/runtime/zk-elgamal-proof
 //! [`program`]: https://github.com/anza-xyz/agave/blob/master/programs/zk-elgamal-proof/src/lib.rs
 
 pub mod instruction;
