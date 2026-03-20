@@ -496,7 +496,6 @@ impl TryFrom<PodRangeProofU64> for RangeProof {
     }
 }
 
-#[cfg(not(target_os = "solana"))]
 impl TryFrom<RangeProof> for PodRangeProofU128 {
     type Error = RangeProofVerificationError;
 
@@ -513,7 +512,6 @@ impl TryFrom<RangeProof> for PodRangeProofU128 {
     }
 }
 
-#[cfg(not(target_os = "solana"))]
 impl TryFrom<PodRangeProofU128> for RangeProof {
     type Error = RangeProofVerificationError;
 
@@ -522,7 +520,6 @@ impl TryFrom<PodRangeProofU128> for RangeProof {
     }
 }
 
-#[cfg(not(target_os = "solana"))]
 impl TryFrom<RangeProof> for PodRangeProofU256 {
     type Error = RangeProofVerificationError;
 
@@ -539,7 +536,6 @@ impl TryFrom<RangeProof> for PodRangeProofU256 {
     }
 }
 
-#[cfg(not(target_os = "solana"))]
 impl TryFrom<PodRangeProofU256> for RangeProof {
     type Error = RangeProofVerificationError;
 
@@ -548,7 +544,6 @@ impl TryFrom<PodRangeProofU256> for RangeProof {
     }
 }
 
-#[cfg(not(target_os = "solana"))]
 fn copy_range_proof_modulo_inner_product_proof(proof: &RangeProof, buf: &mut [u8]) {
     let mut chunks = buf.chunks_mut(UNIT_LEN);
     chunks.next().unwrap().copy_from_slice(proof.A.as_bytes());

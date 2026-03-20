@@ -4,9 +4,8 @@ use {
         pedersen::PedersenOpening,
     },
     js_sys::Uint8Array,
-    solana_zk_sdk::zk_elgamal_proof_program::proof_data::{
-        batched_grouped_ciphertext_validity, VerifyZkProof,
-    },
+    solana_zk_elgamal_proof_program::proof_data,
+    solana_zk_sdk::zk_elgamal_proof_program::{self, VerifyZkProof},
     wasm_bindgen::prelude::*,
 };
 
@@ -14,13 +13,12 @@ use {
 /// the validity of two grouped ElGamal ciphertexts that are encrypted under the same public keys.
 #[wasm_bindgen]
 pub struct BatchedGroupedCiphertext2HandlesValidityProofData {
-    pub(crate) inner:
-        batched_grouped_ciphertext_validity::BatchedGroupedCiphertext2HandlesValidityProofData,
+    pub(crate) inner: proof_data::BatchedGroupedCiphertext2HandlesValidityProofData,
 }
 
 crate::conversion::impl_inner_conversion!(
     BatchedGroupedCiphertext2HandlesValidityProofData,
-    batched_grouped_ciphertext_validity::BatchedGroupedCiphertext2HandlesValidityProofData
+    proof_data::BatchedGroupedCiphertext2HandlesValidityProofData
 );
 
 #[wasm_bindgen]
@@ -38,7 +36,7 @@ impl BatchedGroupedCiphertext2HandlesValidityProofData {
         opening_lo: &PedersenOpening,
         opening_hi: &PedersenOpening,
     ) -> Result<BatchedGroupedCiphertext2HandlesValidityProofData, JsValue> {
-        batched_grouped_ciphertext_validity::new_batched_grouped_ciphertext_2_handles_validity_proof_data(
+        zk_elgamal_proof_program::new_batched_grouped_ciphertext_2_handles_validity_proof_data(
             &first_pubkey.inner,
             &second_pubkey.inner,
             &grouped_ciphertext_lo.inner,
@@ -74,9 +72,8 @@ impl BatchedGroupedCiphertext2HandlesValidityProofData {
         bytes: &Uint8Array,
     ) -> Result<BatchedGroupedCiphertext2HandlesValidityProofData, JsValue> {
         // Define expected length as a constant for stack allocation
-        const EXPECTED_LEN: usize = std::mem::size_of::<
-            batched_grouped_ciphertext_validity::BatchedGroupedCiphertext2HandlesValidityProofData,
-        >();
+        const EXPECTED_LEN: usize =
+            std::mem::size_of::<proof_data::BatchedGroupedCiphertext2HandlesValidityProofData>();
         if bytes.length() as usize != EXPECTED_LEN {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for BatchedGroupedCiphertext2HandlesValidityProof: expected {}, got {}",
@@ -89,7 +86,11 @@ impl BatchedGroupedCiphertext2HandlesValidityProofData {
         bytes.copy_to(&mut data);
 
         bytemuck::try_from_bytes(&data)
-            .map(|pod: &batched_grouped_ciphertext_validity::BatchedGroupedCiphertext2HandlesValidityProofData| Self { inner: *pod })
+            .map(
+                |pod: &proof_data::BatchedGroupedCiphertext2HandlesValidityProofData| Self {
+                    inner: *pod,
+                },
+            )
             .map_err(|_| {
                 JsValue::from_str("Invalid bytes for BatchedGroupedCiphertext2HandlesValidityProof")
             })
@@ -105,13 +106,12 @@ impl BatchedGroupedCiphertext2HandlesValidityProofData {
 /// The context data needed to verify a batched grouped ciphertext 2-handles validity proof.
 #[wasm_bindgen]
 pub struct BatchedGroupedCiphertext2HandlesValidityProofContext {
-    pub(crate) inner:
-        batched_grouped_ciphertext_validity::BatchedGroupedCiphertext2HandlesValidityProofContext,
+    pub(crate) inner: proof_data::BatchedGroupedCiphertext2HandlesValidityProofContext,
 }
 
 crate::conversion::impl_inner_conversion!(
     BatchedGroupedCiphertext2HandlesValidityProofContext,
-    batched_grouped_ciphertext_validity::BatchedGroupedCiphertext2HandlesValidityProofContext
+    proof_data::BatchedGroupedCiphertext2HandlesValidityProofContext
 );
 
 #[wasm_bindgen]
@@ -123,7 +123,7 @@ impl BatchedGroupedCiphertext2HandlesValidityProofContext {
         bytes: &Uint8Array,
     ) -> Result<BatchedGroupedCiphertext2HandlesValidityProofContext, JsValue> {
         let expected_len =
-            std::mem::size_of::<batched_grouped_ciphertext_validity::BatchedGroupedCiphertext2HandlesValidityProofContext>();
+            std::mem::size_of::<proof_data::BatchedGroupedCiphertext2HandlesValidityProofContext>();
         if bytes.length() as usize != expected_len {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for BatchedGroupedCiphertext2HandlesValidityProofContext: expected {}, got {}",
@@ -134,7 +134,11 @@ impl BatchedGroupedCiphertext2HandlesValidityProofContext {
         let mut data = vec![0u8; expected_len];
         bytes.copy_to(&mut data);
         bytemuck::try_from_bytes(&data)
-            .map(|pod: &batched_grouped_ciphertext_validity::BatchedGroupedCiphertext2HandlesValidityProofContext| Self { inner: *pod })
+            .map(
+                |pod: &proof_data::BatchedGroupedCiphertext2HandlesValidityProofContext| Self {
+                    inner: *pod,
+                },
+            )
             .map_err(|_| {
                 JsValue::from_str(
                     "Invalid bytes for BatchedGroupedCiphertext2HandlesValidityProofContext",

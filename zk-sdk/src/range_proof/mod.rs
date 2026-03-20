@@ -13,12 +13,7 @@
 //!   the original Bulletproofs [paper](https://eprint.iacr.org/2017/1066) (Section 4.3).
 
 pub mod errors;
-
-#[cfg(not(target_os = "solana"))]
 pub mod generators;
-#[cfg(not(target_os = "solana"))]
 pub mod inner_product;
-#[cfg(not(target_os = "solana"))]
 pub mod range;
-#[cfg(not(target_os = "solana"))]
 pub mod util;

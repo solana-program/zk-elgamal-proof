@@ -22,9 +22,6 @@ solana-address = { workspace = true, features = ["bytemuck"] }
 solana-sdk-ids = { workspace = true }
 solana-zk-sdk-pod = { workspace = true }
 
-# `solana-zk-sdk` to be replaced by `solana-zk-sdk-pod` once it is split out
-solana-zk-sdk = { workspace = true }
-
 [lints]
 workspace = true
 

@@ -1,7 +1,8 @@
 use {
     crate::encryption::elgamal::{ElGamalCiphertext, ElGamalKeypair},
     js_sys::Uint8Array,
-    solana_zk_sdk::zk_elgamal_proof_program::proof_data::{zero_ciphertext, VerifyZkProof},
+    solana_zk_elgamal_proof_program::proof_data,
+    solana_zk_sdk::zk_elgamal_proof_program::{self, VerifyZkProof},
     wasm_bindgen::prelude::*,
 };
 
@@ -9,12 +10,12 @@ use {
 /// ciphertext encrypts the number 0.
 #[wasm_bindgen]
 pub struct ZeroCiphertextProofData {
-    pub(crate) inner: zero_ciphertext::ZeroCiphertextProofData,
+    pub(crate) inner: proof_data::ZeroCiphertextProofData,
 }
 
 crate::conversion::impl_inner_conversion!(
     ZeroCiphertextProofData,
-    zero_ciphertext::ZeroCiphertextProofData
+    proof_data::ZeroCiphertextProofData
 );
 
 #[wasm_bindgen]
@@ -25,9 +26,12 @@ impl ZeroCiphertextProofData {
         keypair: &ElGamalKeypair,
         ciphertext: &ElGamalCiphertext,
     ) -> Result<ZeroCiphertextProofData, JsValue> {
-        zero_ciphertext::build_zero_ciphertext_proof_data(&keypair.inner, &ciphertext.inner)
-            .map(|inner| Self { inner })
-            .map_err(|e| JsValue::from_str(&e.to_string()))
+        zk_elgamal_proof_program::build_zero_ciphertext_proof_data(
+            &keypair.inner,
+            &ciphertext.inner,
+        )
+        .map(|inner| Self { inner })
+        .map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     /// Returns the context data associated with the proof.
@@ -50,7 +54,7 @@ impl ZeroCiphertextProofData {
     #[wasm_bindgen(js_name = "fromBytes")]
     pub fn from_bytes(bytes: &Uint8Array) -> Result<ZeroCiphertextProofData, JsValue> {
         // Define expected length as a constant for stack allocation
-        const EXPECTED_LEN: usize = std::mem::size_of::<zero_ciphertext::ZeroCiphertextProofData>();
+        const EXPECTED_LEN: usize = std::mem::size_of::<proof_data::ZeroCiphertextProofData>();
         if bytes.length() as usize != EXPECTED_LEN {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for ZeroCiphertextProof: expected {}, got {}",
@@ -63,7 +67,7 @@ impl ZeroCiphertextProofData {
         bytes.copy_to(&mut data);
 
         bytemuck::try_from_bytes(&data)
-            .map(|pod: &zero_ciphertext::ZeroCiphertextProofData| Self { inner: *pod })
+            .map(|pod: &proof_data::ZeroCiphertextProofData| Self { inner: *pod })
             .map_err(|_| JsValue::from_str("Invalid bytes for ZeroCiphertextProof"))
     }
 
@@ -77,12 +81,12 @@ impl ZeroCiphertextProofData {
 /// The context data needed to verify a zero-ciphertext proof.
 #[wasm_bindgen]
 pub struct ZeroCiphertextProofContext {
-    pub(crate) inner: zero_ciphertext::ZeroCiphertextProofContext,
+    pub(crate) inner: proof_data::ZeroCiphertextProofContext,
 }
 
 crate::conversion::impl_inner_conversion!(
     ZeroCiphertextProofContext,
-    zero_ciphertext::ZeroCiphertextProofContext
+    proof_data::ZeroCiphertextProofContext
 );
 
 #[wasm_bindgen]
@@ -91,7 +95,7 @@ impl ZeroCiphertextProofContext {
     /// Throws an error if the bytes are invalid.
     #[wasm_bindgen(js_name = "fromBytes")]
     pub fn from_bytes(bytes: &Uint8Array) -> Result<ZeroCiphertextProofContext, JsValue> {
-        let expected_len = std::mem::size_of::<zero_ciphertext::ZeroCiphertextProofContext>();
+        let expected_len = std::mem::size_of::<proof_data::ZeroCiphertextProofContext>();
         if bytes.length() as usize != expected_len {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for ZeroCiphertextProofContext: expected {}, got {}",
@@ -102,7 +106,7 @@ impl ZeroCiphertextProofContext {
         let mut data = vec![0u8; expected_len];
         bytes.copy_to(&mut data);
         bytemuck::try_from_bytes(&data)
-            .map(|pod: &zero_ciphertext::ZeroCiphertextProofContext| Self { inner: *pod })
+            .map(|pod: &proof_data::ZeroCiphertextProofContext| Self { inner: *pod })
             .map_err(|_| JsValue::from_str("Invalid bytes for ZeroCiphertextProofContext"))
     }
 

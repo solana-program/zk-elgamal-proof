@@ -1,14 +1,12 @@
-#[cfg(not(target_os = "solana"))]
-use crate::range_proof::errors::RangeProofGenerationError;
 use {
     crate::{
-        errors::ElGamalError, range_proof::errors::RangeProofVerificationError,
+        errors::ElGamalError,
+        range_proof::errors::{RangeProofGenerationError, RangeProofVerificationError},
         sigma_proofs::errors::*,
     },
     thiserror::Error,
 };
 
-#[cfg(not(target_os = "solana"))]
 #[derive(Error, Clone, Debug, Eq, PartialEq)]
 pub enum ProofGenerationError {
     #[error("illegal number of commitments")]

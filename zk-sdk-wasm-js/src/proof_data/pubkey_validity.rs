@@ -1,7 +1,8 @@
 use {
     crate::encryption::elgamal::ElGamalKeypair,
     js_sys::Uint8Array,
-    solana_zk_sdk::zk_elgamal_proof_program::proof_data::{pubkey_validity, VerifyZkProof},
+    solana_zk_elgamal_proof_program::proof_data,
+    solana_zk_sdk::zk_elgamal_proof_program::{self, VerifyZkProof},
     wasm_bindgen::prelude::*,
 };
 
@@ -9,12 +10,12 @@ use {
 /// public key is valid (i.e., the prover knows the corresponding secret key).
 #[wasm_bindgen]
 pub struct PubkeyValidityProofData {
-    pub(crate) inner: pubkey_validity::PubkeyValidityProofData,
+    pub(crate) inner: proof_data::PubkeyValidityProofData,
 }
 
 crate::conversion::impl_inner_conversion!(
     PubkeyValidityProofData,
-    pubkey_validity::PubkeyValidityProofData
+    proof_data::PubkeyValidityProofData
 );
 
 #[wasm_bindgen]
@@ -22,7 +23,7 @@ impl PubkeyValidityProofData {
     /// Creates a new public-key validity proof.
     #[wasm_bindgen(constructor)]
     pub fn new(keypair: &ElGamalKeypair) -> Result<PubkeyValidityProofData, JsValue> {
-        pubkey_validity::build_pubkey_validity_proof_data(&keypair.inner)
+        zk_elgamal_proof_program::build_pubkey_validity_proof_data(&keypair.inner)
             .map(|inner| Self { inner })
             .map_err(|e| JsValue::from_str(&e.to_string()))
     }
@@ -47,7 +48,7 @@ impl PubkeyValidityProofData {
     #[wasm_bindgen(js_name = "fromBytes")]
     pub fn from_bytes(bytes: &Uint8Array) -> Result<PubkeyValidityProofData, JsValue> {
         // Define expected length as a constant for stack allocation
-        const EXPECTED_LEN: usize = std::mem::size_of::<pubkey_validity::PubkeyValidityProofData>();
+        const EXPECTED_LEN: usize = std::mem::size_of::<proof_data::PubkeyValidityProofData>();
         if bytes.length() as usize != EXPECTED_LEN {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for PubkeyValidityProof: expected {}, got {}",
@@ -60,7 +61,7 @@ impl PubkeyValidityProofData {
         bytes.copy_to(&mut data);
 
         bytemuck::try_from_bytes(&data)
-            .map(|pod: &pubkey_validity::PubkeyValidityProofData| Self { inner: *pod })
+            .map(|pod: &proof_data::PubkeyValidityProofData| Self { inner: *pod })
             .map_err(|_| JsValue::from_str("Invalid bytes for PubkeyValidityProof"))
     }
 
@@ -74,12 +75,12 @@ impl PubkeyValidityProofData {
 /// The context data needed to verify a public-key validity proof.
 #[wasm_bindgen]
 pub struct PubkeyValidityProofContext {
-    pub(crate) inner: pubkey_validity::PubkeyValidityProofContext,
+    pub(crate) inner: proof_data::PubkeyValidityProofContext,
 }
 
 crate::conversion::impl_inner_conversion!(
     PubkeyValidityProofContext,
-    pubkey_validity::PubkeyValidityProofContext
+    proof_data::PubkeyValidityProofContext
 );
 
 #[wasm_bindgen]
@@ -88,7 +89,7 @@ impl PubkeyValidityProofContext {
     /// Throws an error if the bytes are invalid.
     #[wasm_bindgen(js_name = "fromBytes")]
     pub fn from_bytes(bytes: &Uint8Array) -> Result<PubkeyValidityProofContext, JsValue> {
-        let expected_len = std::mem::size_of::<pubkey_validity::PubkeyValidityProofContext>();
+        let expected_len = std::mem::size_of::<proof_data::PubkeyValidityProofContext>();
         if bytes.length() as usize != expected_len {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for PubkeyValidityProofContext: expected {}, got {}",
@@ -99,7 +100,7 @@ impl PubkeyValidityProofContext {
         let mut data = vec![0u8; expected_len];
         bytes.copy_to(&mut data);
         bytemuck::try_from_bytes(&data)
-            .map(|pod: &pubkey_validity::PubkeyValidityProofContext| Self { inner: *pod })
+            .map(|pod: &proof_data::PubkeyValidityProofContext| Self { inner: *pod })
             .map_err(|_| JsValue::from_str("Invalid bytes for PubkeyValidityProofContext"))
     }
 

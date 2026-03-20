@@ -4,9 +4,8 @@ use {
         pedersen::{PedersenCommitment, PedersenOpening},
     },
     js_sys::Uint8Array,
-    solana_zk_sdk::zk_elgamal_proof_program::proof_data::{
-        ciphertext_commitment_equality, VerifyZkProof,
-    },
+    solana_zk_elgamal_proof_program::proof_data,
+    solana_zk_sdk::zk_elgamal_proof_program::{self, VerifyZkProof},
     wasm_bindgen::prelude::*,
 };
 
@@ -14,12 +13,12 @@ use {
 /// ciphertext and a Pedersen commitment encrypt/encode the same message.
 #[wasm_bindgen]
 pub struct CiphertextCommitmentEqualityProofData {
-    pub(crate) inner: ciphertext_commitment_equality::CiphertextCommitmentEqualityProofData,
+    pub(crate) inner: proof_data::CiphertextCommitmentEqualityProofData,
 }
 
 crate::conversion::impl_inner_conversion!(
     CiphertextCommitmentEqualityProofData,
-    ciphertext_commitment_equality::CiphertextCommitmentEqualityProofData
+    proof_data::CiphertextCommitmentEqualityProofData
 );
 
 #[wasm_bindgen]
@@ -34,7 +33,7 @@ impl CiphertextCommitmentEqualityProofData {
         opening: &PedersenOpening,
         amount: u64,
     ) -> Result<CiphertextCommitmentEqualityProofData, JsValue> {
-        ciphertext_commitment_equality::build_ciphertext_commitment_equality_proof_data(
+        zk_elgamal_proof_program::build_ciphertext_commitment_equality_proof_data(
             &keypair.inner,
             &ciphertext.inner,
             &commitment.inner,
@@ -67,9 +66,8 @@ impl CiphertextCommitmentEqualityProofData {
         bytes: &Uint8Array,
     ) -> Result<CiphertextCommitmentEqualityProofData, JsValue> {
         // Define expected length as a constant for stack allocation
-        const EXPECTED_LEN: usize = std::mem::size_of::<
-            ciphertext_commitment_equality::CiphertextCommitmentEqualityProofData,
-        >();
+        const EXPECTED_LEN: usize =
+            std::mem::size_of::<proof_data::CiphertextCommitmentEqualityProofData>();
         if bytes.length() as usize != EXPECTED_LEN {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for CiphertextCommitmentEqualityProof: expected {}, got {}",
@@ -82,11 +80,7 @@ impl CiphertextCommitmentEqualityProofData {
         bytes.copy_to(&mut data);
 
         bytemuck::try_from_bytes(&data)
-            .map(
-                |pod: &ciphertext_commitment_equality::CiphertextCommitmentEqualityProofData| {
-                    Self { inner: *pod }
-                },
-            )
+            .map(|pod: &proof_data::CiphertextCommitmentEqualityProofData| Self { inner: *pod })
             .map_err(|_| JsValue::from_str("Invalid bytes for CiphertextCommitmentEqualityProof"))
     }
 
@@ -100,12 +94,12 @@ impl CiphertextCommitmentEqualityProofData {
 /// The context data needed to verify a ciphertext-commitment equality proof.
 #[wasm_bindgen]
 pub struct CiphertextCommitmentEqualityProofContext {
-    pub(crate) inner: ciphertext_commitment_equality::CiphertextCommitmentEqualityProofContext,
+    pub(crate) inner: proof_data::CiphertextCommitmentEqualityProofContext,
 }
 
 crate::conversion::impl_inner_conversion!(
     CiphertextCommitmentEqualityProofContext,
-    ciphertext_commitment_equality::CiphertextCommitmentEqualityProofContext
+    proof_data::CiphertextCommitmentEqualityProofContext
 );
 
 #[wasm_bindgen]
@@ -116,9 +110,8 @@ impl CiphertextCommitmentEqualityProofContext {
     pub fn from_bytes(
         bytes: &Uint8Array,
     ) -> Result<CiphertextCommitmentEqualityProofContext, JsValue> {
-        let expected_len = std::mem::size_of::<
-            ciphertext_commitment_equality::CiphertextCommitmentEqualityProofContext,
-        >();
+        let expected_len =
+            std::mem::size_of::<proof_data::CiphertextCommitmentEqualityProofContext>();
         if bytes.length() as usize != expected_len {
             return Err(JsValue::from_str(&format!(
                 "Invalid byte length for CiphertextCommitmentEqualityProofContext: expected {}, got {}",
@@ -129,11 +122,7 @@ impl CiphertextCommitmentEqualityProofContext {
         let mut data = vec![0u8; expected_len];
         bytes.copy_to(&mut data);
         bytemuck::try_from_bytes(&data)
-            .map(
-                |pod: &ciphertext_commitment_equality::CiphertextCommitmentEqualityProofContext| {
-                    Self { inner: *pod }
-                },
-            )
+            .map(|pod: &proof_data::CiphertextCommitmentEqualityProofContext| Self { inner: *pod })
             .map_err(|_| {
                 JsValue::from_str("Invalid bytes for CiphertextCommitmentEqualityProofContext")
             })

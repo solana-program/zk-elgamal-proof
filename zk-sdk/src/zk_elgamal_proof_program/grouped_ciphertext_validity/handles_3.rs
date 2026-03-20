@@ -1,21 +1,3 @@
-//! The grouped-ciphertext with 3 decryption handles validity proof instruction.
-//!
-//! A grouped-ciphertext validity proof certifies that a grouped ElGamal ciphertext is
-//! well-defined, i.e. the ciphertext can be decrypted by private keys associated with its
-//! decryption handles. To generate the proof, a prover must provide the Pedersen opening
-//! associated with the grouped ciphertext's commitment.
-
-use {
-    crate::zk_elgamal_proof_program::proof_data::{ProofType, ZkProofData},
-    bytemuck_derive::{Pod, Zeroable},
-    solana_zk_sdk_pod::{
-        encryption::{
-            elgamal::PodElGamalPubkey, grouped_elgamal::PodGroupedElGamalCiphertext3Handles,
-        },
-        sigma_proofs::PodGroupedCiphertext3HandlesValidityProof,
-    },
-};
-#[cfg(not(target_os = "solana"))]
 use {
     crate::{
         encryption::{
@@ -27,38 +9,16 @@ use {
         transcript::TranscriptProtocol,
         zk_elgamal_proof_program::{
             errors::{ProofGenerationError, ProofVerificationError},
-            proof_data::VerifyZkProof,
+            VerifyZkProof,
         },
     },
     merlin::Transcript,
+    solana_zk_elgamal_proof_program::proof_data::{
+        GroupedCiphertext3HandlesValidityProofContext, GroupedCiphertext3HandlesValidityProofData,
+    },
+    solana_zk_sdk_pod::encryption::elgamal::PodElGamalPubkey,
 };
 
-/// The instruction data that is needed for the
-/// `ProofInstruction::VerifyGroupedCiphertext3HandlesValidity` instruction.
-///
-/// It includes the cryptographic proof as well as the context data information needed to verify
-/// the proof.
-#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
-#[repr(C)]
-pub struct GroupedCiphertext3HandlesValidityProofData {
-    pub context: GroupedCiphertext3HandlesValidityProofContext,
-
-    pub proof: PodGroupedCiphertext3HandlesValidityProof,
-}
-
-#[derive(Clone, Copy, Pod, Zeroable, Debug, PartialEq, Eq)]
-#[repr(C)]
-pub struct GroupedCiphertext3HandlesValidityProofContext {
-    pub first_pubkey: PodElGamalPubkey, // 32 bytes
-
-    pub second_pubkey: PodElGamalPubkey, // 32 bytes
-
-    pub third_pubkey: PodElGamalPubkey, // 32 bytes
-
-    pub grouped_ciphertext: PodGroupedElGamalCiphertext3Handles, // 128 bytes
-}
-
-#[cfg(not(target_os = "solana"))]
 pub fn build_grouped_ciphertext_3_handles_validity_proof_data(
     first_pubkey: &ElGamalPubkey,
     second_pubkey: &ElGamalPubkey,
@@ -102,17 +62,6 @@ pub fn build_grouped_ciphertext_3_handles_validity_proof_data(
     Ok(GroupedCiphertext3HandlesValidityProofData { context, proof })
 }
 
-impl ZkProofData<GroupedCiphertext3HandlesValidityProofContext>
-    for GroupedCiphertext3HandlesValidityProofData
-{
-    const PROOF_TYPE: ProofType = ProofType::GroupedCiphertext3HandlesValidity;
-
-    fn context_data(&self) -> &GroupedCiphertext3HandlesValidityProofContext {
-        &self.context
-    }
-}
-
-#[cfg(not(target_os = "solana"))]
 impl VerifyZkProof for GroupedCiphertext3HandlesValidityProofData {
     fn verify_proof(&self) -> Result<(), ProofVerificationError> {
         let mut transcript = Transcript::new_zk_elgamal_transcript(
