@@ -7,7 +7,7 @@ use {
     },
     base64::{prelude::BASE64_STANDARD, Engine},
     bytemuck_derive::{Pod, Zeroable},
-    std::fmt,
+    core::fmt,
 };
 
 /// Maximum length of a base-64 encoded ElGamal public key

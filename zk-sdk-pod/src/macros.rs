@@ -1,6 +1,6 @@
 macro_rules! impl_from_str {
     (TYPE = $type:ident, BYTES_LEN = $bytes_len:expr, BASE64_LEN = $base64_len:expr) => {
-        impl std::str::FromStr for $type {
+        impl core::str::FromStr for $type {
             type Err = crate::errors::ParseError;
 
             fn from_str(s: &str) -> Result<Self, Self::Err> {
@@ -24,7 +24,7 @@ pub(crate) use impl_from_str;
 
 macro_rules! impl_from_bytes {
     (TYPE = $type:ident, BYTES_LEN = $bytes_len:expr) => {
-        impl std::convert::From<[u8; $bytes_len]> for $type {
+        impl core::convert::From<[u8; $bytes_len]> for $type {
             fn from(bytes: [u8; $bytes_len]) -> Self {
                 Self(bytes)
             }

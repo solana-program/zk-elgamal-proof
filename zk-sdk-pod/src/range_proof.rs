@@ -7,7 +7,7 @@ use {
     },
     base64::{prelude::BASE64_STANDARD, Engine},
     bytemuck::{Pod, Zeroable},
-    std::fmt,
+    core::fmt,
 };
 
 /// Byte length of a range proof excluding the inner-product proof component

@@ -1,3 +1,5 @@
+#![no_std]
+
 //! The native ZK ElGamal proof program.
 //!
 //! The program verifies a number of zero-knowledge proofs that are tailored to work with Pedersen
@@ -11,6 +13,8 @@
 //!
 //! [`ZK ElGamal proof`]: https://docs.anza.xyz/runtime/zk-elgamal-proof
 //! [`program`]: https://github.com/anza-xyz/agave/blob/master/programs/zk-elgamal-proof/src/lib.rs
+
+extern crate alloc;
 
 pub mod instruction;
 pub mod proof_data;
