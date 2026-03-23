@@ -41,6 +41,7 @@
 
 use {
     crate::proof_data::ZkProofData,
+    alloc::vec,
     bytemuck::{bytes_of, Pod},
     num_derive::{FromPrimitive, ToPrimitive},
     num_traits::{FromPrimitive, ToPrimitive},

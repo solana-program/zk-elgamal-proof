@@ -61,7 +61,7 @@ impl fmt::Display for ProofTypeError {
     }
 }
 
-impl std::error::Error for ProofTypeError {}
+impl core::error::Error for ProofTypeError {}
 
 impl TryFrom<PodProofType> for ProofType {
     type Error = ProofTypeError;

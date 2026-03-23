@@ -1,10 +1,11 @@
 use {
     crate::proof_data::{PodProofType, ProofType},
+    alloc::vec::Vec,
     bytemuck::{bytes_of, Pod, Zeroable},
+    core::mem::size_of,
     num_traits::ToPrimitive,
     solana_address::Address,
     solana_instruction::error::{InstructionError, InstructionError::InvalidAccountData},
-    std::mem::size_of,
 };
 
 /// The on-chain state for a verified zero-knowledge proof statement.
