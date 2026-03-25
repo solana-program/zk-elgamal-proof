@@ -48,6 +48,7 @@ impl_serde_base64!(TYPE = PodPedersenCommitment);
 
 #[cfg(test)]
 mod tests {
+    #[cfg(feature = "serde-traits")]
     use {super::*, solana_zk_sdk::encryption::pedersen::Pedersen};
 
     #[cfg(feature = "serde-traits")]

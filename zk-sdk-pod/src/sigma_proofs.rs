@@ -313,6 +313,7 @@ unsafe impl Pod for PodZeroCiphertextProof {}
 
 #[cfg(test)]
 mod tests {
+    #[cfg(feature = "serde-traits")]
     use super::*;
 
     macro_rules! test_sigma_proof_serde {

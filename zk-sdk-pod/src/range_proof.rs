@@ -123,6 +123,7 @@ unsafe impl Pod for PodRangeProofU256 {}
 
 #[cfg(test)]
 mod tests {
+    #[cfg(feature = "serde-traits")]
     use super::*;
 
     #[cfg(feature = "serde-traits")]
