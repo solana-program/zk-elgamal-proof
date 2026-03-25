@@ -114,6 +114,100 @@ impl_from_bytes!(TYPE = PodDecryptHandle, BYTES_LEN = DECRYPT_HANDLE_LEN);
 #[cfg(feature = "serde-traits")]
 impl_serde_base64!(TYPE = PodDecryptHandle);
 
+/// An `ElGamalPubkey` that encodes `None` as all `0`, meant to be usable as a
+/// `Pod` type.
+#[derive(
+    Clone, Copy, Debug, Default, bytemuck_derive::Pod, bytemuck_derive::Zeroable, PartialEq, Eq,
+)]
+#[repr(transparent)]
+pub struct OptionalNonZeroElGamalPubkey(PodElGamalPubkey);
+
+impl OptionalNonZeroElGamalPubkey {
+    pub fn equals(&self, other: &PodElGamalPubkey) -> bool {
+        &self.0 == other
+    }
+}
+
+impl TryFrom<Option<PodElGamalPubkey>> for OptionalNonZeroElGamalPubkey {
+    type Error = crate::errors::ParseError;
+
+    fn try_from(p: Option<PodElGamalPubkey>) -> Result<Self, Self::Error> {
+        match p {
+            None => Ok(Self(PodElGamalPubkey::default())),
+            Some(elgamal_pubkey) => {
+                if elgamal_pubkey == PodElGamalPubkey::default() {
+                    Err(crate::errors::ParseError::InvalidArgument)
+                } else {
+                    Ok(Self(elgamal_pubkey))
+                }
+            }
+        }
+    }
+}
+
+impl From<OptionalNonZeroElGamalPubkey> for Option<PodElGamalPubkey> {
+    fn from(p: OptionalNonZeroElGamalPubkey) -> Self {
+        if p.0 == PodElGamalPubkey::default() {
+            None
+        } else {
+            Some(p.0)
+        }
+    }
+}
+
+#[cfg(feature = "serde-traits")]
+impl serde::Serialize for OptionalNonZeroElGamalPubkey {
+    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        if self.0 == PodElGamalPubkey::default() {
+            s.serialize_none()
+        } else {
+            s.serialize_some(&self.0)
+        }
+    }
+}
+
+#[cfg(feature = "serde-traits")]
+struct OptionalNonZeroElGamalPubkeyVisitor;
+
+#[cfg(feature = "serde-traits")]
+impl<'de> serde::de::Visitor<'de> for OptionalNonZeroElGamalPubkeyVisitor {
+    type Value = OptionalNonZeroElGamalPubkey;
+
+    fn expecting(&self, formatter: &mut core::fmt::Formatter) -> core::fmt::Result {
+        formatter.write_str("an ElGamal public key as base64 or `null`")
+    }
+
+    fn visit_str<E>(self, v: &str) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        let elgamal_pubkey: PodElGamalPubkey =
+            core::str::FromStr::from_str(v).map_err(serde::de::Error::custom)?;
+        OptionalNonZeroElGamalPubkey::try_from(Some(elgamal_pubkey))
+            .map_err(serde::de::Error::custom)
+    }
+
+    fn visit_unit<E>(self) -> Result<Self::Value, E>
+    where
+        E: serde::de::Error,
+    {
+        Ok(OptionalNonZeroElGamalPubkey::default())
+    }
+}
+
+#[cfg(feature = "serde-traits")]
+impl<'de> serde::Deserialize<'de> for OptionalNonZeroElGamalPubkey {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: serde::Deserializer<'de>,
+    {
+        deserializer.deserialize_any(OptionalNonZeroElGamalPubkeyVisitor)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use {super::*, solana_zk_sdk::encryption::elgamal::ElGamalKeypair, std::str::FromStr};
@@ -180,5 +274,54 @@ mod tests {
 
         let deserialized: PodDecryptHandle = serde_json::from_str(&serialized).unwrap();
         assert_eq!(expected_handle, deserialized);
+    }
+
+    #[test]
+    fn test_optional_non_zero_elgamal_pubkey_conversions() {
+        let elgamal_keypair = ElGamalKeypair::new_rand();
+        let pubkey = PodElGamalPubkey(elgamal_keypair.pubkey().to_bytes());
+
+        // Test valid Some
+        let opt_pubkey = OptionalNonZeroElGamalPubkey::try_from(Some(pubkey)).unwrap();
+        assert!(opt_pubkey.equals(&pubkey));
+        assert_eq!(Option::<PodElGamalPubkey>::from(opt_pubkey), Some(pubkey));
+
+        // Test valid None
+        let opt_none = OptionalNonZeroElGamalPubkey::try_from(None).unwrap();
+        assert!(opt_none.equals(&PodElGamalPubkey::default()));
+        assert_eq!(Option::<PodElGamalPubkey>::from(opt_none), None);
+
+        // Test Invalid Argument (passing all zeros inside Some)
+        let err =
+            OptionalNonZeroElGamalPubkey::try_from(Some(PodElGamalPubkey::default())).unwrap_err();
+        assert_eq!(err, crate::errors::ParseError::InvalidArgument);
+    }
+
+    #[cfg(feature = "serde-traits")]
+    #[test]
+    fn test_optional_non_zero_elgamal_pubkey_serde_some() {
+        let elgamal_keypair = ElGamalKeypair::new_rand();
+        let pubkey = PodElGamalPubkey(elgamal_keypair.pubkey().to_bytes());
+        let expected = OptionalNonZeroElGamalPubkey::try_from(Some(pubkey)).unwrap();
+
+        // Serialize should format as a base64 string
+        let serialized = serde_json::to_string(&expected).unwrap();
+        assert_eq!(serialized, format!("\"{}\"", pubkey));
+
+        let deserialized: OptionalNonZeroElGamalPubkey = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(expected, deserialized);
+    }
+
+    #[cfg(feature = "serde-traits")]
+    #[test]
+    fn test_optional_non_zero_elgamal_pubkey_serde_none() {
+        let expected = OptionalNonZeroElGamalPubkey::try_from(None).unwrap();
+
+        // Serialize should format directly to `null`
+        let serialized = serde_json::to_string(&expected).unwrap();
+        assert_eq!(serialized, "null");
+
+        let deserialized: OptionalNonZeroElGamalPubkey = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(expected, deserialized);
     }
 }

@@ -6,4 +6,6 @@ pub enum ParseError {
     WrongSize,
     #[error("Invalid Base64 string")]
     Invalid,
+    #[error("Invalid argument or zero value provided")]
+    InvalidArgument,
 }
