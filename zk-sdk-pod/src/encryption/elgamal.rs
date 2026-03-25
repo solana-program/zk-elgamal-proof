@@ -1,5 +1,7 @@
 //! Plain Old Data types for the ElGamal encryption scheme.
 
+#[cfg(feature = "serde-traits")]
+use crate::macros::impl_serde_base64;
 use {
     crate::{
         encryption::{DECRYPT_HANDLE_LEN, ELGAMAL_CIPHERTEXT_LEN, ELGAMAL_PUBKEY_LEN},
@@ -53,6 +55,9 @@ impl_from_bytes!(
     BYTES_LEN = ELGAMAL_CIPHERTEXT_LEN
 );
 
+#[cfg(feature = "serde-traits")]
+impl_serde_base64!(TYPE = PodElGamalCiphertext);
+
 /// The `ElGamalPubkey` type as a `Pod`.
 #[derive(Clone, Copy, Default, bytemuck_derive::Pod, bytemuck_derive::Zeroable, PartialEq, Eq)]
 #[repr(transparent)]
@@ -78,6 +83,9 @@ impl_from_str!(
 
 impl_from_bytes!(TYPE = PodElGamalPubkey, BYTES_LEN = ELGAMAL_PUBKEY_LEN);
 
+#[cfg(feature = "serde-traits")]
+impl_serde_base64!(TYPE = PodElGamalPubkey);
+
 /// The `DecryptHandle` type as a `Pod`.
 #[derive(Clone, Copy, Default, bytemuck_derive::Pod, bytemuck_derive::Zeroable, PartialEq, Eq)]
 #[repr(transparent)]
@@ -102,6 +110,9 @@ impl_from_str!(
 );
 
 impl_from_bytes!(TYPE = PodDecryptHandle, BYTES_LEN = DECRYPT_HANDLE_LEN);
+
+#[cfg(feature = "serde-traits")]
+impl_serde_base64!(TYPE = PodDecryptHandle);
 
 #[cfg(test)]
 mod tests {
@@ -130,5 +141,44 @@ mod tests {
             PodElGamalCiphertext::from_str(&elgamal_ciphertext_base64_str).unwrap();
 
         assert_eq!(expected_elgamal_ciphertext, computed_elgamal_ciphertext);
+    }
+
+    #[cfg(feature = "serde-traits")]
+    #[test]
+    fn test_elgamal_pubkey_serde() {
+        let elgamal_keypair = ElGamalKeypair::new_rand();
+        let expected_pubkey = PodElGamalPubkey(elgamal_keypair.pubkey().to_bytes());
+
+        let serialized = serde_json::to_string(&expected_pubkey).unwrap();
+        assert_eq!(serialized, format!("\"{}\"", expected_pubkey));
+
+        let deserialized: PodElGamalPubkey = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(expected_pubkey, deserialized);
+    }
+
+    #[cfg(feature = "serde-traits")]
+    #[test]
+    fn test_elgamal_ciphertext_serde() {
+        let elgamal_keypair = ElGamalKeypair::new_rand();
+        let expected_ciphertext =
+            PodElGamalCiphertext(elgamal_keypair.pubkey().encrypt(0_u64).to_bytes());
+
+        let serialized = serde_json::to_string(&expected_ciphertext).unwrap();
+        assert_eq!(serialized, format!("\"{}\"", expected_ciphertext));
+
+        let deserialized: PodElGamalCiphertext = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(expected_ciphertext, deserialized);
+    }
+
+    #[cfg(feature = "serde-traits")]
+    #[test]
+    fn test_decrypt_handle_serde() {
+        let expected_handle = PodDecryptHandle([42u8; DECRYPT_HANDLE_LEN]);
+
+        let serialized = serde_json::to_string(&expected_handle).unwrap();
+        assert_eq!(serialized, format!("\"{}\"", expected_handle));
+
+        let deserialized: PodDecryptHandle = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(expected_handle, deserialized);
     }
 }

@@ -1,5 +1,7 @@
 //! Plain Old Data type for the Pedersen commitment scheme.
 
+#[cfg(feature = "serde-traits")]
+use crate::macros::impl_serde_base64;
 use {
     crate::{
         encryption::PEDERSEN_COMMITMENT_LEN,
@@ -40,3 +42,25 @@ impl_from_bytes!(
     TYPE = PodPedersenCommitment,
     BYTES_LEN = PEDERSEN_COMMITMENT_LEN
 );
+
+#[cfg(feature = "serde-traits")]
+impl_serde_base64!(TYPE = PodPedersenCommitment);
+
+#[cfg(test)]
+mod tests {
+    use {super::*, solana_zk_sdk::encryption::pedersen::Pedersen};
+
+    #[cfg(feature = "serde-traits")]
+    #[test]
+    fn test_pedersen_commitment_serde() {
+        let amount: u64 = 10;
+        let (commitment, _opening) = Pedersen::new(amount);
+        let expected_commitment = PodPedersenCommitment(commitment.to_bytes());
+
+        let serialized = serde_json::to_string(&expected_commitment).unwrap();
+        assert_eq!(serialized, format!("\"{}\"", expected_commitment));
+
+        let deserialized: PodPedersenCommitment = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(expected_commitment, deserialized);
+    }
+}

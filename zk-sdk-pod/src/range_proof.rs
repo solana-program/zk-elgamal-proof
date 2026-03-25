@@ -1,5 +1,7 @@
 //! Plain Old Data types for range proofs.
 
+#[cfg(feature = "serde-traits")]
+use crate::macros::impl_serde_base64;
 use {
     crate::{
         macros::{impl_from_bytes, impl_from_str},
@@ -56,6 +58,9 @@ impl_from_str!(
 
 impl_from_bytes!(TYPE = PodRangeProofU64, BYTES_LEN = RANGE_PROOF_U64_LEN);
 
+#[cfg(feature = "serde-traits")]
+impl_serde_base64!(TYPE = PodRangeProofU64);
+
 /// The `RangeProof` type as a `Pod` restricted to proofs on 128-bit numbers.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(transparent)]
@@ -76,6 +81,9 @@ impl_from_str!(
 );
 
 impl_from_bytes!(TYPE = PodRangeProofU128, BYTES_LEN = RANGE_PROOF_U128_LEN);
+
+#[cfg(feature = "serde-traits")]
+impl_serde_base64!(TYPE = PodRangeProofU128);
 
 /// The `RangeProof` type as a `Pod` restricted to proofs on 256-bit numbers.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -98,6 +106,9 @@ impl_from_str!(
 
 impl_from_bytes!(TYPE = PodRangeProofU256, BYTES_LEN = RANGE_PROOF_U256_LEN);
 
+#[cfg(feature = "serde-traits")]
+impl_serde_base64!(TYPE = PodRangeProofU256);
+
 // The range proof pod types are wrappers for byte arrays, which are both `Pod` and `Zeroable`. However,
 // the marker traits `bytemuck::Pod` and `bytemuck::Zeroable` can only be derived for power-of-two
 // length byte arrays. Directly implement these traits for the range proof pod types.
@@ -109,3 +120,44 @@ unsafe impl Pod for PodRangeProofU128 {}
 
 unsafe impl Zeroable for PodRangeProofU256 {}
 unsafe impl Pod for PodRangeProofU256 {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[cfg(feature = "serde-traits")]
+    #[test]
+    fn test_range_proof_u64_serde() {
+        let expected = PodRangeProofU64([42u8; RANGE_PROOF_U64_LEN]);
+
+        let serialized = serde_json::to_string(&expected).unwrap();
+        assert_eq!(serialized, format!("\"{}\"", expected));
+
+        let deserialized: PodRangeProofU64 = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(expected, deserialized);
+    }
+
+    #[cfg(feature = "serde-traits")]
+    #[test]
+    fn test_range_proof_u128_serde() {
+        let expected = PodRangeProofU128([42u8; RANGE_PROOF_U128_LEN]);
+
+        let serialized = serde_json::to_string(&expected).unwrap();
+        assert_eq!(serialized, format!("\"{}\"", expected));
+
+        let deserialized: PodRangeProofU128 = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(expected, deserialized);
+    }
+
+    #[cfg(feature = "serde-traits")]
+    #[test]
+    fn test_range_proof_u256_serde() {
+        let expected = PodRangeProofU256([42u8; RANGE_PROOF_U256_LEN]);
+
+        let serialized = serde_json::to_string(&expected).unwrap();
+        assert_eq!(serialized, format!("\"{}\"", expected));
+
+        let deserialized: PodRangeProofU256 = serde_json::from_str(&serialized).unwrap();
+        assert_eq!(expected, deserialized);
+    }
+}

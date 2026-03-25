@@ -1,5 +1,7 @@
 //! Plain Old Data types for sigma proofs.
 
+#[cfg(feature = "serde-traits")]
+use crate::macros::impl_serde_base64;
 use {
     crate::macros::{impl_from_bytes, impl_from_str},
     base64::{prelude::BASE64_STANDARD, Engine},
@@ -58,6 +60,9 @@ impl_from_bytes!(
     BYTES_LEN = CIPHERTEXT_COMMITMENT_EQUALITY_PROOF_LEN
 );
 
+#[cfg(feature = "serde-traits")]
+impl_serde_base64!(TYPE = PodCiphertextCommitmentEqualityProof);
+
 /// The `CiphertextCiphertextEqualityProof` type as a `Pod`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(transparent)]
@@ -81,6 +86,9 @@ impl_from_bytes!(
     TYPE = PodCiphertextCiphertextEqualityProof,
     BYTES_LEN = CIPHERTEXT_CIPHERTEXT_EQUALITY_PROOF_LEN
 );
+
+#[cfg(feature = "serde-traits")]
+impl_serde_base64!(TYPE = PodCiphertextCiphertextEqualityProof);
 
 /// The `GroupedCiphertext2HandlesValidityProof` type as a `Pod`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -108,6 +116,9 @@ impl_from_bytes!(
     BYTES_LEN = GROUPED_CIPHERTEXT_2_HANDLES_VALIDITY_PROOF_LEN
 );
 
+#[cfg(feature = "serde-traits")]
+impl_serde_base64!(TYPE = PodGroupedCiphertext2HandlesValidityProof);
+
 /// The `GroupedCiphertext3HandlesValidityProof` type as a `Pod`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(transparent)]
@@ -133,6 +144,9 @@ impl_from_bytes!(
     TYPE = PodGroupedCiphertext3HandlesValidityProof,
     BYTES_LEN = GROUPED_CIPHERTEXT_3_HANDLES_VALIDITY_PROOF_LEN
 );
+
+#[cfg(feature = "serde-traits")]
+impl_serde_base64!(TYPE = PodGroupedCiphertext3HandlesValidityProof);
 
 /// The `BatchedGroupedCiphertext2HandlesValidityProof` type as a `Pod`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -160,6 +174,9 @@ impl_from_bytes!(
     BYTES_LEN = BATCHED_GROUPED_CIPHERTEXT_2_HANDLES_VALIDITY_PROOF_LEN
 );
 
+#[cfg(feature = "serde-traits")]
+impl_serde_base64!(TYPE = PodBatchedGroupedCiphertext2HandlesValidityProof);
+
 /// The `BatchedGroupedCiphertext3HandlesValidityProof` type as a `Pod`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(transparent)]
@@ -186,6 +203,9 @@ impl_from_bytes!(
     BYTES_LEN = BATCHED_GROUPED_CIPHERTEXT_3_HANDLES_VALIDITY_PROOF_LEN
 );
 
+#[cfg(feature = "serde-traits")]
+impl_serde_base64!(TYPE = PodBatchedGroupedCiphertext3HandlesValidityProof);
+
 /// The `ZeroCiphertextProof` type as a `Pod`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(transparent)]
@@ -209,6 +229,9 @@ impl_from_bytes!(
     TYPE = PodZeroCiphertextProof,
     BYTES_LEN = ZERO_CIPHERTEXT_PROOF_LEN
 );
+
+#[cfg(feature = "serde-traits")]
+impl_serde_base64!(TYPE = PodZeroCiphertextProof);
 
 /// The `PercentageWithCapProof` type as a `Pod`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, bytemuck_derive::Pod, bytemuck_derive::Zeroable)]
@@ -234,6 +257,9 @@ impl_from_bytes!(
     BYTES_LEN = PERCENTAGE_WITH_CAP_PROOF_LEN
 );
 
+#[cfg(feature = "serde-traits")]
+impl_serde_base64!(TYPE = PodPercentageWithCapProof);
+
 /// The `PubkeyValidityProof` type as a `Pod`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, bytemuck_derive::Pod, bytemuck_derive::Zeroable)]
 #[repr(transparent)]
@@ -258,6 +284,9 @@ impl_from_bytes!(
     BYTES_LEN = PUBKEY_VALIDITY_PROOF_LEN
 );
 
+#[cfg(feature = "serde-traits")]
+impl_serde_base64!(TYPE = PodPubkeyValidityProof);
+
 // The sigma proof pod types are wrappers for byte arrays, which are both `Pod` and `Zeroable`. However,
 // the marker traits `bytemuck::Pod` and `bytemuck::Zeroable` can only be derived for power-of-two
 // length byte arrays. Directly implement these traits for the sigma proof pod types.
@@ -281,3 +310,78 @@ unsafe impl Pod for PodBatchedGroupedCiphertext3HandlesValidityProof {}
 
 unsafe impl Zeroable for PodZeroCiphertextProof {}
 unsafe impl Pod for PodZeroCiphertextProof {}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    macro_rules! test_sigma_proof_serde {
+        ($test_name:ident, $type:ident, $len:ident) => {
+            #[cfg(feature = "serde-traits")]
+            #[test]
+            fn $test_name() {
+                let expected = $type([42u8; $len]);
+
+                let serialized = serde_json::to_string(&expected).unwrap();
+                assert_eq!(serialized, format!("\"{}\"", expected));
+
+                let deserialized: $type = serde_json::from_str(&serialized).unwrap();
+                assert_eq!(expected, deserialized);
+            }
+        };
+    }
+
+    test_sigma_proof_serde!(
+        test_ciphertext_commitment_equality_proof_serde,
+        PodCiphertextCommitmentEqualityProof,
+        CIPHERTEXT_COMMITMENT_EQUALITY_PROOF_LEN
+    );
+
+    test_sigma_proof_serde!(
+        test_ciphertext_ciphertext_equality_proof_serde,
+        PodCiphertextCiphertextEqualityProof,
+        CIPHERTEXT_CIPHERTEXT_EQUALITY_PROOF_LEN
+    );
+
+    test_sigma_proof_serde!(
+        test_grouped_ciphertext_2_handles_validity_proof_serde,
+        PodGroupedCiphertext2HandlesValidityProof,
+        GROUPED_CIPHERTEXT_2_HANDLES_VALIDITY_PROOF_LEN
+    );
+
+    test_sigma_proof_serde!(
+        test_grouped_ciphertext_3_handles_validity_proof_serde,
+        PodGroupedCiphertext3HandlesValidityProof,
+        GROUPED_CIPHERTEXT_3_HANDLES_VALIDITY_PROOF_LEN
+    );
+
+    test_sigma_proof_serde!(
+        test_batched_grouped_ciphertext_2_handles_validity_proof_serde,
+        PodBatchedGroupedCiphertext2HandlesValidityProof,
+        BATCHED_GROUPED_CIPHERTEXT_2_HANDLES_VALIDITY_PROOF_LEN
+    );
+
+    test_sigma_proof_serde!(
+        test_batched_grouped_ciphertext_3_handles_validity_proof_serde,
+        PodBatchedGroupedCiphertext3HandlesValidityProof,
+        BATCHED_GROUPED_CIPHERTEXT_3_HANDLES_VALIDITY_PROOF_LEN
+    );
+
+    test_sigma_proof_serde!(
+        test_zero_ciphertext_proof_serde,
+        PodZeroCiphertextProof,
+        ZERO_CIPHERTEXT_PROOF_LEN
+    );
+
+    test_sigma_proof_serde!(
+        test_percentage_with_cap_proof_serde,
+        PodPercentageWithCapProof,
+        PERCENTAGE_WITH_CAP_PROOF_LEN
+    );
+
+    test_sigma_proof_serde!(
+        test_pubkey_validity_proof_serde,
+        PodPubkeyValidityProof,
+        PUBKEY_VALIDITY_PROOF_LEN
+    );
+}

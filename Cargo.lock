@@ -1112,6 +1112,8 @@ dependencies = [
  "base64",
  "bytemuck",
  "bytemuck_derive",
+ "serde",
+ "serde_json",
  "solana-zk-sdk",
  "thiserror 2.0.18",
 ]

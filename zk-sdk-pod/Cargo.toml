@@ -12,14 +12,19 @@ edition = { workspace = true }
 [lib]
 crate-type = ["rlib"]
 
+[features]
+serde-traits = ["dep:serde"]
+
 [dependencies]
 base64 = { workspace = true }
 bytemuck = { workspace = true }
 bytemuck_derive = { workspace = true }
+serde = { workspace = true, optional = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
 solana-zk-sdk = { workspace = true }
+serde_json = { workspace = true }
 
 [lints]
 workspace = true
