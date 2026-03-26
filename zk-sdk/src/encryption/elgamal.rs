@@ -811,6 +811,40 @@ define_mul_variants!(
     Output = ElGamalCiphertext
 );
 
+impl<'b> Mul<&'b u64> for &ElGamalCiphertext {
+    type Output = ElGamalCiphertext;
+
+    fn mul(self, scalar: &'b u64) -> ElGamalCiphertext {
+        ElGamalCiphertext {
+            commitment: &self.commitment * scalar,
+            handle: &self.handle * scalar,
+        }
+    }
+}
+
+define_mul_variants!(
+    LHS = ElGamalCiphertext,
+    RHS = u64,
+    Output = ElGamalCiphertext
+);
+
+impl<'b> Mul<&'b ElGamalCiphertext> for &u64 {
+    type Output = ElGamalCiphertext;
+
+    fn mul(self, ciphertext: &'b ElGamalCiphertext) -> ElGamalCiphertext {
+        ElGamalCiphertext {
+            commitment: self * &ciphertext.commitment,
+            handle: self * &ciphertext.handle,
+        }
+    }
+}
+
+define_mul_variants!(
+    LHS = u64,
+    RHS = ElGamalCiphertext,
+    Output = ElGamalCiphertext
+);
+
 /// Decryption handle for Pedersen commitment.
 #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct DecryptHandle(RistrettoPoint);
@@ -900,6 +934,26 @@ impl<'b> Mul<&'b DecryptHandle> for &Scalar {
 }
 
 define_mul_variants!(LHS = Scalar, RHS = DecryptHandle, Output = DecryptHandle);
+
+impl<'b> Mul<&'b u64> for &DecryptHandle {
+    type Output = DecryptHandle;
+
+    fn mul(self, scalar: &'b u64) -> DecryptHandle {
+        DecryptHandle(&self.0 * Scalar::from(*scalar))
+    }
+}
+
+define_mul_variants!(LHS = DecryptHandle, RHS = u64, Output = DecryptHandle);
+
+impl<'b> Mul<&'b DecryptHandle> for &u64 {
+    type Output = DecryptHandle;
+
+    fn mul(self, handle: &'b DecryptHandle) -> DecryptHandle {
+        DecryptHandle(Scalar::from(*self) * &handle.0)
+    }
+}
+
+define_mul_variants!(LHS = u64, RHS = DecryptHandle, Output = DecryptHandle);
 
 #[cfg(test)]
 mod tests {

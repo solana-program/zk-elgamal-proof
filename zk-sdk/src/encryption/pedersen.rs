@@ -190,6 +190,26 @@ define_mul_variants!(
     Output = PedersenOpening
 );
 
+impl<'b> Mul<&'b u64> for &PedersenOpening {
+    type Output = PedersenOpening;
+
+    fn mul(self, scalar: &'b u64) -> PedersenOpening {
+        PedersenOpening(&self.0 * Scalar::from(*scalar))
+    }
+}
+
+define_mul_variants!(LHS = PedersenOpening, RHS = u64, Output = PedersenOpening);
+
+impl<'b> Mul<&'b PedersenOpening> for &u64 {
+    type Output = PedersenOpening;
+
+    fn mul(self, opening: &'b PedersenOpening) -> PedersenOpening {
+        PedersenOpening(Scalar::from(*self) * &opening.0)
+    }
+}
+
+define_mul_variants!(LHS = u64, RHS = PedersenOpening, Output = PedersenOpening);
+
 /// Pedersen commitment type.
 #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct PedersenCommitment(RistrettoPoint);
@@ -285,6 +305,34 @@ impl<'b> Mul<&'b PedersenCommitment> for &Scalar {
 
 define_mul_variants!(
     LHS = Scalar,
+    RHS = PedersenCommitment,
+    Output = PedersenCommitment
+);
+
+impl<'b> Mul<&'b u64> for &PedersenCommitment {
+    type Output = PedersenCommitment;
+
+    fn mul(self, scalar: &'b u64) -> PedersenCommitment {
+        PedersenCommitment(Scalar::from(*scalar) * &self.0)
+    }
+}
+
+define_mul_variants!(
+    LHS = PedersenCommitment,
+    RHS = u64,
+    Output = PedersenCommitment
+);
+
+impl<'b> Mul<&'b PedersenCommitment> for &u64 {
+    type Output = PedersenCommitment;
+
+    fn mul(self, commitment: &'b PedersenCommitment) -> PedersenCommitment {
+        PedersenCommitment(Scalar::from(*self) * &commitment.0)
+    }
+}
+
+define_mul_variants!(
+    LHS = u64,
     RHS = PedersenCommitment,
     Output = PedersenCommitment
 );
