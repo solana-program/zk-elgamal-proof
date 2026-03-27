@@ -9,7 +9,7 @@ use {
             ELGAMAL_CIPHERTEXT_LEN, PEDERSEN_COMMITMENT_LEN,
         },
         errors::ParseError,
-        macros::{impl_from_bytes, impl_from_str},
+        macros::{impl_from_bytes, impl_from_str, impl_nullable},
     },
     base64::{prelude::BASE64_STANDARD, Engine},
     bytemuck::Zeroable,
@@ -102,6 +102,11 @@ impl_from_bytes!(
     BYTES_LEN = GROUPED_ELGAMAL_CIPHERTEXT_2_HANDLES
 );
 
+impl_nullable!(
+    TYPE = PodGroupedElGamalCiphertext2Handles,
+    BYTES_LEN = GROUPED_ELGAMAL_CIPHERTEXT_2_HANDLES
+);
+
 impl_extract!(TYPE = PodGroupedElGamalCiphertext2Handles);
 
 #[cfg(feature = "serde")]
@@ -137,6 +142,11 @@ impl_from_str!(
 );
 
 impl_from_bytes!(
+    TYPE = PodGroupedElGamalCiphertext3Handles,
+    BYTES_LEN = GROUPED_ELGAMAL_CIPHERTEXT_3_HANDLES
+);
+
+impl_nullable!(
     TYPE = PodGroupedElGamalCiphertext3Handles,
     BYTES_LEN = GROUPED_ELGAMAL_CIPHERTEXT_3_HANDLES
 );

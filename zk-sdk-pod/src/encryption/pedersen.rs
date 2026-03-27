@@ -5,7 +5,7 @@ use crate::macros::impl_serde_base64;
 use {
     crate::{
         encryption::PEDERSEN_COMMITMENT_LEN,
-        macros::{impl_from_bytes, impl_from_str},
+        macros::{impl_from_bytes, impl_from_str, impl_nullable},
     },
     base64::{prelude::BASE64_STANDARD, Engine},
     bytemuck_derive::{Pod, Zeroable},
@@ -39,6 +39,11 @@ impl_from_str!(
 );
 
 impl_from_bytes!(
+    TYPE = PodPedersenCommitment,
+    BYTES_LEN = PEDERSEN_COMMITMENT_LEN
+);
+
+impl_nullable!(
     TYPE = PodPedersenCommitment,
     BYTES_LEN = PEDERSEN_COMMITMENT_LEN
 );

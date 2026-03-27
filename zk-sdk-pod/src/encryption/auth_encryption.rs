@@ -5,7 +5,7 @@ use crate::macros::impl_serde_base64;
 use {
     crate::{
         encryption::AE_CIPHERTEXT_LEN,
-        macros::{impl_from_bytes, impl_from_str},
+        macros::{impl_from_bytes, impl_from_str, impl_nullable},
     },
     base64::{prelude::BASE64_STANDARD, Engine},
     bytemuck::{Pod, Zeroable},
@@ -45,6 +45,8 @@ impl_from_str!(
 );
 
 impl_from_bytes!(TYPE = PodAeCiphertext, BYTES_LEN = AE_CIPHERTEXT_LEN);
+
+impl_nullable!(TYPE = PodAeCiphertext, BYTES_LEN = AE_CIPHERTEXT_LEN);
 
 #[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodAeCiphertext);

@@ -957,6 +957,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "solana-nullable"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "da028344c595c7416769ff648d206de7962571291a4cea24c38a60b6f40d53bb"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "solana-program-error"
 version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1114,6 +1123,7 @@ dependencies = [
  "bytemuck_derive",
  "serde",
  "serde_json",
+ "solana-nullable",
  "solana-zk-sdk",
  "solana-zk-sdk-pod",
  "thiserror 2.0.18",

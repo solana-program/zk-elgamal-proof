@@ -33,6 +33,15 @@ macro_rules! impl_from_bytes {
 }
 pub(crate) use impl_from_bytes;
 
+macro_rules! impl_nullable {
+    (TYPE = $type:ident, BYTES_LEN = $bytes_len:expr) => {
+        impl solana_nullable::Nullable for $type {
+            const NONE: Self = Self([0u8; $bytes_len]);
+        }
+    };
+}
+pub(crate) use impl_nullable;
+
 #[cfg(feature = "serde")]
 macro_rules! impl_serde_base64 {
     (TYPE = $type:ident) => {

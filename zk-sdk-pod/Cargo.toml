@@ -13,7 +13,7 @@ edition = { workspace = true }
 crate-type = ["rlib"]
 
 [features]
-serde = ["dep:serde"]
+serde = ["dep:serde", "solana-nullable/serde"]
 
 [dependencies]
 base64 = { workspace = true }
@@ -21,6 +21,7 @@ bytemuck = { workspace = true }
 bytemuck_derive = { workspace = true }
 serde = { workspace = true, optional = true }
 thiserror = { workspace = true }
+solana-nullable = { workspace = true }
 
 [dev-dependencies]
 serde_json = { workspace = true }

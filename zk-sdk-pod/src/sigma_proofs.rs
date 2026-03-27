@@ -3,7 +3,7 @@
 #[cfg(feature = "serde")]
 use crate::macros::impl_serde_base64;
 use {
-    crate::macros::{impl_from_bytes, impl_from_str},
+    crate::macros::{impl_from_bytes, impl_from_str, impl_nullable},
     base64::{prelude::BASE64_STANDARD, Engine},
     bytemuck::{Pod, Zeroable},
     core::fmt,
@@ -60,6 +60,11 @@ impl_from_bytes!(
     BYTES_LEN = CIPHERTEXT_COMMITMENT_EQUALITY_PROOF_LEN
 );
 
+impl_nullable!(
+    TYPE = PodCiphertextCommitmentEqualityProof,
+    BYTES_LEN = CIPHERTEXT_COMMITMENT_EQUALITY_PROOF_LEN
+);
+
 #[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodCiphertextCommitmentEqualityProof);
 
@@ -83,6 +88,11 @@ impl_from_str!(
 );
 
 impl_from_bytes!(
+    TYPE = PodCiphertextCiphertextEqualityProof,
+    BYTES_LEN = CIPHERTEXT_CIPHERTEXT_EQUALITY_PROOF_LEN
+);
+
+impl_nullable!(
     TYPE = PodCiphertextCiphertextEqualityProof,
     BYTES_LEN = CIPHERTEXT_CIPHERTEXT_EQUALITY_PROOF_LEN
 );
@@ -116,6 +126,11 @@ impl_from_bytes!(
     BYTES_LEN = GROUPED_CIPHERTEXT_2_HANDLES_VALIDITY_PROOF_LEN
 );
 
+impl_nullable!(
+    TYPE = PodGroupedCiphertext2HandlesValidityProof,
+    BYTES_LEN = GROUPED_CIPHERTEXT_2_HANDLES_VALIDITY_PROOF_LEN
+);
+
 #[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodGroupedCiphertext2HandlesValidityProof);
 
@@ -141,6 +156,11 @@ impl_from_str!(
 );
 
 impl_from_bytes!(
+    TYPE = PodGroupedCiphertext3HandlesValidityProof,
+    BYTES_LEN = GROUPED_CIPHERTEXT_3_HANDLES_VALIDITY_PROOF_LEN
+);
+
+impl_nullable!(
     TYPE = PodGroupedCiphertext3HandlesValidityProof,
     BYTES_LEN = GROUPED_CIPHERTEXT_3_HANDLES_VALIDITY_PROOF_LEN
 );
@@ -174,6 +194,11 @@ impl_from_bytes!(
     BYTES_LEN = BATCHED_GROUPED_CIPHERTEXT_2_HANDLES_VALIDITY_PROOF_LEN
 );
 
+impl_nullable!(
+    TYPE = PodBatchedGroupedCiphertext2HandlesValidityProof,
+    BYTES_LEN = BATCHED_GROUPED_CIPHERTEXT_2_HANDLES_VALIDITY_PROOF_LEN
+);
+
 #[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodBatchedGroupedCiphertext2HandlesValidityProof);
 
@@ -199,6 +224,11 @@ impl_from_str!(
 );
 
 impl_from_bytes!(
+    TYPE = PodBatchedGroupedCiphertext3HandlesValidityProof,
+    BYTES_LEN = BATCHED_GROUPED_CIPHERTEXT_3_HANDLES_VALIDITY_PROOF_LEN
+);
+
+impl_nullable!(
     TYPE = PodBatchedGroupedCiphertext3HandlesValidityProof,
     BYTES_LEN = BATCHED_GROUPED_CIPHERTEXT_3_HANDLES_VALIDITY_PROOF_LEN
 );
@@ -230,6 +260,11 @@ impl_from_bytes!(
     BYTES_LEN = ZERO_CIPHERTEXT_PROOF_LEN
 );
 
+impl_nullable!(
+    TYPE = PodZeroCiphertextProof,
+    BYTES_LEN = ZERO_CIPHERTEXT_PROOF_LEN
+);
+
 #[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodZeroCiphertextProof);
 
@@ -257,6 +292,11 @@ impl_from_bytes!(
     BYTES_LEN = PERCENTAGE_WITH_CAP_PROOF_LEN
 );
 
+impl_nullable!(
+    TYPE = PodPercentageWithCapProof,
+    BYTES_LEN = PERCENTAGE_WITH_CAP_PROOF_LEN
+);
+
 #[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodPercentageWithCapProof);
 
@@ -280,6 +320,11 @@ impl_from_str!(
 );
 
 impl_from_bytes!(
+    TYPE = PodPubkeyValidityProof,
+    BYTES_LEN = PUBKEY_VALIDITY_PROOF_LEN
+);
+
+impl_nullable!(
     TYPE = PodPubkeyValidityProof,
     BYTES_LEN = PUBKEY_VALIDITY_PROOF_LEN
 );

@@ -4,7 +4,7 @@
 use crate::macros::impl_serde_base64;
 use {
     crate::{
-        macros::{impl_from_bytes, impl_from_str},
+        macros::{impl_from_bytes, impl_from_str, impl_nullable},
         RISTRETTO_POINT_LEN, SCALAR_LEN,
     },
     base64::{prelude::BASE64_STANDARD, Engine},
@@ -58,6 +58,8 @@ impl_from_str!(
 
 impl_from_bytes!(TYPE = PodRangeProofU64, BYTES_LEN = RANGE_PROOF_U64_LEN);
 
+impl_nullable!(TYPE = PodRangeProofU64, BYTES_LEN = RANGE_PROOF_U64_LEN);
+
 #[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodRangeProofU64);
 
@@ -82,6 +84,8 @@ impl_from_str!(
 
 impl_from_bytes!(TYPE = PodRangeProofU128, BYTES_LEN = RANGE_PROOF_U128_LEN);
 
+impl_nullable!(TYPE = PodRangeProofU128, BYTES_LEN = RANGE_PROOF_U128_LEN);
+
 #[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodRangeProofU128);
 
@@ -105,6 +109,8 @@ impl_from_str!(
 );
 
 impl_from_bytes!(TYPE = PodRangeProofU256, BYTES_LEN = RANGE_PROOF_U256_LEN);
+
+impl_nullable!(TYPE = PodRangeProofU256, BYTES_LEN = RANGE_PROOF_U256_LEN);
 
 #[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodRangeProofU256);
