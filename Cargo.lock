@@ -1115,6 +1115,7 @@ dependencies = [
  "serde",
  "serde_json",
  "solana-zk-sdk",
+ "solana-zk-sdk-pod",
  "thiserror 2.0.18",
 ]
 

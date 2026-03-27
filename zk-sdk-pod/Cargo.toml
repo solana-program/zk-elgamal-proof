@@ -23,8 +23,9 @@ serde = { workspace = true, optional = true }
 thiserror = { workspace = true }
 
 [dev-dependencies]
-solana-zk-sdk = { workspace = true }
 serde_json = { workspace = true }
+solana-zk-sdk = { workspace = true }
+solana-zk-sdk-pod = { path = ".", features = ["serde"] }
 
 [lints]
 workspace = true
