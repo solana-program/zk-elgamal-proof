@@ -1,5 +1,7 @@
 //! Plain Old Data types for the Grouped ElGamal encryption scheme.
 
+#[cfg(feature = "serde")]
+use crate::macros::impl_serde_base64;
 use {
     crate::{
         encryption::{
@@ -7,7 +9,7 @@ use {
             ELGAMAL_CIPHERTEXT_LEN, PEDERSEN_COMMITMENT_LEN,
         },
         errors::ParseError,
-        macros::{impl_from_bytes, impl_from_str},
+        macros::{impl_from_bytes, impl_from_str, impl_nullable},
     },
     base64::{prelude::BASE64_STANDARD, Engine},
     bytemuck::Zeroable,
@@ -100,7 +102,15 @@ impl_from_bytes!(
     BYTES_LEN = GROUPED_ELGAMAL_CIPHERTEXT_2_HANDLES
 );
 
+impl_nullable!(
+    TYPE = PodGroupedElGamalCiphertext2Handles,
+    BYTES_LEN = GROUPED_ELGAMAL_CIPHERTEXT_2_HANDLES
+);
+
 impl_extract!(TYPE = PodGroupedElGamalCiphertext2Handles);
+
+#[cfg(feature = "serde")]
+impl_serde_base64!(TYPE = PodGroupedElGamalCiphertext2Handles);
 
 /// The `GroupedElGamalCiphertext` type with three decryption handles as a `Pod`
 #[derive(Clone, Copy, bytemuck_derive::Pod, bytemuck_derive::Zeroable, PartialEq, Eq)]
@@ -135,6 +145,14 @@ impl_from_bytes!(
     TYPE = PodGroupedElGamalCiphertext3Handles,
     BYTES_LEN = GROUPED_ELGAMAL_CIPHERTEXT_3_HANDLES
 );
+
+impl_nullable!(
+    TYPE = PodGroupedElGamalCiphertext3Handles,
+    BYTES_LEN = GROUPED_ELGAMAL_CIPHERTEXT_3_HANDLES
+);
+
+#[cfg(feature = "serde")]
+impl_serde_base64!(TYPE = PodGroupedElGamalCiphertext3Handles);
 
 impl_extract!(TYPE = PodGroupedElGamalCiphertext3Handles);
 
@@ -228,5 +246,58 @@ mod tests {
             .try_extract_ciphertext(3)
             .unwrap_err();
         assert_eq!(err, ParseError::WrongSize);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_grouped_ciphertext_2_handles_serde() {
+        let elgamal_keypair_0 = ElGamalKeypair::new_rand();
+        let elgamal_keypair_1 = ElGamalKeypair::new_rand();
+
+        let amount: u64 = 10;
+        let (_commitment, opening) = Pedersen::new(amount);
+        let grouped_ciphertext = GroupedElGamal::encrypt_with(
+            [elgamal_keypair_0.pubkey(), elgamal_keypair_1.pubkey()],
+            amount,
+            &opening,
+        );
+        let expected_ciphertext =
+            PodGroupedElGamalCiphertext2Handles(grouped_ciphertext.to_bytes().try_into().unwrap());
+
+        let serialized = serde_json::to_string(&expected_ciphertext).unwrap();
+        assert_eq!(serialized, format!("\"{}\"", expected_ciphertext));
+
+        let deserialized: PodGroupedElGamalCiphertext2Handles =
+            serde_json::from_str(&serialized).unwrap();
+        assert_eq!(expected_ciphertext, deserialized);
+    }
+
+    #[cfg(feature = "serde")]
+    #[test]
+    fn test_grouped_ciphertext_3_handles_serde() {
+        let elgamal_keypair_0 = ElGamalKeypair::new_rand();
+        let elgamal_keypair_1 = ElGamalKeypair::new_rand();
+        let elgamal_keypair_2 = ElGamalKeypair::new_rand();
+
+        let amount: u64 = 10;
+        let (_commitment, opening) = Pedersen::new(amount);
+        let grouped_ciphertext = GroupedElGamal::encrypt_with(
+            [
+                elgamal_keypair_0.pubkey(),
+                elgamal_keypair_1.pubkey(),
+                elgamal_keypair_2.pubkey(),
+            ],
+            amount,
+            &opening,
+        );
+        let expected_ciphertext =
+            PodGroupedElGamalCiphertext3Handles(grouped_ciphertext.to_bytes().try_into().unwrap());
+
+        let serialized = serde_json::to_string(&expected_ciphertext).unwrap();
+        assert_eq!(serialized, format!("\"{}\"", expected_ciphertext));
+
+        let deserialized: PodGroupedElGamalCiphertext3Handles =
+            serde_json::from_str(&serialized).unwrap();
+        assert_eq!(expected_ciphertext, deserialized);
     }
 }
