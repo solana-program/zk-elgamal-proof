@@ -13,7 +13,7 @@ edition = { workspace = true }
 crate-type = ["rlib"]
 
 [features]
-serde-traits = ["dep:serde"]
+serde = ["dep:serde"]
 
 [dependencies]
 base64 = { workspace = true }

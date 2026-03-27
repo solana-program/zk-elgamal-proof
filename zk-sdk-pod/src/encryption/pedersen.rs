@@ -1,6 +1,6 @@
 //! Plain Old Data type for the Pedersen commitment scheme.
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 use crate::macros::impl_serde_base64;
 use {
     crate::{
@@ -43,15 +43,15 @@ impl_from_bytes!(
     BYTES_LEN = PEDERSEN_COMMITMENT_LEN
 );
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodPedersenCommitment);
 
 #[cfg(test)]
 mod tests {
-    #[cfg(feature = "serde-traits")]
+    #[cfg(feature = "serde")]
     use {super::*, solana_zk_sdk::encryption::pedersen::Pedersen};
 
-    #[cfg(feature = "serde-traits")]
+    #[cfg(feature = "serde")]
     #[test]
     fn test_pedersen_commitment_serde() {
         let amount: u64 = 10;

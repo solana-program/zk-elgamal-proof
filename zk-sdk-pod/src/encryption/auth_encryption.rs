@@ -1,6 +1,6 @@
 //! Plain Old Data types for the AES128-GCM-SIV authenticated encryption scheme.
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 use crate::macros::impl_serde_base64;
 use {
     crate::{
@@ -46,7 +46,7 @@ impl_from_str!(
 
 impl_from_bytes!(TYPE = PodAeCiphertext, BYTES_LEN = AE_CIPHERTEXT_LEN);
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodAeCiphertext);
 
 impl Default for PodAeCiphertext {
@@ -70,7 +70,7 @@ mod tests {
         assert_eq!(expected_ae_ciphertext, computed_ae_ciphertext);
     }
 
-    #[cfg(feature = "serde-traits")]
+    #[cfg(feature = "serde")]
     #[test]
     fn test_ae_ciphertext_serde() {
         let ae_key = AeKey::new_rand();

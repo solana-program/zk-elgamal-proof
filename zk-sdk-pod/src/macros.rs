@@ -33,7 +33,7 @@ macro_rules! impl_from_bytes {
 }
 pub(crate) use impl_from_bytes;
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 macro_rules! impl_serde_base64 {
     (TYPE = $type:ident) => {
         impl serde::Serialize for $type {
@@ -72,5 +72,5 @@ macro_rules! impl_serde_base64 {
         }
     };
 }
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 pub(crate) use impl_serde_base64;

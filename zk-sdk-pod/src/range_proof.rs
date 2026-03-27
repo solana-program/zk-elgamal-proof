@@ -1,6 +1,6 @@
 //! Plain Old Data types for range proofs.
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 use crate::macros::impl_serde_base64;
 use {
     crate::{
@@ -58,7 +58,7 @@ impl_from_str!(
 
 impl_from_bytes!(TYPE = PodRangeProofU64, BYTES_LEN = RANGE_PROOF_U64_LEN);
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodRangeProofU64);
 
 /// The `RangeProof` type as a `Pod` restricted to proofs on 128-bit numbers.
@@ -82,7 +82,7 @@ impl_from_str!(
 
 impl_from_bytes!(TYPE = PodRangeProofU128, BYTES_LEN = RANGE_PROOF_U128_LEN);
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodRangeProofU128);
 
 /// The `RangeProof` type as a `Pod` restricted to proofs on 256-bit numbers.
@@ -106,7 +106,7 @@ impl_from_str!(
 
 impl_from_bytes!(TYPE = PodRangeProofU256, BYTES_LEN = RANGE_PROOF_U256_LEN);
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodRangeProofU256);
 
 // The range proof pod types are wrappers for byte arrays, which are both `Pod` and `Zeroable`. However,
@@ -123,10 +123,10 @@ unsafe impl Pod for PodRangeProofU256 {}
 
 #[cfg(test)]
 mod tests {
-    #[cfg(feature = "serde-traits")]
+    #[cfg(feature = "serde")]
     use super::*;
 
-    #[cfg(feature = "serde-traits")]
+    #[cfg(feature = "serde")]
     #[test]
     fn test_range_proof_u64_serde() {
         let expected = PodRangeProofU64([42u8; RANGE_PROOF_U64_LEN]);
@@ -138,7 +138,7 @@ mod tests {
         assert_eq!(expected, deserialized);
     }
 
-    #[cfg(feature = "serde-traits")]
+    #[cfg(feature = "serde")]
     #[test]
     fn test_range_proof_u128_serde() {
         let expected = PodRangeProofU128([42u8; RANGE_PROOF_U128_LEN]);
@@ -150,7 +150,7 @@ mod tests {
         assert_eq!(expected, deserialized);
     }
 
-    #[cfg(feature = "serde-traits")]
+    #[cfg(feature = "serde")]
     #[test]
     fn test_range_proof_u256_serde() {
         let expected = PodRangeProofU256([42u8; RANGE_PROOF_U256_LEN]);

@@ -1,6 +1,6 @@
 //! Plain Old Data types for the ElGamal encryption scheme.
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 use crate::macros::impl_serde_base64;
 use {
     crate::{
@@ -55,7 +55,7 @@ impl_from_bytes!(
     BYTES_LEN = ELGAMAL_CIPHERTEXT_LEN
 );
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodElGamalCiphertext);
 
 /// The `ElGamalPubkey` type as a `Pod`.
@@ -83,7 +83,7 @@ impl_from_str!(
 
 impl_from_bytes!(TYPE = PodElGamalPubkey, BYTES_LEN = ELGAMAL_PUBKEY_LEN);
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodElGamalPubkey);
 
 /// The `DecryptHandle` type as a `Pod`.
@@ -111,7 +111,7 @@ impl_from_str!(
 
 impl_from_bytes!(TYPE = PodDecryptHandle, BYTES_LEN = DECRYPT_HANDLE_LEN);
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodDecryptHandle);
 
 /// An `ElGamalPubkey` that encodes `None` as all `0`, meant to be usable as a
@@ -155,7 +155,7 @@ impl From<OptionalNonZeroElGamalPubkey> for Option<PodElGamalPubkey> {
     }
 }
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 impl serde::Serialize for OptionalNonZeroElGamalPubkey {
     fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
     where
@@ -169,10 +169,10 @@ impl serde::Serialize for OptionalNonZeroElGamalPubkey {
     }
 }
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 struct OptionalNonZeroElGamalPubkeyVisitor;
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 impl<'de> serde::de::Visitor<'de> for OptionalNonZeroElGamalPubkeyVisitor {
     type Value = OptionalNonZeroElGamalPubkey;
 
@@ -198,7 +198,7 @@ impl<'de> serde::de::Visitor<'de> for OptionalNonZeroElGamalPubkeyVisitor {
     }
 }
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 impl<'de> serde::Deserialize<'de> for OptionalNonZeroElGamalPubkey {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
@@ -237,7 +237,7 @@ mod tests {
         assert_eq!(expected_elgamal_ciphertext, computed_elgamal_ciphertext);
     }
 
-    #[cfg(feature = "serde-traits")]
+    #[cfg(feature = "serde")]
     #[test]
     fn test_elgamal_pubkey_serde() {
         let elgamal_keypair = ElGamalKeypair::new_rand();
@@ -250,7 +250,7 @@ mod tests {
         assert_eq!(expected_pubkey, deserialized);
     }
 
-    #[cfg(feature = "serde-traits")]
+    #[cfg(feature = "serde")]
     #[test]
     fn test_elgamal_ciphertext_serde() {
         let elgamal_keypair = ElGamalKeypair::new_rand();
@@ -264,7 +264,7 @@ mod tests {
         assert_eq!(expected_ciphertext, deserialized);
     }
 
-    #[cfg(feature = "serde-traits")]
+    #[cfg(feature = "serde")]
     #[test]
     fn test_decrypt_handle_serde() {
         let expected_handle = PodDecryptHandle([42u8; DECRYPT_HANDLE_LEN]);
@@ -297,7 +297,7 @@ mod tests {
         assert_eq!(err, crate::errors::ParseError::InvalidArgument);
     }
 
-    #[cfg(feature = "serde-traits")]
+    #[cfg(feature = "serde")]
     #[test]
     fn test_optional_non_zero_elgamal_pubkey_serde_some() {
         let elgamal_keypair = ElGamalKeypair::new_rand();
@@ -312,7 +312,7 @@ mod tests {
         assert_eq!(expected, deserialized);
     }
 
-    #[cfg(feature = "serde-traits")]
+    #[cfg(feature = "serde")]
     #[test]
     fn test_optional_non_zero_elgamal_pubkey_serde_none() {
         let expected = OptionalNonZeroElGamalPubkey::try_from(None).unwrap();

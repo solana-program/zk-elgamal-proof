@@ -1,6 +1,6 @@
 //! Plain Old Data types for the Grouped ElGamal encryption scheme.
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 use crate::macros::impl_serde_base64;
 use {
     crate::{
@@ -104,7 +104,7 @@ impl_from_bytes!(
 
 impl_extract!(TYPE = PodGroupedElGamalCiphertext2Handles);
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodGroupedElGamalCiphertext2Handles);
 
 /// The `GroupedElGamalCiphertext` type with three decryption handles as a `Pod`
@@ -141,7 +141,7 @@ impl_from_bytes!(
     BYTES_LEN = GROUPED_ELGAMAL_CIPHERTEXT_3_HANDLES
 );
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodGroupedElGamalCiphertext3Handles);
 
 impl_extract!(TYPE = PodGroupedElGamalCiphertext3Handles);
@@ -238,7 +238,7 @@ mod tests {
         assert_eq!(err, ParseError::WrongSize);
     }
 
-    #[cfg(feature = "serde-traits")]
+    #[cfg(feature = "serde")]
     #[test]
     fn test_grouped_ciphertext_2_handles_serde() {
         let elgamal_keypair_0 = ElGamalKeypair::new_rand();
@@ -262,7 +262,7 @@ mod tests {
         assert_eq!(expected_ciphertext, deserialized);
     }
 
-    #[cfg(feature = "serde-traits")]
+    #[cfg(feature = "serde")]
     #[test]
     fn test_grouped_ciphertext_3_handles_serde() {
         let elgamal_keypair_0 = ElGamalKeypair::new_rand();

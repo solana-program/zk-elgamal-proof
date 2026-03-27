@@ -1,6 +1,6 @@
 //! Plain Old Data types for sigma proofs.
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 use crate::macros::impl_serde_base64;
 use {
     crate::macros::{impl_from_bytes, impl_from_str},
@@ -60,7 +60,7 @@ impl_from_bytes!(
     BYTES_LEN = CIPHERTEXT_COMMITMENT_EQUALITY_PROOF_LEN
 );
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodCiphertextCommitmentEqualityProof);
 
 /// The `CiphertextCiphertextEqualityProof` type as a `Pod`.
@@ -87,7 +87,7 @@ impl_from_bytes!(
     BYTES_LEN = CIPHERTEXT_CIPHERTEXT_EQUALITY_PROOF_LEN
 );
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodCiphertextCiphertextEqualityProof);
 
 /// The `GroupedCiphertext2HandlesValidityProof` type as a `Pod`.
@@ -116,7 +116,7 @@ impl_from_bytes!(
     BYTES_LEN = GROUPED_CIPHERTEXT_2_HANDLES_VALIDITY_PROOF_LEN
 );
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodGroupedCiphertext2HandlesValidityProof);
 
 /// The `GroupedCiphertext3HandlesValidityProof` type as a `Pod`.
@@ -145,7 +145,7 @@ impl_from_bytes!(
     BYTES_LEN = GROUPED_CIPHERTEXT_3_HANDLES_VALIDITY_PROOF_LEN
 );
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodGroupedCiphertext3HandlesValidityProof);
 
 /// The `BatchedGroupedCiphertext2HandlesValidityProof` type as a `Pod`.
@@ -174,7 +174,7 @@ impl_from_bytes!(
     BYTES_LEN = BATCHED_GROUPED_CIPHERTEXT_2_HANDLES_VALIDITY_PROOF_LEN
 );
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodBatchedGroupedCiphertext2HandlesValidityProof);
 
 /// The `BatchedGroupedCiphertext3HandlesValidityProof` type as a `Pod`.
@@ -203,7 +203,7 @@ impl_from_bytes!(
     BYTES_LEN = BATCHED_GROUPED_CIPHERTEXT_3_HANDLES_VALIDITY_PROOF_LEN
 );
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodBatchedGroupedCiphertext3HandlesValidityProof);
 
 /// The `ZeroCiphertextProof` type as a `Pod`.
@@ -230,7 +230,7 @@ impl_from_bytes!(
     BYTES_LEN = ZERO_CIPHERTEXT_PROOF_LEN
 );
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodZeroCiphertextProof);
 
 /// The `PercentageWithCapProof` type as a `Pod`.
@@ -257,7 +257,7 @@ impl_from_bytes!(
     BYTES_LEN = PERCENTAGE_WITH_CAP_PROOF_LEN
 );
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodPercentageWithCapProof);
 
 /// The `PubkeyValidityProof` type as a `Pod`.
@@ -284,7 +284,7 @@ impl_from_bytes!(
     BYTES_LEN = PUBKEY_VALIDITY_PROOF_LEN
 );
 
-#[cfg(feature = "serde-traits")]
+#[cfg(feature = "serde")]
 impl_serde_base64!(TYPE = PodPubkeyValidityProof);
 
 // The sigma proof pod types are wrappers for byte arrays, which are both `Pod` and `Zeroable`. However,
@@ -313,12 +313,12 @@ unsafe impl Pod for PodZeroCiphertextProof {}
 
 #[cfg(test)]
 mod tests {
-    #[cfg(feature = "serde-traits")]
+    #[cfg(feature = "serde")]
     use super::*;
 
     macro_rules! test_sigma_proof_serde {
         ($test_name:ident, $type:ident, $len:ident) => {
-            #[cfg(feature = "serde-traits")]
+            #[cfg(feature = "serde")]
             #[test]
             fn $test_name() {
                 let expected = $type([42u8; $len]);
