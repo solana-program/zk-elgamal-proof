@@ -6,10 +6,10 @@ on:
       package-path:
         description: Path to directory with package to release
         required: true
-        default: 'zk-sdk'
+        default: "zk-sdk"
         type: choice
         options:
-          - program
+          - interface
           - zk-keygen
           - zk-sdk
           - zk-sdk-pod

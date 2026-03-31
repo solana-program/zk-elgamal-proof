@@ -1,7 +1,7 @@
 use {
     crate::encryption::pedersen::{PedersenCommitment, PedersenOpening},
     js_sys::Uint8Array,
-    solana_zk_elgamal_proof_program::proof_data,
+    solana_zk_elgamal_proof_interface::proof_data,
     solana_zk_sdk::zk_elgamal_proof_program::{self, VerifyZkProof},
     wasm_bindgen::prelude::*,
 };

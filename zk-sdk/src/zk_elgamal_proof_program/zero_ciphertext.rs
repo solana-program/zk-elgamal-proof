@@ -10,7 +10,7 @@ use {
     },
     curve25519_dalek::traits::IsIdentity,
     merlin::Transcript,
-    solana_zk_elgamal_proof_program::proof_data::{
+    solana_zk_elgamal_proof_interface::proof_data::{
         ZeroCiphertextProofContext, ZeroCiphertextProofData,
     },
     solana_zk_sdk_pod::encryption::elgamal::{PodElGamalCiphertext, PodElGamalPubkey},

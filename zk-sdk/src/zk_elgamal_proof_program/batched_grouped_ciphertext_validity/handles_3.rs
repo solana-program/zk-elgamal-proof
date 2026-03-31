@@ -13,7 +13,7 @@ use {
         },
     },
     merlin::Transcript,
-    solana_zk_elgamal_proof_program::proof_data::{
+    solana_zk_elgamal_proof_interface::proof_data::{
         BatchedGroupedCiphertext3HandlesValidityProofContext,
         BatchedGroupedCiphertext3HandlesValidityProofData,
     },

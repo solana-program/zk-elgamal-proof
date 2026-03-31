@@ -1,4 +1,4 @@
-use {js_sys::Uint8Array, solana_zk_elgamal_proof_program::proof_data, wasm_bindgen::prelude::*};
+use {js_sys::Uint8Array, solana_zk_elgamal_proof_interface::proof_data, wasm_bindgen::prelude::*};
 
 pub mod batched_range_proof_u128;
 pub mod batched_range_proof_u256;

@@ -9,7 +9,7 @@ use {
         },
     },
     merlin::Transcript,
-    solana_zk_elgamal_proof_program::proof_data::{
+    solana_zk_elgamal_proof_interface::proof_data::{
         PercentageWithCapProofContext, PercentageWithCapProofData,
     },
     solana_zk_sdk_pod::encryption::pedersen::PodPedersenCommitment,

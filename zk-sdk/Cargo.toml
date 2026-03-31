@@ -31,7 +31,7 @@ solana-seed-derivable = { workspace = true }
 solana-seed-phrase = { workspace = true }
 solana-signature = { workspace = true }
 solana-signer = { workspace = true }
-solana-zk-elgamal-proof-program = { workspace = true }
+solana-zk-elgamal-proof-interface = { workspace = true }
 solana-zk-sdk-pod = { workspace = true }
 subtle = { workspace = true }
 thiserror = { workspace = true }

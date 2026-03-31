@@ -13,7 +13,7 @@ use {
     },
     curve25519_dalek::scalar::Scalar,
     merlin::Transcript,
-    solana_zk_elgamal_proof_program::proof_data::{
+    solana_zk_elgamal_proof_interface::proof_data::{
         CiphertextCommitmentEqualityProofContext, CiphertextCommitmentEqualityProofData,
     },
     solana_zk_sdk_pod::encryption::{

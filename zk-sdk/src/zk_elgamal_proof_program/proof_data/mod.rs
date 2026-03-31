@@ -1,4 +1,4 @@
-use crate::zk_elgamal_proof_program::errors::ProofVerificationError;
+use crate::zk_elgamal_proof_interface::errors::ProofVerificationError;
 
 pub mod batched_grouped_ciphertext_validity;
 pub mod batched_range_proof;

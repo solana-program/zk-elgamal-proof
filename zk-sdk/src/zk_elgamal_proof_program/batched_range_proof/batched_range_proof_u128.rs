@@ -11,7 +11,7 @@ use {
             VerifyZkProof,
         },
     },
-    solana_zk_elgamal_proof_program::proof_data::BatchedRangeProofU128Data,
+    solana_zk_elgamal_proof_interface::proof_data::BatchedRangeProofU128Data,
     std::convert::TryInto,
 };
 
