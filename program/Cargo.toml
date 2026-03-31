@@ -1,7 +1,7 @@
 [package]
-name = "solana-zk-elgamal-proof-program"
-description = "Solana ZK ElGamal Proof Program"
-documentation = "https://docs.rs/solana-zk-elgamal-proof-program"
+name = "solana-zk-elgamal-proof-interface"
+description = "Solana ZK ElGamal Proof Interface"
+documentation = "https://docs.rs/solana-zk-elgamal-proof-interface"
 version = "0.1.0"
 authors = { workspace = true }
 repository = { workspace = true }

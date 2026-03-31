@@ -11,7 +11,7 @@ use {
     bytemuck::{bytes_of, Zeroable},
     curve25519_dalek::traits::IsIdentity,
     merlin::Transcript,
-    solana_zk_elgamal_proof_program::proof_data::{BatchedRangeProofContext, MAX_COMMITMENTS},
+    solana_zk_elgamal_proof_interface::proof_data::{BatchedRangeProofContext, MAX_COMMITMENTS},
     solana_zk_sdk_pod::encryption::pedersen::PodPedersenCommitment,
     std::convert::TryInto,
 };

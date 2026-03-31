@@ -1070,7 +1070,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "solana-zk-elgamal-proof-program"
+name = "solana-zk-elgamal-proof-interface"
 version = "0.1.0"
 dependencies = [
  "bytemuck",
@@ -1106,7 +1106,7 @@ dependencies = [
  "solana-seed-phrase",
  "solana-signature",
  "solana-signer",
- "solana-zk-elgamal-proof-program",
+ "solana-zk-elgamal-proof-interface",
  "solana-zk-sdk-pod",
  "subtle",
  "thiserror 2.0.18",
@@ -1136,7 +1136,7 @@ dependencies = [
  "bytemuck",
  "getrandom 0.2.17",
  "js-sys",
- "solana-zk-elgamal-proof-program",
+ "solana-zk-elgamal-proof-interface",
  "solana-zk-sdk",
  "solana-zk-sdk-pod",
  "wasm-bindgen",

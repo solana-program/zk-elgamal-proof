@@ -9,7 +9,7 @@ use {
         },
     },
     merlin::Transcript,
-    solana_zk_elgamal_proof_program::proof_data::{
+    solana_zk_elgamal_proof_interface::proof_data::{
         PubkeyValidityProofContext, PubkeyValidityProofData,
     },
     solana_zk_sdk_pod::encryption::elgamal::PodElGamalPubkey,
