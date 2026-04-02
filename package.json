@@ -3,7 +3,7 @@
   "scripts": {
   },
   "devDependencies": {
-    "@playwright/test": "^1.59.0"
+    "@playwright/test": "^1.59.1"
   },
   "engines": {
     "node": ">=v20.0.0"
