@@ -921,13 +921,13 @@ dependencies = [
 
 [[package]]
 name = "solana-instruction"
-version = "3.0.0"
+version = "3.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8df4e8fcba01d7efa647ed20a081c234475df5e11a93acb4393cc2c9a7b99bab"
+checksum = "a97881335fc698deb46c6571945969aae6d93a14e2fff792a368b4fac872f116"
 dependencies = [
- "solana-define-syscall 3.0.0",
+ "solana-define-syscall 5.0.0",
  "solana-instruction-error",
- "solana-pubkey",
+ "solana-pubkey 4.2.0",
 ]
 
 [[package]]
@@ -978,6 +978,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8909d399deb0851aa524420beeb5646b115fd253ef446e35fe4504c904da3941"
 dependencies = [
  "solana-address 1.1.0",
+]
+
+[[package]]
+name = "solana-pubkey"
+version = "4.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7db719574990de7e8b0f55a8593ac92a5ccb42c8ce67b3e4bf05b139d5d9ee71"
+dependencies = [
+ "solana-address 2.6.0",
 ]
 
 [[package]]
@@ -1045,7 +1054,7 @@ version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5bfea97951fee8bae0d6038f39a5efcb6230ecdfe33425ac75196d1a1e3e3235"
 dependencies = [
- "solana-pubkey",
+ "solana-pubkey 3.0.0",
  "solana-signature",
  "solana-transaction-error",
 ]
