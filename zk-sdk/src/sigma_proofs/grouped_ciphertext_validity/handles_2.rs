@@ -22,13 +22,12 @@ use {
         },
         transcript::TranscriptProtocol,
     },
-    curve25519_dalek::{
+    curve25519::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
         traits::{IsIdentity, MultiscalarMul, VartimeMultiscalarMul},
     },
     merlin::Transcript,
-    rand::rngs::OsRng,
     solana_zk_sdk_pod::{sigma_proofs::PodGroupedCiphertext2HandlesValidityProof, UNIT_LEN},
     zeroize::Zeroize,
 };
@@ -95,8 +94,8 @@ impl GroupedCiphertext2HandlesValidityProof {
         let r = opening.get_scalar();
 
         // generate random masking factors that also serves as nonces
-        let mut y_r = Scalar::random(&mut OsRng);
-        let mut y_x = Scalar::random(&mut OsRng);
+        let mut y_r = Scalar::random(&mut rand::rng());
+        let mut y_x = Scalar::random(&mut rand::rng());
 
         let Y_0 = RistrettoPoint::multiscalar_mul(vec![&y_r, &y_x], vec![&(*H), &G]).compress();
         let Y_1 = (&y_r * P_first).compress();

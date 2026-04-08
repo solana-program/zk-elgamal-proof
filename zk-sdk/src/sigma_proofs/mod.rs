@@ -16,7 +16,7 @@ pub mod zero_ciphertext;
 
 use {
     crate::sigma_proofs::errors::SigmaProofVerificationError,
-    curve25519_dalek::{ristretto::CompressedRistretto, scalar::Scalar},
+    curve25519::{ristretto::CompressedRistretto, scalar::Scalar},
     solana_zk_sdk_pod::{RISTRETTO_POINT_LEN, SCALAR_LEN},
 };
 

@@ -17,7 +17,7 @@ aes-gcm-siv = { workspace = true }
 base64 = { workspace = true }
 bincode = { workspace = true }
 bytemuck = { workspace = true }
-curve25519-dalek = { workspace = true, features = ["serde"] }
+curve25519 = { workspace = true, features = ["serde"] }
 itertools = { workspace = true }
 merlin = { workspace = true }
 rand = { workspace = true }

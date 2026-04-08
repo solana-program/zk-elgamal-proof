@@ -24,12 +24,11 @@ use {
     },
     base64::{prelude::BASE64_STANDARD, Engine},
     core::ops::{Add, Mul, Sub},
-    curve25519_dalek::{
+    curve25519::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
         traits::Identity,
     },
-    rand::rngs::OsRng,
     serde::{Deserialize, Serialize},
     sha3::{Digest, Sha3_512},
     solana_derivation_path::DerivationPath,
@@ -60,7 +59,7 @@ impl ElGamal {
     /// This function is randomized. It internally samples a scalar element using `OsRng`.
     fn keygen() -> ElGamalKeypair {
         // secret scalar should be non-zero except with negligible probability
-        let s = Zeroizing::new(Scalar::random(&mut OsRng));
+        let s = Zeroizing::new(Scalar::random(&mut rand::rng()));
         Self::keygen_with_scalar(&s)
     }
 
@@ -474,7 +473,7 @@ impl ElGamalSecretKey {
     ///
     /// This function is randomized. It internally samples a scalar element using `OsRng`.
     pub fn new_rand() -> Self {
-        ElGamalSecretKey(Scalar::random(&mut OsRng))
+        ElGamalSecretKey(Scalar::random(&mut rand::rng()))
     }
 
     /// Derive an ElGamal secret key from an entropy seed.
@@ -960,7 +959,7 @@ mod tests {
     use {
         super::*,
         crate::encryption::pedersen::Pedersen,
-        bip39::{Language, Mnemonic, MnemonicType, Seed},
+        bip39::{Language, Mnemonic, Seed},
         solana_address::Address,
         solana_keypair::Keypair,
         solana_signer::null_signer::NullSigner,
@@ -1239,7 +1238,8 @@ mod tests {
 
     #[test]
     fn test_keypair_from_seed_phrase_and_passphrase() {
-        let mnemonic = Mnemonic::new(MnemonicType::Words12, Language::English);
+        let entropy = rand::random::<[u8; 16]>();
+        let mnemonic = Mnemonic::from_entropy(&entropy, Language::English).unwrap();
         let passphrase = "42";
         let seed = Seed::new(&mnemonic, passphrase);
         let expected_keypair = ElGamalKeypair::from_seed(seed.as_bytes()).unwrap();
