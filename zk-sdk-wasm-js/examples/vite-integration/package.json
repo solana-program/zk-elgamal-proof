@@ -9,7 +9,7 @@
     "@solana/zk-sdk": "file:../.."
   },
   "devDependencies": {
-    "vite": "^8.0.5",
+    "vite": "^8.0.7",
     "vite-plugin-wasm": "^3.6.0"
   }
 }
