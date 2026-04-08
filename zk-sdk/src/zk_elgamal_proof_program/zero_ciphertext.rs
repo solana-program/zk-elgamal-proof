@@ -8,7 +8,7 @@ use {
             VerifyZkProof,
         },
     },
-    curve25519_dalek::traits::IsIdentity,
+    curve25519::traits::IsIdentity,
     merlin::Transcript,
     solana_zk_elgamal_proof_interface::proof_data::{
         ZeroCiphertextProofContext, ZeroCiphertextProofData,

@@ -10,7 +10,6 @@ use {
         Aes128GcmSiv,
     },
     base64::{prelude::BASE64_STANDARD, Engine},
-    rand::{rngs::OsRng, Rng},
     sha3::{Digest, Sha3_512},
     solana_derivation_path::DerivationPath,
     solana_seed_derivable::SeedDerivable,
@@ -41,14 +40,14 @@ impl AuthenticatedEncryption {
     ///
     /// This function is randomized. It internally samples a 128-bit key using `OsRng`.
     fn keygen() -> AeKey {
-        AeKey(OsRng.gen::<[u8; AE_KEY_LEN]>())
+        AeKey(rand::random::<[u8; AE_KEY_LEN]>())
     }
 
     /// On input of an authenticated encryption key and an amount, the function returns a
     /// corresponding authenticated encryption ciphertext.
     fn encrypt(key: &AeKey, balance: u64) -> AeCiphertext {
         let plaintext = Zeroizing::new(balance.to_le_bytes());
-        let nonce: Nonce = OsRng.gen::<[u8; NONCE_LEN]>();
+        let nonce: Nonce = rand::random::<[u8; NONCE_LEN]>();
 
         // The balance and the nonce have fixed length and therefore, encryption should not fail.
         let ciphertext = Aes128GcmSiv::new(&key.0.into())

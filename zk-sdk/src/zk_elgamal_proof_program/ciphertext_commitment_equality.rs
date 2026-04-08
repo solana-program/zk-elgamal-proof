@@ -11,7 +11,7 @@ use {
             VerifyZkProof,
         },
     },
-    curve25519_dalek::scalar::Scalar,
+    curve25519::scalar::Scalar,
     merlin::Transcript,
     solana_zk_elgamal_proof_interface::proof_data::{
         CiphertextCommitmentEqualityProofContext, CiphertextCommitmentEqualityProofData,

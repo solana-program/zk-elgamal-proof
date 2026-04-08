@@ -16,13 +16,12 @@ use {
         },
         transcript::TranscriptProtocol,
     },
-    curve25519_dalek::{
+    curve25519::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
         traits::{IsIdentity, VartimeMultiscalarMul},
     },
     merlin::Transcript,
-    rand::rngs::OsRng,
     solana_zk_sdk_pod::{sigma_proofs::PodPubkeyValidityProof, UNIT_LEN},
     zeroize::Zeroize,
 };
@@ -63,7 +62,7 @@ impl PubkeyValidityProof {
         let mut s_inv = s.invert();
 
         // generate a random masking factor that also serves as a nonce
-        let mut y = Scalar::random(&mut OsRng);
+        let mut y = Scalar::random(&mut rand::rng());
         let Y = (&y * &(*H)).compress();
 
         // record masking factors in transcript and get challenges
@@ -165,7 +164,7 @@ mod test {
     use {
         super::*,
         bytemuck::Zeroable,
-        curve25519_dalek::traits::Identity,
+        curve25519::traits::Identity,
         solana_address::Address,
         solana_keypair::Keypair,
         solana_zk_sdk_pod::{

@@ -46,13 +46,12 @@ use {
         },
         transcript::TranscriptProtocol,
     },
-    curve25519_dalek::{
+    curve25519::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
         traits::{IsIdentity, MultiscalarMul, VartimeMultiscalarMul},
     },
     merlin::Transcript,
-    rand::rngs::OsRng,
     solana_zk_sdk_pod::{sigma_proofs::PodPercentageWithCapProof, UNIT_LEN},
     subtle::{Choice, ConditionallySelectable, ConstantTimeGreater},
     zeroize::Zeroize,
@@ -220,10 +219,10 @@ impl PercentageWithCapProof {
         let C_delta = delta_commitment.get_point();
         let C_claimed = claimed_commitment.get_point();
 
-        let z_x = Scalar::random(&mut OsRng);
-        let z_delta = Scalar::random(&mut OsRng);
-        let z_claimed = Scalar::random(&mut OsRng);
-        let mut c_equality = Scalar::random(&mut OsRng);
+        let z_x = Scalar::random(&mut rand::rng());
+        let z_delta = Scalar::random(&mut rand::rng());
+        let z_claimed = Scalar::random(&mut rand::rng());
+        let mut c_equality = Scalar::random(&mut rand::rng());
 
         let Y_delta = RistrettoPoint::multiscalar_mul(
             vec![z_x, z_delta, -c_equality],
@@ -248,7 +247,7 @@ impl PercentageWithCapProof {
         // generate max proof properly
         let r_percentage = percentage_opening.get_scalar();
 
-        let mut y_max_proof = Scalar::random(&mut OsRng); // blinding factor for the percentage opening
+        let mut y_max_proof = Scalar::random(&mut rand::rng()); // blinding factor for the percentage opening
         let Y_max_proof = (y_max_proof * &(*H)).compress(); // commitment to blinding factor
 
         // provide the simulated `Y_max_proof`, `Y_delta`, and the properly generated `Y_claimed`
@@ -320,8 +319,8 @@ impl PercentageWithCapProof {
         let m = Scalar::from(max_value);
         let C_percentage = percentage_commitment.get_point();
 
-        let z_max_proof = Scalar::random(&mut OsRng);
-        let c_max_proof = Scalar::random(&mut OsRng); // random challenge
+        let z_max_proof = Scalar::random(&mut rand::rng());
+        let c_max_proof = Scalar::random(&mut rand::rng()); // random challenge
 
         // solve for Y_max in the verification algebraic relation
         let Y_max_proof = RistrettoPoint::multiscalar_mul(
@@ -342,9 +341,9 @@ impl PercentageWithCapProof {
         let r_delta = delta_opening.get_scalar();
         let r_claimed = claimed_opening.get_scalar();
 
-        let mut y_x = Scalar::random(&mut OsRng); // generate blinding factors
-        let mut y_delta = Scalar::random(&mut OsRng);
-        let mut y_claimed = Scalar::random(&mut OsRng);
+        let mut y_x = Scalar::random(&mut rand::rng()); // generate blinding factors
+        let mut y_delta = Scalar::random(&mut rand::rng());
+        let mut y_claimed = Scalar::random(&mut rand::rng());
 
         // commitment to blinding factors
         let Y_delta =

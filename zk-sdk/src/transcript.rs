@@ -1,6 +1,6 @@
 use {
     crate::{errors::TranscriptError, TRANSCRIPT_DOMAIN},
-    curve25519_dalek::{ristretto::CompressedRistretto, scalar::Scalar, traits::IsIdentity},
+    curve25519::{ristretto::CompressedRistretto, scalar::Scalar, traits::IsIdentity},
     merlin::Transcript,
 };
 

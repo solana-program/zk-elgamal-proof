@@ -21,7 +21,7 @@ use {
         },
         errors::ElGamalError,
     },
-    curve25519_dalek::scalar::Scalar,
+    curve25519::scalar::Scalar,
     solana_zk_sdk_pod::{
         encryption::grouped_elgamal::{
             PodGroupedElGamalCiphertext2Handles, PodGroupedElGamalCiphertext3Handles,

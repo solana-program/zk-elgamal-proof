@@ -17,7 +17,7 @@ use {
         transcript::TranscriptProtocol,
     },
     core::iter,
-    curve25519_dalek::{
+    curve25519::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
         traits::MultiscalarMul,
@@ -26,7 +26,7 @@ use {
     zeroize::Zeroize,
 };
 #[cfg(test)]
-use {curve25519_dalek::traits::VartimeMultiscalarMul, std::borrow::Borrow};
+use {curve25519::traits::VartimeMultiscalarMul, std::borrow::Borrow};
 
 /// An inner-product proof.
 ///
@@ -275,7 +275,7 @@ impl InnerProductProof {
         // 2. Compute `u_i^-1` for all `i`.
         let mut challenges_inv = challenges.clone();
         // This computes `(u_k * ... * u_1)^-1` and stores `u_i^-1` in `challenges_inv`.
-        let allinv = Scalar::batch_invert(&mut challenges_inv);
+        let allinv = Scalar::invert_batch_alloc(&mut challenges_inv);
 
         // 3. Compute `u_i^2` and `u_i^-2` for all `i`.
         for i in 0..lg_n {
@@ -467,9 +467,7 @@ impl InnerProductProof {
 
 #[cfg(test)]
 mod tests {
-    use {
-        super::*, crate::range_proof::generators::RangeProofGens, rand::rngs::OsRng, sha3::Sha3_512,
-    };
+    use {super::*, crate::range_proof::generators::RangeProofGens, sha3::Sha3_512};
 
     #[test]
     #[allow(non_snake_case)]
@@ -482,13 +480,13 @@ mod tests {
 
         let Q = RistrettoPoint::hash_from_bytes::<Sha3_512>(b"test point");
 
-        let a: Vec<_> = (0..n).map(|_| Scalar::random(&mut OsRng)).collect();
-        let b: Vec<_> = (0..n).map(|_| Scalar::random(&mut OsRng)).collect();
+        let a: Vec<_> = (0..n).map(|_| Scalar::random(&mut rand::rng())).collect();
+        let b: Vec<_> = (0..n).map(|_| Scalar::random(&mut rand::rng())).collect();
         let c = util::inner_product(&a, &b).unwrap();
 
         let G_factors: Vec<Scalar> = iter::repeat_n(Scalar::ONE, n).collect();
 
-        let y_inv = Scalar::random(&mut OsRng);
+        let y_inv = Scalar::random(&mut rand::rng());
         let H_factors: Vec<Scalar> = util::exp_iter(y_inv).take(n).collect();
 
         // P would be determined upstream, but we need a correct P to check the proof.

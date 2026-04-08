@@ -10,13 +10,12 @@ use {
         transcript::TranscriptProtocol,
     },
     core::iter,
-    curve25519_dalek::{
+    curve25519::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
         traits::{IsIdentity, MultiscalarMul, VartimeMultiscalarMul},
     },
     merlin::Transcript,
-    rand::rngs::OsRng,
     solana_zk_sdk_pod::{
         range_proof::{
             PodRangeProofU128, PodRangeProofU256, PodRangeProofU64, INNER_PRODUCT_PROOF_U128_LEN,
@@ -103,7 +102,7 @@ impl RangeProof {
 
         // 2. Create commitments A and S.
         // A is a commitment to the bit-vectors a_L and a_R
-        let mut a_blinding = Scalar::random(&mut OsRng);
+        let mut a_blinding = Scalar::random(&mut rand::rng());
         let mut A = a_blinding * &(*H);
 
         let mut gens_iter = bp_gens.G(nm).zip(bp_gens.H(nm));
@@ -123,12 +122,12 @@ impl RangeProof {
         let A = A.compress();
 
         // generate blinding factors and generate their Pedersen vector commitment
-        let mut s_L: Vec<Scalar> = (0..nm).map(|_| Scalar::random(&mut OsRng)).collect();
-        let mut s_R: Vec<Scalar> = (0..nm).map(|_| Scalar::random(&mut OsRng)).collect();
+        let mut s_L: Vec<Scalar> = (0..nm).map(|_| Scalar::random(&mut rand::rng())).collect();
+        let mut s_R: Vec<Scalar> = (0..nm).map(|_| Scalar::random(&mut rand::rng())).collect();
 
         // generate blinding factor for Pedersen commitment; `s_blinding` should not to be confused
         // with blinding factors for the actual inner product vector
-        let mut s_blinding = Scalar::random(&mut OsRng);
+        let mut s_blinding = Scalar::random(&mut rand::rng());
 
         let S = RistrettoPoint::multiscalar_mul(
             iter::once(&s_blinding).chain(s_L.iter()).chain(s_R.iter()),

@@ -15,7 +15,7 @@
 //!
 
 use {
-    curve25519_dalek::{
+    curve25519::{
         constants::RISTRETTO_BASEPOINT_POINT as G,
         ristretto::RistrettoPoint,
         scalar::Scalar,

@@ -16,13 +16,12 @@ use {
         },
         transcript::TranscriptProtocol,
     },
-    curve25519_dalek::{
+    curve25519::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
         traits::{IsIdentity, MultiscalarMul},
     },
     merlin::Transcript,
-    rand::rngs::OsRng,
     solana_zk_sdk_pod::{sigma_proofs::PodZeroCiphertextProof, UNIT_LEN},
     zeroize::Zeroize,
 };
@@ -64,7 +63,7 @@ impl ZeroCiphertextProof {
         let D = ciphertext.handle.get_point();
 
         // generate a random masking factor that also serves as a nonce
-        let mut y = Scalar::random(&mut OsRng);
+        let mut y = Scalar::random(&mut rand::rng());
         let Y_P = (&y * P).compress();
         let Y_D = (&y * D).compress();
 

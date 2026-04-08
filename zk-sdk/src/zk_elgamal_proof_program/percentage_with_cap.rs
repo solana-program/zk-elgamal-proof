@@ -97,7 +97,7 @@ impl VerifyZkProof for PercentageWithCapProofData {
 
 #[cfg(test)]
 mod test {
-    use {super::*, crate::encryption::pedersen::Pedersen, curve25519_dalek::scalar::Scalar};
+    use {super::*, crate::encryption::pedersen::Pedersen, curve25519::scalar::Scalar};
 
     #[test]
     fn test_percentage_with_cap_instruction_correctness() {

@@ -3,13 +3,12 @@
 use {
     crate::errors::ElGamalError,
     core::ops::{Add, Mul, Sub},
-    curve25519_dalek::{
+    curve25519::{
         constants::{RISTRETTO_BASEPOINT_COMPRESSED, RISTRETTO_BASEPOINT_POINT},
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
         traits::MultiscalarMul,
     },
-    rand::rngs::OsRng,
     serde::{Deserialize, Serialize},
     sha3::Sha3_512,
     solana_zk_sdk_pod::encryption::{
@@ -84,7 +83,7 @@ pub struct PedersenOpening(Scalar);
 
 impl PedersenOpening {
     pub fn new_rand() -> Self {
-        PedersenOpening(Scalar::random(&mut OsRng))
+        PedersenOpening(Scalar::random(&mut rand::rng()))
     }
 }
 
@@ -346,7 +345,7 @@ mod tests {
         let amount_0: u64 = 77;
         let amount_1: u64 = 57;
 
-        let rng = &mut OsRng;
+        let rng = &mut rand::rng();
         let opening_0 = PedersenOpening(Scalar::random(rng));
         let opening_1 = PedersenOpening(Scalar::random(rng));
 
@@ -362,7 +361,7 @@ mod tests {
         let amount_0: u64 = 77;
         let amount_1: u64 = 57;
 
-        let rng = &mut OsRng;
+        let rng = &mut rand::rng();
         let opening_0 = PedersenOpening(Scalar::random(rng));
         let opening_1 = PedersenOpening(Scalar::random(rng));
 
@@ -402,7 +401,7 @@ mod tests {
 
     #[test]
     fn test_pedersen_opening_bytes() {
-        let opening = PedersenOpening(Scalar::random(&mut OsRng));
+        let opening = PedersenOpening(Scalar::random(&mut rand::rng()));
 
         let encoded = opening.to_bytes();
         let decoded = PedersenOpening::from_bytes(&encoded).unwrap();
