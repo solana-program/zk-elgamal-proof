@@ -959,7 +959,7 @@ mod tests {
     use {
         super::*,
         crate::encryption::pedersen::Pedersen,
-        bip39::{Language, Mnemonic, MnemonicType, Seed},
+        bip39::{Language, Mnemonic, Seed},
         solana_address::Address,
         solana_keypair::Keypair,
         solana_signer::null_signer::NullSigner,
@@ -1238,7 +1238,8 @@ mod tests {
 
     #[test]
     fn test_keypair_from_seed_phrase_and_passphrase() {
-        let mnemonic = Mnemonic::new(MnemonicType::Words12, Language::English);
+        let entropy = rand::random::<[u8; 16]>();
+        let mnemonic = Mnemonic::from_entropy(&entropy, Language::English).unwrap();
         let passphrase = "42";
         let seed = Seed::new(&mnemonic, passphrase);
         let expected_keypair = ElGamalKeypair::from_seed(seed.as_bytes()).unwrap();
