@@ -37,15 +37,15 @@ serde = "1.0.228"
 serde_derive = "1.0.219"
 serde_json = "1.0.149"
 sha3 = "0.10.8"
-solana-address = { version = "2.6.0", default-features = false }
+solana-address = { version = "2.5.0", default-features = false }
 solana-derivation-path = "3.0.0"
-solana-instruction = "3.4.0"
-solana-keypair = "3.1.2"
+solana-instruction = "3.0.0"
+solana-keypair = "3.0.1"
 solana-nullable = "1.1.0"
 solana-sdk-ids = "3.1.0"
 solana-seed-derivable = "3.0.0"
 solana-seed-phrase = "3.0.0"
-solana-signature = { version = "3.4.0", default-features = false }
+solana-signature = { version = "3.1.0", default-features = false }
 solana-signer = "3.0.0"
 solana-zk-elgamal-proof-interface = { path = "interface", version = "0.1.0" }
 solana-zk-sdk = { path = "zk-sdk", version = "5.0.1" }
