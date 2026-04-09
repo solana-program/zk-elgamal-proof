@@ -14,6 +14,8 @@
 //! As the messages are encrypted as scalar elements (a.k.a. in the "exponent"), one must solve the
 //! discrete log to recover the originally encrypted value.
 
+#[cfg(test)]
+use curve25519_dalek::traits::Identity;
 use {
     crate::{
         encryption::{
@@ -27,7 +29,6 @@ use {
     curve25519_dalek::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
-        traits::Identity,
     },
     rand::rngs::OsRng,
     serde::{Deserialize, Serialize},
@@ -110,11 +111,8 @@ impl ElGamal {
     ///
     /// It should only be used in contexts where the amount does not need to be kept secret.
     /// For standard, confidential encryption, use `ElGamalPubkey::encrypt()`.
-    #[deprecated(
-        since = "4.1.0",
-        note = "This function is intended for internal use and will be removed from the public API in a future version."
-    )]
-    pub fn encode<T: Into<Scalar>>(amount: T) -> ElGamalCiphertext {
+    #[cfg(test)]
+    pub(crate) fn encode<T: Into<Scalar>>(amount: T) -> ElGamalCiphertext {
         #[allow(deprecated)]
         let commitment = Pedersen::encode(amount);
         let handle = DecryptHandle(RistrettoPoint::identity());
