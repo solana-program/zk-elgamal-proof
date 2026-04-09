@@ -21,7 +21,7 @@ use {
 };
 
 #[allow(clippy::too_many_arguments)]
-pub fn new_batched_grouped_ciphertext_2_handles_validity_proof_data(
+pub fn build_batched_grouped_ciphertext_2_handles_validity_proof_data(
     first_pubkey: &ElGamalPubkey,
     second_pubkey: &ElGamalPubkey,
     grouped_ciphertext_lo: &GroupedElGamalCiphertext<2>,
@@ -129,7 +129,7 @@ mod test {
         let grouped_ciphertext_hi =
             GroupedElGamal::encrypt_with([first_pubkey, second_pubkey], amount_hi, &opening_hi);
 
-        let proof_data = new_batched_grouped_ciphertext_2_handles_validity_proof_data(
+        let proof_data = build_batched_grouped_ciphertext_2_handles_validity_proof_data(
             first_pubkey,
             second_pubkey,
             &grouped_ciphertext_lo,
@@ -143,7 +143,7 @@ mod test {
 
         assert!(proof_data.verify_proof().is_ok());
 
-        let result = new_batched_grouped_ciphertext_2_handles_validity_proof_data(
+        let result = build_batched_grouped_ciphertext_2_handles_validity_proof_data(
             first_keypair.pubkey(),
             second_keypair.pubkey(),
             &grouped_ciphertext_hi, // Swapped: Passed Hi ciphertext
