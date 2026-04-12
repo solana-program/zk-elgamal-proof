@@ -48,7 +48,7 @@ solana-seed-phrase = "3.0.0"
 solana-signature = { version = "3.1.0", default-features = false }
 solana-signer = "3.0.0"
 solana-zk-elgamal-proof-interface = { path = "interface", version = "0.1.0" }
-solana-zk-sdk = { path = "zk-sdk", version = "5.0.1" }
+solana-zk-sdk = { path = "zk-sdk", version = "6.0.0" }
 solana-zk-sdk-pod = { path = "zk-sdk-pod", version = "0.1.0" }
 solana-zk-sdk-wasm-js = { path = "zk-sdk-wasm-js", version = "0.1.0" }
 subtle = "2.6.1"
