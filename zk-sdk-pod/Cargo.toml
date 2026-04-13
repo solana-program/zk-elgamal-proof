@@ -2,7 +2,7 @@
 name = "solana-zk-sdk-pod"
 description = "Solana ZK SDK Plain Old Data (Pod)"
 documentation = "https://docs.rs/solana-zk-sdk-pod"
-version = "0.1.0"
+version = "0.1.1"
 authors = { workspace = true }
 repository = { workspace = true }
 homepage = { workspace = true }
