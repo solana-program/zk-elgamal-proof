@@ -476,4 +476,13 @@ mod tests {
 
         assert_eq!(PedersenCommitment::from_bytes(&invalid_bytes), None);
     }
+
+    #[test]
+    fn temp_test() {
+        let temp_g = G;
+        let temp_h = *H;
+
+        println!("G: {:?}", temp_g.compress());
+        println!("H: {:?}", temp_h.compress());
+    }
 }
