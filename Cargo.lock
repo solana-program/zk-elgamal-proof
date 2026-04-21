@@ -1085,7 +1085,7 @@ dependencies = [
 
 [[package]]
 name = "solana-zk-sdk"
-version = "6.0.0"
+version = "6.0.1"
 dependencies = [
  "aes-gcm-siv",
  "base64",
