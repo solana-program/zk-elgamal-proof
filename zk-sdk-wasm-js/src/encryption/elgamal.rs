@@ -114,6 +114,11 @@ impl ElGamalSecretKey {
         }
         signature.copy_to(&mut bytes);
         let signature = Signature::from(bytes);
+
+        if signature == Signature::default() {
+            return Err(JsValue::from_str("Rejecting default signature"));
+        }
+
         elgamal::ElGamalSecretKey::new_from_signature(&signature)
             .map(|inner| Self { inner })
             .map_err(|e| JsValue::from_str(&e.to_string()))
@@ -136,8 +141,9 @@ impl ElGamalSecretKey {
     #[wasm_bindgen(js_name = "fromSeedPhraseAndPassphrase")]
     pub fn from_seed_phrase_and_passphrase(
         seed_phrase: &str,
-        passphrase: &str,
+        passphrase: Option<String>,
     ) -> Result<ElGamalSecretKey, JsValue> {
+        let passphrase = passphrase.as_deref().unwrap_or("");
         <elgamal::ElGamalSecretKey as SeedDerivable>::from_seed_phrase_and_passphrase(
             seed_phrase,
             passphrase,
@@ -243,7 +249,7 @@ impl ElGamalKeypair {
     #[wasm_bindgen(js_name = "fromSeedPhraseAndPassphrase")]
     pub fn from_seed_phrase_and_passphrase(
         seed_phrase: &str,
-        passphrase: &str,
+        passphrase: Option<String>,
     ) -> Result<ElGamalKeypair, JsValue> {
         let secret = ElGamalSecretKey::from_seed_phrase_and_passphrase(seed_phrase, passphrase)?;
         Ok(Self::from_secret_key(&secret))
@@ -523,6 +529,13 @@ mod tests {
     }
 
     #[wasm_bindgen_test]
+    fn test_from_signature_rejects_default_signature() {
+        let default = vec![0u8; 64];
+        assert!(ElGamalSecretKey::from_signature(Uint8Array::from(default.as_slice())).is_err());
+        assert!(ElGamalKeypair::from_signature(Uint8Array::from(default.as_slice())).is_err());
+    }
+
+    #[wasm_bindgen_test]
     fn test_from_seed_roundtrip() {
         let seed = [9u8; 32];
         let seed_arr = Uint8Array::from(seed.as_ref());
@@ -547,13 +560,14 @@ mod tests {
     fn test_from_seed_phrase_roundtrip() {
         let phrase =
             "blanket tower apple sunset trigger muscle fame detect absent copper cram guard";
-        let passphrase = "";
 
-        let a = ElGamalSecretKey::from_seed_phrase_and_passphrase(phrase, passphrase).unwrap();
-        let b = ElGamalSecretKey::from_seed_phrase_and_passphrase(phrase, passphrase).unwrap();
+        let a = ElGamalSecretKey::from_seed_phrase_and_passphrase(phrase, None).unwrap();
+        let b = ElGamalSecretKey::from_seed_phrase_and_passphrase(phrase, None).unwrap();
         assert_eq!(a.to_bytes(), b.to_bytes());
 
-        let different = ElGamalSecretKey::from_seed_phrase_and_passphrase(phrase, "pw").unwrap();
+        let different =
+            ElGamalSecretKey::from_seed_phrase_and_passphrase(phrase, Some("pw".to_string()))
+                .unwrap();
         assert_ne!(different.to_bytes(), a.to_bytes());
     }
 
