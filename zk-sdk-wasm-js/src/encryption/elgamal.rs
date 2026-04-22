@@ -1,12 +1,17 @@
 use {
     crate::encryption::pedersen::{PedersenCommitment, PedersenOpening},
     js_sys::Uint8Array,
+    solana_seed_derivable::SeedDerivable,
+    solana_signature::Signature,
     solana_zk_sdk::encryption::elgamal,
     solana_zk_sdk_pod::encryption::{
         DECRYPT_HANDLE_LEN, ELGAMAL_CIPHERTEXT_LEN, ELGAMAL_PUBKEY_LEN, ELGAMAL_SECRET_KEY_LEN,
     },
     wasm_bindgen::prelude::{wasm_bindgen, JsValue},
 };
+
+/// Byte length of an ed25519 signature.
+const SIGNATURE_LEN: usize = 64;
 
 #[wasm_bindgen]
 pub struct ElGamalPubkey {
@@ -82,6 +87,65 @@ impl ElGamalSecretKey {
         }
     }
 
+    /// Returns the message that a Solana signer must sign in order to
+    /// deterministically derive an `ElGamalSecretKey` via `fromSignature`.
+    ///
+    /// The message is `b"ElGamalSecretKey" || public_seed`. For the
+    /// spl-token-2022 confidential extension, the `public_seed` is the
+    /// 32-byte token account address.
+    #[wasm_bindgen(js_name = "signerMessage")]
+    pub fn signer_message(public_seed: Uint8Array) -> Vec<u8> {
+        let mut seed = vec![0u8; public_seed.length() as usize];
+        public_seed.copy_to(&mut seed);
+        [b"ElGamalSecretKey".as_ref(), seed.as_ref()].concat()
+    }
+
+    /// Derives an `ElGamalSecretKey` from a 64-byte ed25519 signature
+    /// over the message returned by `signerMessage`.
+    #[wasm_bindgen(js_name = "fromSignature")]
+    pub fn from_signature(signature: Uint8Array) -> Result<ElGamalSecretKey, JsValue> {
+        let mut bytes = [0u8; SIGNATURE_LEN];
+        if signature.length() as usize != SIGNATURE_LEN {
+            return Err(JsValue::from_str(&format!(
+                "Invalid signature length: expected {}, got {}",
+                SIGNATURE_LEN,
+                signature.length()
+            )));
+        }
+        signature.copy_to(&mut bytes);
+        let signature = Signature::from(bytes);
+        elgamal::ElGamalSecretKey::new_from_signature(&signature)
+            .map(|inner| Self { inner })
+            .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    /// Deterministically derives an `ElGamalSecretKey` from a seed.
+    ///
+    /// The seed must be between 32 and 65535 bytes in length.
+    #[wasm_bindgen(js_name = "fromSeed")]
+    pub fn from_seed(seed: Uint8Array) -> Result<ElGamalSecretKey, JsValue> {
+        let mut bytes = vec![0u8; seed.length() as usize];
+        seed.copy_to(&mut bytes);
+        <elgamal::ElGamalSecretKey as SeedDerivable>::from_seed(&bytes)
+            .map(|inner| Self { inner })
+            .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    /// Deterministically derives an `ElGamalSecretKey` from a BIP39 mnemonic
+    /// seed phrase and optional passphrase.
+    #[wasm_bindgen(js_name = "fromSeedPhraseAndPassphrase")]
+    pub fn from_seed_phrase_and_passphrase(
+        seed_phrase: &str,
+        passphrase: &str,
+    ) -> Result<ElGamalSecretKey, JsValue> {
+        <elgamal::ElGamalSecretKey as SeedDerivable>::from_seed_phrase_and_passphrase(
+            seed_phrase,
+            passphrase,
+        )
+        .map(|inner| Self { inner })
+        .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
     /// Deserializes an ElGamal secret key from a byte slice.
     /// Throws an error if the bytes are invalid.
     #[wasm_bindgen(js_name = "fromBytes")]
@@ -145,6 +209,44 @@ impl ElGamalKeypair {
         Self {
             inner: elgamal::ElGamalKeypair::new(secret_key.inner.clone()),
         }
+    }
+
+    /// Returns the message that a Solana signer must sign in order to
+    /// deterministically derive an `ElGamalKeypair` via `fromSignature`.
+    ///
+    /// Identical to `ElGamalSecretKey.signerMessage` — provided on `ElGamalKeypair`
+    /// for ergonomic access.
+    #[wasm_bindgen(js_name = "signerMessage")]
+    pub fn signer_message(public_seed: Uint8Array) -> Vec<u8> {
+        ElGamalSecretKey::signer_message(public_seed)
+    }
+
+    /// Derives an `ElGamalKeypair` from a 64-byte ed25519 signature
+    /// over the message returned by `signerMessage`.
+    #[wasm_bindgen(js_name = "fromSignature")]
+    pub fn from_signature(signature: Uint8Array) -> Result<ElGamalKeypair, JsValue> {
+        let secret = ElGamalSecretKey::from_signature(signature)?;
+        Ok(Self::from_secret_key(&secret))
+    }
+
+    /// Deterministically derives an `ElGamalKeypair` from a seed.
+    ///
+    /// The seed must be between 32 and 65535 bytes in length.
+    #[wasm_bindgen(js_name = "fromSeed")]
+    pub fn from_seed(seed: Uint8Array) -> Result<ElGamalKeypair, JsValue> {
+        let secret = ElGamalSecretKey::from_seed(seed)?;
+        Ok(Self::from_secret_key(&secret))
+    }
+
+    /// Deterministically derives an `ElGamalKeypair` from a BIP39 mnemonic
+    /// seed phrase and optional passphrase.
+    #[wasm_bindgen(js_name = "fromSeedPhraseAndPassphrase")]
+    pub fn from_seed_phrase_and_passphrase(
+        seed_phrase: &str,
+        passphrase: &str,
+    ) -> Result<ElGamalKeypair, JsValue> {
+        let secret = ElGamalSecretKey::from_seed_phrase_and_passphrase(seed_phrase, passphrase)?;
+        Ok(Self::from_secret_key(&secret))
     }
 
     /// Returns the public key of the keypair.
@@ -384,5 +486,87 @@ mod tests {
         let ciphertext = keypair.pubkey().encrypt_with(amount, &opening);
         let decrypted = keypair.secret().decrypt(&ciphertext);
         assert_eq!(decrypted, Ok(amount));
+    }
+
+    #[wasm_bindgen_test]
+    fn test_signer_message_format() {
+        let seed = [7u8; 32];
+        let expected = [b"ElGamalSecretKey".as_ref(), seed.as_ref()].concat();
+
+        let from_secret = ElGamalSecretKey::signer_message(Uint8Array::from(seed.as_ref()));
+        assert_eq!(from_secret, expected);
+
+        let from_keypair = ElGamalKeypair::signer_message(Uint8Array::from(seed.as_ref()));
+        assert_eq!(from_keypair, expected);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_from_signature_determinism() {
+        let signature_bytes = [1u8; 64];
+        let sig = Uint8Array::from(signature_bytes.as_ref());
+
+        let secret_a = ElGamalSecretKey::from_signature(sig.clone()).unwrap();
+        let secret_b = ElGamalSecretKey::from_signature(sig.clone()).unwrap();
+        assert_eq!(secret_a.to_bytes(), secret_b.to_bytes());
+
+        // Keypair derivation must yield the same secret as the secret-key path.
+        let keypair = ElGamalKeypair::from_signature(sig).unwrap();
+        assert_eq!(keypair.secret().to_bytes(), secret_a.to_bytes());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_from_signature_rejects_wrong_length() {
+        let short = vec![0u8; 63];
+        assert!(ElGamalSecretKey::from_signature(Uint8Array::from(short.as_slice())).is_err());
+        let long = vec![0u8; 65];
+        assert!(ElGamalKeypair::from_signature(Uint8Array::from(long.as_slice())).is_err());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_from_seed_roundtrip() {
+        let seed = [9u8; 32];
+        let seed_arr = Uint8Array::from(seed.as_ref());
+
+        let secret_a = ElGamalSecretKey::from_seed(seed_arr.clone()).unwrap();
+        let secret_b = ElGamalSecretKey::from_seed(seed_arr.clone()).unwrap();
+        assert_eq!(secret_a.to_bytes(), secret_b.to_bytes());
+
+        let keypair = ElGamalKeypair::from_seed(seed_arr).unwrap();
+        assert_eq!(keypair.secret().to_bytes(), secret_a.to_bytes());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_from_seed_rejects_short_seed() {
+        // `ElGamalSecretKey::from_seed` requires at least 32 bytes of seed material.
+        let too_short = vec![0u8; 16];
+        assert!(ElGamalSecretKey::from_seed(Uint8Array::from(too_short.as_slice())).is_err());
+        assert!(ElGamalKeypair::from_seed(Uint8Array::from(too_short.as_slice())).is_err());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_from_seed_phrase_roundtrip() {
+        let phrase =
+            "blanket tower apple sunset trigger muscle fame detect absent copper cram guard";
+        let passphrase = "";
+
+        let a = ElGamalSecretKey::from_seed_phrase_and_passphrase(phrase, passphrase).unwrap();
+        let b = ElGamalSecretKey::from_seed_phrase_and_passphrase(phrase, passphrase).unwrap();
+        assert_eq!(a.to_bytes(), b.to_bytes());
+
+        let different = ElGamalSecretKey::from_seed_phrase_and_passphrase(phrase, "pw").unwrap();
+        assert_ne!(different.to_bytes(), a.to_bytes());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_different_public_seeds_produce_different_keys() {
+        // Domain separation across token accounts: different public seeds must
+        // yield different signer messages, and therefore different keys for any
+        // given (hypothetical) signer.
+        let seed_a = Uint8Array::from([1u8; 32].as_ref());
+        let seed_b = Uint8Array::from([2u8; 32].as_ref());
+
+        let msg_a = ElGamalSecretKey::signer_message(seed_a);
+        let msg_b = ElGamalSecretKey::signer_message(seed_b);
+        assert_ne!(msg_a, msg_b);
     }
 }

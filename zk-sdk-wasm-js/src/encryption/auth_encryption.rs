@@ -1,9 +1,14 @@
 use {
     js_sys::Uint8Array,
+    solana_seed_derivable::SeedDerivable,
+    solana_signature::Signature,
     solana_zk_sdk::encryption::auth_encryption,
     solana_zk_sdk_pod::encryption::{AE_CIPHERTEXT_LEN, AE_KEY_LEN},
     wasm_bindgen::prelude::{wasm_bindgen, JsValue},
 };
+
+/// Byte length of an ed25519 signature.
+const SIGNATURE_LEN: usize = 64;
 
 #[wasm_bindgen]
 pub struct AeKey {
@@ -20,6 +25,65 @@ impl AeKey {
         Self {
             inner: auth_encryption::AeKey::new_rand(),
         }
+    }
+
+    /// Returns the message that a Solana signer must sign in order to
+    /// deterministically derive an `AeKey` via `fromSignature`.
+    ///
+    /// The message is `b"AeKey" || public_seed`. For the spl-token-2022
+    /// confidential extension, the `public_seed` is the 32-byte token
+    /// account address.
+    #[wasm_bindgen(js_name = "signerMessage")]
+    pub fn signer_message(public_seed: Uint8Array) -> Vec<u8> {
+        let mut seed = vec![0u8; public_seed.length() as usize];
+        public_seed.copy_to(&mut seed);
+        [b"AeKey".as_ref(), seed.as_ref()].concat()
+    }
+
+    /// Derives an `AeKey` from a 64-byte ed25519 signature over the
+    /// message returned by `signerMessage`.
+    #[wasm_bindgen(js_name = "fromSignature")]
+    pub fn from_signature(signature: Uint8Array) -> Result<AeKey, JsValue> {
+        let mut bytes = [0u8; SIGNATURE_LEN];
+        if signature.length() as usize != SIGNATURE_LEN {
+            return Err(JsValue::from_str(&format!(
+                "Invalid signature length: expected {}, got {}",
+                SIGNATURE_LEN,
+                signature.length()
+            )));
+        }
+        signature.copy_to(&mut bytes);
+        let signature = Signature::from(bytes);
+        auth_encryption::AeKey::new_from_signature(&signature)
+            .map(|inner| Self { inner })
+            .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    /// Deterministically derives an `AeKey` from a seed.
+    ///
+    /// The seed must be between 16 and 65535 bytes in length.
+    #[wasm_bindgen(js_name = "fromSeed")]
+    pub fn from_seed(seed: Uint8Array) -> Result<AeKey, JsValue> {
+        let mut bytes = vec![0u8; seed.length() as usize];
+        seed.copy_to(&mut bytes);
+        <auth_encryption::AeKey as SeedDerivable>::from_seed(&bytes)
+            .map(|inner| Self { inner })
+            .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    /// Deterministically derives an `AeKey` from a BIP39 mnemonic seed
+    /// phrase and optional passphrase.
+    #[wasm_bindgen(js_name = "fromSeedPhraseAndPassphrase")]
+    pub fn from_seed_phrase_and_passphrase(
+        seed_phrase: &str,
+        passphrase: &str,
+    ) -> Result<AeKey, JsValue> {
+        <auth_encryption::AeKey as SeedDerivable>::from_seed_phrase_and_passphrase(
+            seed_phrase,
+            passphrase,
+        )
+        .map(|inner| Self { inner })
+        .map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     /// Deserializes an `AeKey` from a byte slice.
@@ -159,5 +223,71 @@ mod tests {
         // Attempt to decrypt with wrong key
         let result = key2.decrypt(&ciphertext);
         assert!(!result.is_ok());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_signer_message_format() {
+        let seed = [7u8; 32];
+        let expected = [b"AeKey".as_ref(), seed.as_ref()].concat();
+        let msg = AeKey::signer_message(Uint8Array::from(seed.as_ref()));
+        assert_eq!(msg, expected);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_signer_message_domain_separated_from_elgamal() {
+        // The AeKey and ElGamalSecretKey domain separators must differ so that
+        // signing the same public seed for both keys yields different signatures.
+        let seed = Uint8Array::from([0u8; 32].as_ref());
+        let ae_msg = AeKey::signer_message(seed.clone());
+        let elgamal_msg = crate::encryption::elgamal::ElGamalSecretKey::signer_message(seed);
+        assert_ne!(ae_msg, elgamal_msg);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_from_signature_determinism() {
+        let signature_bytes = [3u8; 64];
+        let sig = Uint8Array::from(signature_bytes.as_ref());
+
+        let key_a = AeKey::from_signature(sig.clone()).unwrap();
+        let key_b = AeKey::from_signature(sig).unwrap();
+        assert_eq!(key_a.to_bytes(), key_b.to_bytes());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_from_signature_rejects_wrong_length() {
+        let short = vec![0u8; 63];
+        assert!(AeKey::from_signature(Uint8Array::from(short.as_slice())).is_err());
+        let long = vec![0u8; 65];
+        assert!(AeKey::from_signature(Uint8Array::from(long.as_slice())).is_err());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_from_seed_roundtrip() {
+        let seed = [9u8; 32];
+        let seed_arr = Uint8Array::from(seed.as_ref());
+        let key_a = AeKey::from_seed(seed_arr.clone()).unwrap();
+        let key_b = AeKey::from_seed(seed_arr).unwrap();
+        assert_eq!(key_a.to_bytes(), key_b.to_bytes());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_from_seed_rejects_short_seed() {
+        // `AeKey::from_seed` requires at least 16 bytes of seed material.
+        let too_short = vec![0u8; 8];
+        assert!(AeKey::from_seed(Uint8Array::from(too_short.as_slice())).is_err());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_from_seed_phrase_roundtrip() {
+        let phrase =
+            "blanket tower apple sunset trigger muscle fame detect absent copper cram guard";
+        let passphrase = "";
+
+        let a = AeKey::from_seed_phrase_and_passphrase(phrase, passphrase).unwrap();
+        let b = AeKey::from_seed_phrase_and_passphrase(phrase, passphrase).unwrap();
+        assert_eq!(a.to_bytes(), b.to_bytes());
+
+        let different = AeKey::from_seed_phrase_and_passphrase(phrase, "pw").unwrap();
+        assert_ne!(different.to_bytes(), a.to_bytes());
     }
 }
