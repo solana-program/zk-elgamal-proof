@@ -214,7 +214,7 @@ impl ElGamalKeypair {
     /// Returns the message that a Solana signer must sign in order to
     /// deterministically derive an `ElGamalKeypair` via `fromSignature`.
     ///
-    /// Identical to `ElGamalSecretKey.signerMessage` — provided on `ElGamalKeypair`
+    /// Identical to `ElGamalSecretKey.signerMessage` - provided on `ElGamalKeypair`
     /// for ergonomic access.
     #[wasm_bindgen(js_name = "signerMessage")]
     pub fn signer_message(public_seed: Uint8Array) -> Vec<u8> {
