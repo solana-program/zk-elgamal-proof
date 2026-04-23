@@ -37,8 +37,8 @@ importers:
         specifier: ^6.8.0
         version: 6.8.0(typescript@5.9.3)
       '@solana/zk-sdk':
-        specifier: 0.3.1
-        version: 0.3.1
+        specifier: 0.4.1
+        version: 0.4.1
       '@types/node':
         specifier: ^25.6.0
         version: 25.6.0
@@ -1125,8 +1125,8 @@ packages:
       typescript:
         optional: true
 
-  '@solana/zk-sdk@0.3.1':
-    resolution: {integrity: sha512-5Ynl4kwETtboiyqHPwCgQF/iHxPOimTd/geUOj5O2a8hkqsVyROu00nB9JRDX+ft11LRw8sn9fkLJQLpabRASA==}
+  '@solana/zk-sdk@0.4.1':
+    resolution: {integrity: sha512-AHLu8CJgPeOygLzVK0h0GBorIZk0Zj6nAG51mJEAFfLRDnPTzF4oG2dWrr5FxO9bu6ChMWhIHXEIiln/L9sTjQ==}
 
   '@tybys/wasm-util@0.10.1':
     resolution: {integrity: sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==}
@@ -4615,7 +4615,7 @@ snapshots:
     transitivePeerDependencies:
       - fastestsmallesttextencoderdecoder
 
-  '@solana/zk-sdk@0.3.1': {}
+  '@solana/zk-sdk@0.4.1': {}
 
   '@tybys/wasm-util@0.10.1':
     dependencies:
