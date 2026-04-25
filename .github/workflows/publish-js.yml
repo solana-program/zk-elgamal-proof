@@ -6,10 +6,10 @@ on:
       package-path:
         description: Path to directory with package to release
         required: true
-        default: "clients/js"
+        default: "clients-js"
         type: choice
         options:
-          - clients/js
+          - clients-js
       level:
         description: Version level
         required: true
