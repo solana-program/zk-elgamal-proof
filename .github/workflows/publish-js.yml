@@ -6,7 +6,7 @@ on:
       package-path:
         description: Path to directory with package to release
         required: true
-        default: 'clients/js'
+        default: "clients/js"
         type: choice
         options:
           - clients/js
@@ -57,7 +57,7 @@ jobs:
     needs: set_env
     uses: solana-program/actions/.github/workflows/publish-js.yml@main
     with:
-      sbpf-program-packages: "zk-sdk"
+      sbpf-program-packages: "interface zk-sdk-pod"
       solana-cli-version: ${{ needs.set_env.outputs.SOLANA_CLI_VERSION }}
       target: ${{ needs.set_env.outputs.TARGET }}
       package-path: ${{ inputs.package-path }}
