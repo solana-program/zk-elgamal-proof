@@ -41,6 +41,14 @@ format-check-%:
 powerset-%:
 	cargo $(nightly) hack check --feature-powerset --all-targets --manifest-path $(call make-path,$*)/Cargo.toml $(ARGS)
 
+check-no-std-alloc-%:
+	cargo $(nightly) hack check \
+		--target bpfel-unknown-none \
+		--each-feature \
+		--manifest-path $(call make-path,$*)/Cargo.toml \
+		-Zbuild-std=alloc,core \
+		$(ARGS)
+
 semver-check-%:
 	cargo semver-checks --manifest-path $(call make-path,$*)/Cargo.toml $(ARGS)
 
