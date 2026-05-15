@@ -41,7 +41,7 @@ solana-address = { version = "2.5.0", default-features = false }
 solana-derivation-path = "3.0.0"
 solana-instruction = { version = "3.0.0", default-features = false }
 solana-keypair = "3.0.1"
-solana-nullable = "1.1.0"
+solana-nullable = "1.1.1"
 solana-sdk-ids = "3.1.0"
 solana-seed-derivable = "3.0.0"
 solana-seed-phrase = "3.0.0"
