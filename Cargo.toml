@@ -27,6 +27,7 @@ bytemuck = "1.25.0"
 bytemuck_derive = "1.10.2"
 curve25519-dalek = { version = "4.1.3", features = ["digest", "rand_core"] }
 getrandom = "0.2"
+hkdf = "0.12.4"
 itertools = "0.14.0"
 js-sys = "0.3.77"
 merlin = { version = "3", default-features = false }
@@ -36,6 +37,7 @@ rand = "0.8.5"
 serde = { version = "1.0.228", default-features = false }
 serde_derive = "1.0.219"
 serde_json = "1.0.150"
+sha2 = "0.10.9"
 sha3 = "0.10.8"
 solana-address = { version = "2.5.0", default-features = false }
 solana-derivation-path = "3.0.0"

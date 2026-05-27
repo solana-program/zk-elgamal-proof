@@ -10,7 +10,9 @@ use {
         Aes128GcmSiv,
     },
     base64::{prelude::BASE64_STANDARD, Engine},
+    hkdf::Hkdf,
     rand::{rngs::OsRng, Rng},
+    sha2::Sha512,
     sha3::{Digest, Sha3_512},
     solana_derivation_path::DerivationPath,
     solana_seed_derivable::SeedDerivable,
@@ -28,6 +30,16 @@ use {
     subtle::ConstantTimeEq,
     zeroize::{Zeroize, Zeroizing},
 };
+
+/// HKDF salt used when deriving an `AeKey`. Versioned so that future revisions
+/// of the key derivation scheme can coexist with the current one by bumping the
+/// `:vN` suffix.
+const AE_HKDF_SALT: &[u8] = b"solana-zk-sdk:AeKey:v1:hkdf-sha512";
+
+/// HKDF info string used to bind the expanded output to the `AeKey` key type.
+/// Combined with the salt this provides domain separation against ElGamal
+/// derivation even when both share the same input key material.
+const AE_HKDF_INFO: &[u8] = b"AeKey";
 
 /// Byte length of an authenticated encryption nonce component
 const NONCE_LEN: usize = 12;
@@ -105,13 +117,14 @@ impl AeKey {
 
     /// Derive a seed from a Solana signer used to generate an authenticated encryption key.
     ///
-    /// The seed is derived as the hash of the signature of a public seed.
+    /// The signer is asked to sign the message `b"AeKey" || public_seed`. The
+    /// resulting Ed25519 signature is fed into HKDF-SHA512 (RFC 5869) to
+    /// produce 64 bytes of pseudorandom seed material suitable for
+    /// [`AeKey::from_seed`].
     pub fn seed_from_signer(
         signer: &dyn Signer,
         public_seed: &[u8],
     ) -> Result<Vec<u8>, SignerError> {
-        // TODO: This function uses a non-standard KDF and should be refactored.
-        // See: https://github.com/solana-program/zk-elgamal-proof/issues/35
         let message = [b"AeKey", public_seed].concat();
         let signature = signer.try_sign_message(&message)?;
 
@@ -130,13 +143,139 @@ impl AeKey {
         Self::from_seed(&seed)
     }
 
-    /// Derive a seed from a signature used to generate an authenticated encryption key.
+    /// Derive a seed from a signature used to generate an authenticated
+    /// encryption key.
+    ///
+    /// The signature is treated as input key material for HKDF-Extract
+    /// (HKDF-SHA512, RFC 5869) using a versioned, domain-separated salt. The
+    /// returned 64-byte pseudorandom key is then fed into [`AeKey::from_seed`]
+    /// which performs the corresponding HKDF-Expand step.
     pub fn seed_from_signature(signature: &Signature) -> Vec<u8> {
+        let (prk, _) = Hkdf::<Sha512>::extract(Some(AE_HKDF_SALT), signature.as_ref());
+        prk.to_vec()
+    }
+
+    /// Derive an authenticated encryption key from a Solana signer using the
+    /// legacy SHA3-512-based KDF.
+    ///
+    /// Retained only so wallets can recover keys for accounts that were
+    /// provisioned under `solana-zk-sdk` versions that shipped the
+    /// non-standard `Truncate-128(SHA3-512(...))` derivation. New code should
+    /// use [`AeKey::new_from_signer`].
+    #[deprecated(
+        note = "Non-standard SHA3-512 KDF; new code should use `AeKey::new_from_signer`. \
+                Retained for backward compatibility with accounts provisioned under \
+                solana-zk-sdk versions prior to the HKDF-SHA512 migration. \
+                See https://github.com/solana-program/zk-elgamal-proof/issues/35."
+    )]
+    #[allow(deprecated)]
+    pub fn new_from_signer_legacy(
+        signer: &dyn Signer,
+        public_seed: &[u8],
+    ) -> Result<Self, Box<dyn error::Error>> {
+        let seed = Self::seed_from_signer_legacy(signer, public_seed)?;
+        Self::from_seed_legacy(&seed)
+    }
+
+    /// Derive a seed from a Solana signer using the legacy SHA3-512 KDF.
+    ///
+    /// See [`AeKey::new_from_signer_legacy`] for context.
+    #[deprecated(
+        note = "Non-standard SHA3-512 KDF; new code should use `AeKey::seed_from_signer`. \
+                Retained for backward compatibility. \
+                See https://github.com/solana-program/zk-elgamal-proof/issues/35."
+    )]
+    #[allow(deprecated)]
+    pub fn seed_from_signer_legacy(
+        signer: &dyn Signer,
+        public_seed: &[u8],
+    ) -> Result<Vec<u8>, SignerError> {
+        let message = [b"AeKey", public_seed].concat();
+        let signature = signer.try_sign_message(&message)?;
+
+        if bool::from(signature.as_ref().ct_eq(Signature::default().as_ref())) {
+            return Err(SignerError::Custom("Rejecting default signature".into()));
+        }
+
+        Ok(Self::seed_from_signature_legacy(&signature))
+    }
+
+    /// Derive an authenticated encryption key from a raw signature using the
+    /// legacy SHA3-512 KDF.
+    ///
+    /// See [`AeKey::new_from_signer_legacy`] for context.
+    #[deprecated(
+        note = "Non-standard SHA3-512 KDF; new code should use `AeKey::new_from_signature`. \
+                Retained for backward compatibility. \
+                See https://github.com/solana-program/zk-elgamal-proof/issues/35."
+    )]
+    #[allow(deprecated)]
+    pub fn new_from_signature_legacy(signature: &Signature) -> Result<Self, Box<dyn error::Error>> {
+        let seed = Self::seed_from_signature_legacy(signature);
+        Self::from_seed_legacy(&seed)
+    }
+
+    /// Derive a seed from a signature using the legacy SHA3-512 KDF.
+    ///
+    /// See [`AeKey::new_from_signer_legacy`] for context.
+    #[deprecated(
+        note = "Non-standard SHA3-512 KDF; new code should use `AeKey::seed_from_signature`. \
+                Retained for backward compatibility. \
+                See https://github.com/solana-program/zk-elgamal-proof/issues/35."
+    )]
+    pub fn seed_from_signature_legacy(signature: &Signature) -> Vec<u8> {
         let mut hasher = Sha3_512::new();
         hasher.update(signature);
         let result = hasher.finalize();
 
         result.to_vec()
+    }
+
+    /// Derive an authenticated encryption key from a raw seed using the legacy
+    /// SHA3-512 KDF.
+    ///
+    /// See [`AeKey::new_from_signer_legacy`] for context.
+    #[deprecated(
+        note = "Non-standard SHA3-512 KDF; new code should use `AeKey::from_seed`. \
+                Retained for backward compatibility. \
+                See https://github.com/solana-program/zk-elgamal-proof/issues/35."
+    )]
+    pub fn from_seed_legacy(seed: &[u8]) -> Result<Self, Box<dyn error::Error>> {
+        const MINIMUM_SEED_LEN: usize = AE_KEY_LEN;
+        const MAXIMUM_SEED_LEN: usize = 65535;
+
+        if seed.len() < MINIMUM_SEED_LEN {
+            return Err(AuthenticatedEncryptionError::SeedLengthTooShort.into());
+        }
+        if seed.len() > MAXIMUM_SEED_LEN {
+            return Err(AuthenticatedEncryptionError::SeedLengthTooLong.into());
+        }
+
+        let mut hasher = Sha3_512::new();
+        hasher.update(seed);
+        let result = hasher.finalize();
+
+        Ok(Self(result[..AE_KEY_LEN].try_into()?))
+    }
+
+    /// Derive an authenticated encryption key from a BIP39 mnemonic and
+    /// passphrase using the legacy SHA3-512 KDF.
+    ///
+    /// See [`AeKey::new_from_signer_legacy`] for context.
+    #[deprecated(
+        note = "Non-standard SHA3-512 KDF; new code should use `<AeKey as SeedDerivable>::\
+                from_seed_phrase_and_passphrase`. Retained for backward compatibility. \
+                See https://github.com/solana-program/zk-elgamal-proof/issues/35."
+    )]
+    #[allow(deprecated)]
+    pub fn from_seed_phrase_and_passphrase_legacy(
+        seed_phrase: &str,
+        passphrase: &str,
+    ) -> Result<Self, Box<dyn error::Error>> {
+        Self::from_seed_legacy(&generate_seed_from_seed_phrase_and_passphrase(
+            seed_phrase,
+            passphrase,
+        ))
     }
 
     /// Generates a random authenticated encryption key.
@@ -188,11 +327,12 @@ impl SeedDerivable for AeKey {
             return Err(AuthenticatedEncryptionError::SeedLengthTooLong.into());
         }
 
-        let mut hasher = Sha3_512::new();
-        hasher.update(seed);
-        let result = hasher.finalize();
+        let hkdf = Hkdf::<Sha512>::new(Some(AE_HKDF_SALT), seed);
+        let mut okm = [0u8; AE_KEY_LEN];
+        hkdf.expand(AE_HKDF_INFO, &mut okm)
+            .map_err(|_| AuthenticatedEncryptionError::Deserialization)?;
 
-        Ok(Self(result[..AE_KEY_LEN].try_into()?))
+        Ok(Self(okm))
     }
 
     fn from_seed_and_derivation_path(
@@ -221,6 +361,12 @@ impl From<[u8; AE_KEY_LEN]> for AeKey {
 
 impl From<AeKey> for [u8; AE_KEY_LEN] {
     fn from(key: AeKey) -> Self {
+        key.0
+    }
+}
+
+impl From<&AeKey> for [u8; AE_KEY_LEN] {
+    fn from(key: &AeKey) -> Self {
         key.0
     }
 }
@@ -394,6 +540,105 @@ mod tests {
 
         let tampered_ciphertext = AeCiphertext::from_bytes(&tampered_bytes).unwrap();
         assert!(tampered_ciphertext.decrypt(&key).is_none());
+    }
+
+    #[test]
+    fn test_aes_key_from_into_ref() {
+        // Verify `From<&AeKey> for [u8; AE_KEY_LEN]` returns the same bytes as
+        // the owning version. This is what backs the wasm-js `to_bytes()`
+        // no-clone path.
+        let key = AeKey::from_seed(&[7; 32]).unwrap();
+        let owned: [u8; AE_KEY_LEN] = key.clone().into();
+        let borrowed: [u8; AE_KEY_LEN] = (&key).into();
+        assert_eq!(owned, borrowed);
+    }
+
+    #[test]
+    fn test_aekey_hkdf_determinism_from_signature() {
+        let sig = Signature::from([0x42u8; 64]);
+        let key_a = AeKey::new_from_signature(&sig).unwrap();
+        let key_b = AeKey::new_from_signature(&sig).unwrap();
+        assert_eq!(
+            <[u8; AE_KEY_LEN]>::from(&key_a),
+            <[u8; AE_KEY_LEN]>::from(&key_b),
+        );
+    }
+
+    #[test]
+    fn test_aekey_hkdf_differs_from_legacy() {
+        // The HKDF and legacy SHA3-512 paths must produce different keys for
+        // the same input — otherwise the legacy fallback would silently match
+        // the new derivation and accounts could be mis-claimed as migrated.
+        let sig = Signature::from([0x42u8; 64]);
+        let new_key = AeKey::new_from_signature(&sig).unwrap();
+        #[allow(deprecated)]
+        let old_key = AeKey::new_from_signature_legacy(&sig).unwrap();
+        assert_ne!(
+            <[u8; AE_KEY_LEN]>::from(&new_key),
+            <[u8; AE_KEY_LEN]>::from(&old_key),
+        );
+    }
+
+    #[test]
+    fn test_aekey_hkdf_known_vector_from_signature() {
+        // Canonical test vector for the HKDF-SHA512 AeKey derivation.
+        //
+        // Inputs:
+        //   signature = [0x42; 64]
+        //   salt      = b"solana-zk-sdk:AeKey:v1:hkdf-sha512"
+        //   info      = b"AeKey"
+        //   L         = 16
+        let sig = Signature::from([0x42u8; 64]);
+        let key = AeKey::new_from_signature(&sig).unwrap();
+        let bytes: [u8; AE_KEY_LEN] = (&key).into();
+        let expected: [u8; AE_KEY_LEN] = [
+            0xe7, 0x04, 0x81, 0x8f, 0x1c, 0x01, 0xb9, 0xbe, 0x2d, 0xb3, 0x99, 0x67, 0x7b, 0x7a,
+            0x91, 0x53,
+        ];
+        assert_eq!(
+            bytes, expected,
+            "HKDF AeKey vector drift; computed {:02x?}",
+            bytes
+        );
+    }
+
+    #[test]
+    fn test_aekey_legacy_known_vector_from_signature() {
+        // Pinned canonical bytes for the SHA3-512 legacy derivation.
+        // Inputs:
+        //   signature = [0x42; 64]
+        //   key       = Truncate-128(SHA3-512(SHA3-512(signature)))
+        let sig = Signature::from([0x42u8; 64]);
+        #[allow(deprecated)]
+        let key = AeKey::new_from_signature_legacy(&sig).unwrap();
+        let bytes: [u8; AE_KEY_LEN] = (&key).into();
+        let expected: [u8; AE_KEY_LEN] = [
+            0x06, 0x6b, 0x8d, 0xa6, 0x7e, 0x6f, 0x30, 0x1c, 0xab, 0x63, 0x4b, 0x60, 0x93, 0xca,
+            0x8c, 0x35,
+        ];
+        assert_eq!(
+            bytes, expected,
+            "Legacy AeKey vector drift; computed {:02x?}",
+            bytes
+        );
+    }
+
+    #[test]
+    fn test_aekey_hkdf_signer_matches_signature_path() {
+        // `new_from_signer` should match `new_from_signature` applied to the
+        // signature the signer would produce for the same message.
+        let keypair = Keypair::new();
+        let public_seed = [0x11u8; 32];
+        let key_from_signer = AeKey::new_from_signer(&keypair, &public_seed).unwrap();
+
+        let message = [b"AeKey", public_seed.as_ref()].concat();
+        let sig = keypair.sign_message(&message);
+        let key_from_sig = AeKey::new_from_signature(&sig).unwrap();
+
+        assert_eq!(
+            <[u8; AE_KEY_LEN]>::from(&key_from_signer),
+            <[u8; AE_KEY_LEN]>::from(&key_from_sig),
+        );
     }
 
     #[test]
