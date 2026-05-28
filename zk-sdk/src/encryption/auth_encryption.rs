@@ -143,16 +143,16 @@ impl AeKey {
         Self::from_seed(&seed)
     }
 
-    /// Derive a seed from a signature used to generate an authenticated
-    /// encryption key.
+    /// Returns the input key material derived from a signature, suitable for
+    /// feeding into [`AeKey::from_seed`].
     ///
-    /// The signature is treated as input key material for HKDF-Extract
-    /// (HKDF-SHA512, RFC 5869) using a versioned, domain-separated salt. The
-    /// returned 64-byte pseudorandom key is then fed into [`AeKey::from_seed`]
-    /// which performs the corresponding HKDF-Expand step.
+    /// The signature bytes themselves are returned unmodified so that the
+    /// full HKDF-SHA512 chain (Extract + Expand) runs exactly once inside
+    /// [`AeKey::from_seed`]. A wallet that prefers to call HKDF directly via
+    /// its platform crypto can therefore reproduce the SDK output via
+    /// `HKDF-SHA512(salt = AE_HKDF_SALT, ikm = signature, info = b"AeKey", L = 16)`.
     pub fn seed_from_signature(signature: &Signature) -> Vec<u8> {
-        let (prk, _) = Hkdf::<Sha512>::extract(Some(AE_HKDF_SALT), signature.as_ref());
-        prk.to_vec()
+        signature.as_ref().to_vec()
     }
 
     /// Derive an authenticated encryption key from a Solana signer using the
@@ -592,8 +592,8 @@ mod tests {
         let key = AeKey::new_from_signature(&sig).unwrap();
         let bytes: [u8; AE_KEY_LEN] = (&key).into();
         let expected: [u8; AE_KEY_LEN] = [
-            0xe7, 0x04, 0x81, 0x8f, 0x1c, 0x01, 0xb9, 0xbe, 0x2d, 0xb3, 0x99, 0x67, 0x7b, 0x7a,
-            0x91, 0x53,
+            0x48, 0x6d, 0x45, 0x79, 0x6d, 0xf2, 0xdc, 0xa5, 0xeb, 0x5e, 0x1e, 0xaf, 0x47, 0xb0,
+            0x74, 0x65,
         ];
         assert_eq!(
             bytes, expected,
@@ -621,6 +621,24 @@ mod tests {
             "Legacy AeKey vector drift; computed {:02x?}",
             bytes
         );
+    }
+
+    #[test]
+    fn test_aekey_matches_single_hkdf_over_signature() {
+        // The documented interop contract is: an external implementation
+        // (e.g. Web Crypto subtle.deriveBits, Apple CryptoKit HKDF<SHA512>)
+        // computing `HKDF-SHA512(salt = AE_HKDF_SALT, ikm = signature,
+        // info = b"AeKey", L = 16)` MUST produce the same bytes as the SDK.
+        // Regression guard for the double-HKDF-Extract bug.
+        let sig = Signature::from([0x42u8; 64]);
+        let sdk_key = AeKey::new_from_signature(&sig).unwrap();
+        let sdk_bytes: [u8; AE_KEY_LEN] = (&sdk_key).into();
+
+        let direct = Hkdf::<Sha512>::new(Some(AE_HKDF_SALT), sig.as_ref());
+        let mut external_bytes = [0u8; AE_KEY_LEN];
+        direct.expand(AE_HKDF_INFO, &mut external_bytes).unwrap();
+
+        assert_eq!(sdk_bytes, external_bytes);
     }
 
     #[test]

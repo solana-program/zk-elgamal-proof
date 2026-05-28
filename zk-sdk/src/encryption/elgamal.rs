@@ -639,16 +639,18 @@ impl ElGamalSecretKey {
         Ok(key)
     }
 
-    /// Derive a seed from a signature used to generate an ElGamal secret key.
+    /// Returns the input key material derived from a signature, suitable for
+    /// feeding into [`ElGamalSecretKey::from_seed`].
     ///
-    /// The signature is treated as input key material for HKDF-Extract
-    /// (HKDF-SHA512, RFC 5869) using a versioned, domain-separated salt. The
-    /// returned 64-byte pseudorandom key is then fed into
-    /// [`ElGamalSecretKey::from_seed`] which performs the corresponding
-    /// HKDF-Expand step.
+    /// The signature bytes themselves are returned unmodified so that the
+    /// full HKDF-SHA512 chain (Extract + Expand) runs exactly once inside
+    /// [`ElGamalSecretKey::from_seed`]. A wallet that prefers to call HKDF
+    /// directly via its platform crypto can therefore reproduce the SDK
+    /// output via
+    /// `HKDF-SHA512(salt = ELGAMAL_HKDF_SALT, ikm = signature, info = b"ElGamalSecretKey", L = 64)`
+    /// and then reduce the 64 bytes via `Scalar::from_bytes_mod_order_wide`.
     pub fn seed_from_signature(signature: &Signature) -> Vec<u8> {
-        let (prk, _) = Hkdf::<Sha512>::extract(Some(ELGAMAL_HKDF_SALT), signature.as_ref());
-        prk.to_vec()
+        signature.as_ref().to_vec()
     }
 
     /// Derive an ElGamal secret key from a Solana signer using the legacy
@@ -1455,9 +1457,9 @@ mod tests {
         let sig = Signature::from([0x42u8; 64]);
         let key = ElGamalSecretKey::new_from_signature(&sig).unwrap();
         let expected: [u8; ELGAMAL_SECRET_KEY_LEN] = [
-            0xa6, 0x5a, 0xb9, 0xa5, 0x97, 0x56, 0xd8, 0x68, 0xc5, 0xdc, 0x1d, 0xbe, 0xbf, 0xfe,
-            0x52, 0xa0, 0x9e, 0xb7, 0xeb, 0x6a, 0xe2, 0x90, 0x6c, 0x13, 0x4e, 0x3c, 0x74, 0x5d,
-            0xb7, 0x9c, 0x02, 0x00,
+            0xe7, 0x03, 0x51, 0xd6, 0x6a, 0x1a, 0x3f, 0x88, 0x3c, 0xd8, 0x53, 0x64, 0x8b, 0xa2,
+            0x18, 0xfa, 0x39, 0x0a, 0x67, 0xdf, 0x61, 0x1d, 0x59, 0x7a, 0x0c, 0xf6, 0xd7, 0x7d,
+            0x92, 0x67, 0x45, 0x03,
         ];
         assert_eq!(
             key.as_bytes(),
@@ -1487,6 +1489,23 @@ mod tests {
     }
 
     #[test]
+    fn test_elgamal_matches_single_hkdf_over_signature() {
+        // External-implementation interop contract: HKDF-SHA512 over the
+        // signature with the documented salt/info, expanded to 64 bytes, then
+        // reduced via `Scalar::from_bytes_mod_order_wide`, MUST equal the SDK
+        // scalar. Regression guard for the double-HKDF-Extract bug.
+        let sig = Signature::from([0x42u8; 64]);
+        let sdk_secret = ElGamalSecretKey::new_from_signature(&sig).unwrap();
+
+        let direct = Hkdf::<Sha512>::new(Some(ELGAMAL_HKDF_SALT), sig.as_ref());
+        let mut wide = [0u8; 64];
+        direct.expand(ELGAMAL_HKDF_INFO, &mut wide).unwrap();
+        let external_scalar = Scalar::from_bytes_mod_order_wide(&wide);
+
+        assert_eq!(sdk_secret.as_bytes(), external_scalar.as_bytes());
+    }
+
+    #[test]
     fn test_elgamal_hkdf_signer_matches_signature_path() {
         // `new_from_signer` should match `new_from_signature` over the
         // signature the signer would produce for the same message.
@@ -1505,11 +1524,16 @@ mod tests {
     fn test_elgamal_aekey_domain_separation_from_signature() {
         // ElGamal and AeKey derivations over the same signature must produce
         // unrelated key material. This is enforced by salt + info domain
-        // separation in the HKDF construction.
+        // separation in the HKDF construction inside `from_seed`.
         let sig = Signature::from([0x42u8; 64]);
-        let elgamal_seed = ElGamalSecretKey::seed_from_signature(&sig);
-        let ae_seed = crate::encryption::auth_encryption::AeKey::seed_from_signature(&sig);
-        assert_ne!(elgamal_seed, ae_seed);
+        let elgamal_secret = ElGamalSecretKey::new_from_signature(&sig).unwrap();
+        let ae_key = crate::encryption::auth_encryption::AeKey::new_from_signature(&sig).unwrap();
+
+        // The first 16 bytes of the ElGamal scalar and the AeKey would only
+        // collide if the salt+info domain separation were broken.
+        let elgamal_bytes = elgamal_secret.as_bytes();
+        let ae_bytes: [u8; 16] = (&ae_key).into();
+        assert_ne!(&elgamal_bytes[..16], &ae_bytes[..]);
     }
 
     #[test]
