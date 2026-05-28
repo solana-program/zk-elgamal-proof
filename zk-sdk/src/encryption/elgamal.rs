@@ -569,8 +569,8 @@ impl ElGamalSecretKey {
         }
 
         let hkdf = Hkdf::<Sha512>::new(Some(ELGAMAL_HKDF_SALT), seed);
-        let mut wide = [0u8; 64];
-        hkdf.expand(ELGAMAL_HKDF_INFO, &mut wide)
+        let mut wide = Zeroizing::new([0u8; 64]);
+        hkdf.expand(ELGAMAL_HKDF_INFO, wide.as_mut_slice())
             .map_err(|_| ElGamalError::SecretKeyDeserialization)?;
 
         Ok(ElGamalSecretKey(Scalar::from_bytes_mod_order_wide(&wide)))

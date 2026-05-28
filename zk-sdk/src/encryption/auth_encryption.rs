@@ -328,11 +328,11 @@ impl SeedDerivable for AeKey {
         }
 
         let hkdf = Hkdf::<Sha512>::new(Some(AE_HKDF_SALT), seed);
-        let mut okm = [0u8; AE_KEY_LEN];
-        hkdf.expand(AE_HKDF_INFO, &mut okm)
+        let mut okm = Zeroizing::new([0u8; AE_KEY_LEN]);
+        hkdf.expand(AE_HKDF_INFO, okm.as_mut_slice())
             .map_err(|_| AuthenticatedEncryptionError::Deserialization)?;
 
-        Ok(Self(okm))
+        Ok(Self(*okm))
     }
 
     fn from_seed_and_derivation_path(
