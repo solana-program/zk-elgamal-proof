@@ -147,7 +147,7 @@ impl AeKey {
     /// feeding into [`AeKey::from_seed`].
     ///
     /// The signature bytes themselves are returned unmodified so that the
-    /// full HKDF-SHA512 chain (Extract + Expand) runs exactly once inside
+    /// full HKDF-SHA512 chain (Extract and Expand) runs exactly once inside
     /// [`AeKey::from_seed`]. A wallet that prefers to call HKDF directly via
     /// its platform crypto can therefore reproduce the SDK output via
     /// `HKDF-SHA512(salt = AE_HKDF_SALT, ikm = signature, info = b"AeKey", L = 16)`.
