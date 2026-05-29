@@ -114,10 +114,7 @@ impl AeKey {
     /// Serializes the `AeKey` to a byte array.
     #[wasm_bindgen(js_name = "toBytes")]
     pub fn to_bytes(&self) -> Vec<u8> {
-        // Clone is needed here because the zk-sdk implements only `From<AeKey>` for
-        // `[u8; AE_KEY_LEN]` and not `From<&AeKey>`.
-        // TODO: Consider implementing `From<&AeKey>` for `[u8; AE_KEY_LEN]`.
-        let bytes: [u8; AE_KEY_LEN] = self.inner.clone().into();
+        let bytes: [u8; AE_KEY_LEN] = (&self.inner).into();
         bytes.to_vec()
     }
 

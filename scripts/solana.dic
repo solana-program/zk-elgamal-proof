@@ -78,6 +78,11 @@ MPC
 multiscalar
 representable
 KDF
+HKDF
+SHA512
+crypto
+pseudorandom
+SDK
 Curve25519
 hashable
 SHAKE256
