@@ -15,8 +15,8 @@ importers:
   clients-js:
     dependencies:
       '@solana-program/system':
-        specifier: ^0.12.0
-        version: 0.12.0(@solana/kit@6.9.0(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10))
+        specifier: ^0.12.1
+        version: 0.12.1(@solana/kit@6.9.0(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10))
     devDependencies:
       '@ava/typescript':
         specifier: ^7.0.0
@@ -838,10 +838,10 @@ packages:
     peerDependencies:
       '@solana/kit': ^5.0
 
-  '@solana-program/system@0.12.0':
-    resolution: {integrity: sha512-ZnAAWeGVMWNtJhw3GdifI2HnhZ0A0H0qs8tBkcFvxp/8wIavvO+GOM4Jd0N22u2+Lni2zcwvcrxrsxj6Mjphng==}
+  '@solana-program/system@0.12.1':
+    resolution: {integrity: sha512-atn3PTTu6bG1cOvDY50JPaysWFdpPu03U/tanS0ikpINqnBZL5wEQvep8mx4Qkt18XUUp8DXvPjnzmVULUWCwQ==}
     peerDependencies:
-      '@solana/kit': ^6.1.0
+      '@solana/kit': ^6.4.0
 
   '@solana/accounts@6.9.0':
     resolution: {integrity: sha512-g36AJreJrgf9AAjOfbdFHEFUTymBgzbWHoEDElZ+fDKvqBINDiUVKzDApwc7C7kGPMFqQBaoEHnQRxf2IqfKZQ==}
@@ -4351,7 +4351,7 @@ snapshots:
     dependencies:
       '@solana/kit': 6.9.0(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)
 
-  '@solana-program/system@0.12.0(@solana/kit@6.9.0(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10))':
+  '@solana-program/system@0.12.1(@solana/kit@6.9.0(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10))':
     dependencies:
       '@solana/kit': 6.9.0(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)
 
