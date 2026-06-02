@@ -54,10 +54,6 @@ impl ConfidentialKeys {
         signature.copy_to(&mut bytes);
         let signature = Signature::from(bytes);
 
-        if signature == Signature::default() {
-            return Err(JsValue::from_str("Rejecting default signature"));
-        }
-
         derive_confidential_keys_from_signature(&signature)
             .map(|(elgamal, ae)| Self {
                 elgamal: elgamal.into(),
