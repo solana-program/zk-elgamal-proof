@@ -92,7 +92,7 @@ pub fn derive_confidential_keys(
 /// over the canonical derivation message.
 ///
 /// Rejects the default (all-zero) signature: some `Signer` implementations
-/// return it instead of erroring, and the resulting keys would be predictable.
+/// return it instead of raising an error, and the resulting keys would be predictable.
 pub fn derive_confidential_keys_from_signature(
     signature: &Signature,
 ) -> Result<(ElGamalKeypair, AeKey), ElGamalError> {
