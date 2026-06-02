@@ -19,6 +19,7 @@ use curve25519_dalek::traits::Identity;
 use {
     crate::{
         encryption::{
+            derivation::{ELGAMAL_HKDF_INFO, HKDF_SALT},
             discrete_log::DiscreteLog,
             pedersen::{Pedersen, PedersenCommitment, PedersenOpening, G, H},
         },
@@ -54,16 +55,6 @@ use {
     subtle::{Choice, ConstantTimeEq},
     zeroize::{Zeroize, Zeroizing},
 };
-
-/// HKDF salt used when deriving an `ElGamalSecretKey`. Versioned so that future
-/// revisions of the key derivation scheme can coexist with the current one by
-/// bumping the `:vN` suffix.
-const ELGAMAL_HKDF_SALT: &[u8] = b"solana-zk-sdk:ElGamalSecretKey:v1:hkdf-sha512";
-
-/// HKDF info string used to bind the expanded output to the `ElGamalSecretKey`
-/// key type. Combined with the salt this provides domain separation against
-/// `AeKey` derivation even when both share the same input key material.
-const ELGAMAL_HKDF_INFO: &[u8] = b"ElGamalSecretKey";
 
 /// Algorithm handle for the twisted ElGamal encryption scheme
 pub struct ElGamal;
@@ -193,7 +184,8 @@ impl ElGamalKeypair {
     /// Create an ElGamal keypair from an ElGamal public key and an ElGamal secret key.
     ///
     /// An ElGamal keypair should never be instantiated manually; `ElGamalKeypair::new`,
-    /// `ElGamalKeypair::new_rand` or `ElGamalKeypair::new_from_signer` should be used instead.
+    /// `ElGamalKeypair::new_rand` or
+    /// [`crate::encryption::derivation::derive_confidential_keys`] should be used instead.
     /// This function exists to create custom ElGamal keypairs for tests.
     pub fn new_for_tests(public: ElGamalPubkey, secret: ElGamalSecretKey) -> Self {
         Self { public, secret }
@@ -205,38 +197,14 @@ impl ElGamalKeypair {
         Self { public, secret }
     }
 
-    /// Deterministically derives an ElGamal keypair from a Solana signer and a public seed.
-    ///
-    /// This function exists for applications where a user may not wish to maintain a Solana signer
-    /// and an ElGamal keypair separately. Instead, a user can derive the ElGamal keypair
-    /// on-the-fly whenever encryption/decryption is needed.
-    ///
-    /// For the spl-token-2022 confidential extension, the ElGamal public key is specified in a
-    /// token account. A natural way to derive an ElGamal keypair is to define it from the hash of
-    /// a Solana keypair and a Solana address as the public seed. However, for general hardware
-    /// wallets, the signing key is not exposed in the API. Therefore, this function uses a signer
-    /// to sign a public seed and the resulting signature is then hashed to derive an ElGamal
-    /// keypair.
-    pub fn new_from_signer(
-        signer: &dyn Signer,
-        public_seed: &[u8],
-    ) -> Result<Self, Box<dyn error::Error>> {
-        let secret = ElGamalSecretKey::new_from_signer(signer, public_seed)?;
-        Ok(Self::new(secret))
-    }
-
-    /// Derive an ElGamal keypair from a signature.
-    pub fn new_from_signature(signature: &Signature) -> Result<Self, Box<dyn error::Error>> {
-        let secret = ElGamalSecretKey::new_from_signature(signature)?;
-        Ok(Self::new(secret))
-    }
-
     /// Derive an ElGamal keypair from a Solana signer using the legacy
     /// SHA3-512 KDF.
     ///
     /// See [`ElGamalSecretKey::new_from_signer_legacy`] for context.
-    #[deprecated(note = "Non-standard SHA3-512 KDF; new code should use \
-                `ElGamalKeypair::new_from_signer`. Retained for backward compatibility. \
+    #[deprecated(note = "Non-standard SHA3-512 KDF. New code should use \
+                `crate::encryption::derivation::derive_confidential_keys`. \
+                Retained for backward compatibility with accounts provisioned under \
+                solana-zk-sdk versions prior to the HKDF-SHA512 migration. \
                 See https://github.com/solana-program/zk-elgamal-proof/issues/35.")]
     #[allow(deprecated)]
     pub fn new_from_signer_legacy(
@@ -251,8 +219,9 @@ impl ElGamalKeypair {
     /// SHA3-512 KDF.
     ///
     /// See [`ElGamalSecretKey::new_from_signer_legacy`] for context.
-    #[deprecated(note = "Non-standard SHA3-512 KDF; new code should use \
-                `ElGamalKeypair::new_from_signature`. Retained for backward compatibility. \
+    #[deprecated(note = "Non-standard SHA3-512 KDF. New code should use \
+                `crate::encryption::derivation::derive_confidential_keys_from_signature`. \
+                Retained for backward compatibility. \
                 See https://github.com/solana-program/zk-elgamal-proof/issues/35.")]
     #[allow(deprecated)]
     pub fn new_from_signature_legacy(signature: &Signature) -> Result<Self, Box<dyn error::Error>> {
@@ -265,7 +234,8 @@ impl ElGamalKeypair {
     ///
     /// See [`ElGamalSecretKey::new_from_signer_legacy`] for context.
     #[deprecated(
-        note = "Non-standard SHA3-512 KDF; new code should use `ElGamalKeypair::from_seed`. \
+        note = "Non-standard SHA3-512 KDF. New code should use `ElGamalKeypair::from_seed` \
+                (which now uses the unified HKDF spine). \
                 Retained for backward compatibility. \
                 See https://github.com/solana-program/zk-elgamal-proof/issues/35."
     )]
@@ -280,8 +250,9 @@ impl ElGamalKeypair {
     /// the legacy SHA3-512 KDF.
     ///
     /// See [`ElGamalSecretKey::new_from_signer_legacy`] for context.
-    #[deprecated(note = "Non-standard SHA3-512 KDF; new code should use \
-                `<ElGamalKeypair as SeedDerivable>::from_seed_phrase_and_passphrase`. \
+    #[deprecated(note = "Non-standard SHA3-512 KDF. New code should use \
+                `<ElGamalKeypair as SeedDerivable>::from_seed_phrase_and_passphrase` \
+                (which now uses the unified HKDF spine). \
                 Retained for backward compatibility. \
                 See https://github.com/solana-program/zk-elgamal-proof/issues/35.")]
     #[allow(deprecated)]
@@ -553,10 +524,13 @@ impl ElGamalSecretKey {
 
     /// Derive an ElGamal secret key from an entropy seed.
     ///
-    /// The seed is treated as input key material for HKDF-SHA512 (RFC 5869).
-    /// HKDF-Extract uses a versioned, domain-separated salt; HKDF-Expand
-    /// produces 64 bytes which are reduced to a uniformly distributed
-    /// Ristretto scalar via `Scalar::from_bytes_mod_order_wide`.
+    /// The seed is treated as input key material for HKDF-SHA512 (RFC 5869)
+    /// using the shared `HKDF_SALT` and `ELGAMAL_HKDF_INFO` from
+    /// [`crate::encryption::derivation`]. HKDF-Expand produces 64 bytes which
+    /// are reduced to a uniformly distributed Ristretto scalar via
+    /// `Scalar::from_bytes_mod_order_wide`. Feeding the same IKM into this
+    /// function and into `<AeKey as SeedDerivable>::from_seed` produces an
+    /// independent pair (HKDF info-based separation).
     pub fn from_seed(seed: &[u8]) -> Result<Self, ElGamalError> {
         const MINIMUM_SEED_LEN: usize = ELGAMAL_SECRET_KEY_LEN;
         const MAXIMUM_SEED_LEN: usize = 65535;
@@ -568,7 +542,7 @@ impl ElGamalSecretKey {
             return Err(ElGamalError::SeedLengthTooLong);
         }
 
-        let hkdf = Hkdf::<Sha512>::new(Some(ELGAMAL_HKDF_SALT), seed);
+        let hkdf = Hkdf::<Sha512>::new(Some(HKDF_SALT), seed);
         let mut wide = Zeroizing::new([0u8; 64]);
         hkdf.expand(ELGAMAL_HKDF_INFO, wide.as_mut_slice())
             .map_err(|_| ElGamalError::SecretKeyDeserialization)?;
@@ -601,67 +575,16 @@ impl ElGamalSecretKey {
 }
 
 impl ElGamalSecretKey {
-    /// Deterministically derives an ElGamal secret key from a Solana signer and a public seed.
-    ///
-    /// See `ElGamalKeypair::new_from_signer` for more context on the key derivation.
-    pub fn new_from_signer(
-        signer: &dyn Signer,
-        public_seed: &[u8],
-    ) -> Result<Self, Box<dyn error::Error>> {
-        let seed = Self::seed_from_signer(signer, public_seed)?;
-        let key = Self::from_seed(&seed)?;
-        Ok(key)
-    }
-
-    /// Derive a seed from a Solana signer used to generate an ElGamal secret key.
-    ///
-    /// The seed is derived as the hash of the signature of a public seed.
-    pub fn seed_from_signer(
-        signer: &dyn Signer,
-        public_seed: &[u8],
-    ) -> Result<Vec<u8>, SignerError> {
-        let message = [b"ElGamalSecretKey", public_seed].concat();
-        let signature = signer.try_sign_message(&message)?;
-
-        // Some `Signer` implementations return the default signature, which is not suitable for
-        // use as key material
-        if bool::from(signature.as_ref().ct_eq(Signature::default().as_ref())) {
-            return Err(SignerError::Custom("Rejecting default signatures".into()));
-        }
-
-        Ok(Self::seed_from_signature(&signature))
-    }
-
-    /// Derive an ElGamal secret key from a signature.
-    pub fn new_from_signature(signature: &Signature) -> Result<Self, Box<dyn error::Error>> {
-        let seed = Self::seed_from_signature(signature);
-        let key = Self::from_seed(&seed)?;
-        Ok(key)
-    }
-
-    /// Returns the input key material derived from a signature, suitable for
-    /// feeding into [`ElGamalSecretKey::from_seed`].
-    ///
-    /// The signature bytes themselves are returned unmodified so that the
-    /// full HKDF-SHA512 chain (Extract and Expand) runs exactly once inside
-    /// [`ElGamalSecretKey::from_seed`]. A wallet that prefers to call HKDF
-    /// directly via its platform crypto can therefore reproduce the SDK
-    /// output via
-    /// `HKDF-SHA512(salt = ELGAMAL_HKDF_SALT, ikm = signature, info = b"ElGamalSecretKey", L = 64)`
-    /// and then reduce the 64 bytes via `Scalar::from_bytes_mod_order_wide`.
-    pub fn seed_from_signature(signature: &Signature) -> Vec<u8> {
-        signature.as_ref().to_vec()
-    }
-
     /// Derive an ElGamal secret key from a Solana signer using the legacy
     /// SHA3-512-based KDF.
     ///
     /// Retained only so wallets can recover keys for accounts that were
     /// provisioned under `solana-zk-sdk` versions that shipped the
     /// non-standard `Scalar::hash_from_bytes::<Sha3_512>(...)` derivation. New
-    /// code should use [`ElGamalSecretKey::new_from_signer`].
-    #[deprecated(note = "Non-standard SHA3-512 KDF; new code should use \
-                `ElGamalSecretKey::new_from_signer`. Retained for backward \
+    /// code should use
+    /// [`crate::encryption::derivation::derive_confidential_keys`].
+    #[deprecated(note = "Non-standard SHA3-512 KDF. New code should use \
+                `crate::encryption::derivation::derive_confidential_keys`. Retained for backward \
                 compatibility with accounts provisioned under solana-zk-sdk versions \
                 prior to the HKDF-SHA512 migration. \
                 See https://github.com/solana-program/zk-elgamal-proof/issues/35.")]
@@ -678,9 +601,10 @@ impl ElGamalSecretKey {
     /// Derive a seed from a Solana signer using the legacy SHA3-512 KDF.
     ///
     /// See [`ElGamalSecretKey::new_from_signer_legacy`] for context.
-    #[deprecated(note = "Non-standard SHA3-512 KDF; new code should use \
-                `ElGamalSecretKey::seed_from_signer`. Retained for backward compatibility. \
-                See https://github.com/solana-program/zk-elgamal-proof/issues/35.")]
+    #[deprecated(
+        note = "Non-standard SHA3-512 KDF. Retained for backward compatibility. \
+                See https://github.com/solana-program/zk-elgamal-proof/issues/35."
+    )]
     #[allow(deprecated)]
     pub fn seed_from_signer_legacy(
         signer: &dyn Signer,
@@ -700,8 +624,9 @@ impl ElGamalSecretKey {
     /// SHA3-512 KDF.
     ///
     /// See [`ElGamalSecretKey::new_from_signer_legacy`] for context.
-    #[deprecated(note = "Non-standard SHA3-512 KDF; new code should use \
-                `ElGamalSecretKey::new_from_signature`. Retained for backward compatibility. \
+    #[deprecated(note = "Non-standard SHA3-512 KDF. New code should use \
+                `crate::encryption::derivation::derive_confidential_keys_from_signature`. \
+                Retained for backward compatibility. \
                 See https://github.com/solana-program/zk-elgamal-proof/issues/35.")]
     #[allow(deprecated)]
     pub fn new_from_signature_legacy(signature: &Signature) -> Result<Self, Box<dyn error::Error>> {
@@ -713,9 +638,10 @@ impl ElGamalSecretKey {
     /// Derive a seed from a signature using the legacy SHA3-512 KDF.
     ///
     /// See [`ElGamalSecretKey::new_from_signer_legacy`] for context.
-    #[deprecated(note = "Non-standard SHA3-512 KDF; new code should use \
-                `ElGamalSecretKey::seed_from_signature`. Retained for backward compatibility. \
-                See https://github.com/solana-program/zk-elgamal-proof/issues/35.")]
+    #[deprecated(
+        note = "Non-standard SHA3-512 KDF. Retained for backward compatibility. \
+                See https://github.com/solana-program/zk-elgamal-proof/issues/35."
+    )]
     pub fn seed_from_signature_legacy(signature: &Signature) -> Vec<u8> {
         let mut hasher = Sha3_512::new();
         hasher.update(signature.as_ref());
@@ -728,8 +654,9 @@ impl ElGamalSecretKey {
     /// KDF.
     ///
     /// See [`ElGamalSecretKey::new_from_signer_legacy`] for context.
-    #[deprecated(note = "Non-standard SHA3-512 KDF; new code should use \
-                `ElGamalSecretKey::from_seed`. Retained for backward compatibility. \
+    #[deprecated(note = "Non-standard SHA3-512 KDF. New code should use \
+                `ElGamalSecretKey::from_seed` (which now uses the unified HKDF spine). \
+                Retained for backward compatibility. \
                 See https://github.com/solana-program/zk-elgamal-proof/issues/35.")]
     pub fn from_seed_legacy(seed: &[u8]) -> Result<Self, ElGamalError> {
         const MINIMUM_SEED_LEN: usize = ELGAMAL_SECRET_KEY_LEN;
@@ -748,8 +675,9 @@ impl ElGamalSecretKey {
     /// the legacy SHA3-512 KDF.
     ///
     /// See [`ElGamalSecretKey::new_from_signer_legacy`] for context.
-    #[deprecated(note = "Non-standard SHA3-512 KDF; new code should use \
-                `<ElGamalSecretKey as SeedDerivable>::from_seed_phrase_and_passphrase`. \
+    #[deprecated(note = "Non-standard SHA3-512 KDF. New code should use \
+                `<ElGamalSecretKey as SeedDerivable>::from_seed_phrase_and_passphrase` \
+                (which now uses the unified HKDF spine). \
                 Retained for backward compatibility. \
                 See https://github.com/solana-program/zk-elgamal-proof/issues/35.")]
     #[allow(deprecated)]
@@ -1159,9 +1087,6 @@ mod tests {
         super::*,
         crate::encryption::pedersen::Pedersen,
         bip39::{Language, Mnemonic, MnemonicType, Seed},
-        solana_address::Address,
-        solana_keypair::Keypair,
-        solana_signer::null_signer::NullSigner,
         std::fs::{self, File},
     };
 
@@ -1404,72 +1329,6 @@ mod tests {
     }
 
     #[test]
-    fn test_secret_key_new_from_signer() {
-        let keypair1 = Keypair::new();
-        let keypair2 = Keypair::new();
-
-        assert_ne!(
-            ElGamalSecretKey::new_from_signer(&keypair1, Address::default().as_ref())
-                .unwrap()
-                .0,
-            ElGamalSecretKey::new_from_signer(&keypair2, Address::default().as_ref())
-                .unwrap()
-                .0,
-        );
-
-        let null_signer = NullSigner::new(&Address::default());
-        assert!(
-            ElGamalSecretKey::new_from_signer(&null_signer, Address::default().as_ref()).is_err()
-        );
-    }
-
-    #[test]
-    fn test_elgamal_hkdf_determinism_from_signature() {
-        let sig = Signature::from([0x42u8; 64]);
-        let key_a = ElGamalSecretKey::new_from_signature(&sig).unwrap();
-        let key_b = ElGamalSecretKey::new_from_signature(&sig).unwrap();
-        assert_eq!(key_a.as_bytes(), key_b.as_bytes());
-    }
-
-    #[test]
-    fn test_elgamal_hkdf_differs_from_legacy() {
-        // The HKDF and legacy SHA3-512 paths must produce different secret
-        // keys for the same input — otherwise the legacy fallback would
-        // silently match the new derivation and accounts could be mis-claimed
-        // as migrated.
-        let sig = Signature::from([0x42u8; 64]);
-        let new_key = ElGamalSecretKey::new_from_signature(&sig).unwrap();
-        #[allow(deprecated)]
-        let old_key = ElGamalSecretKey::new_from_signature_legacy(&sig).unwrap();
-        assert_ne!(new_key.as_bytes(), old_key.as_bytes());
-    }
-
-    #[test]
-    fn test_elgamal_hkdf_known_vector_from_signature() {
-        // Canonical test vector for the HKDF-SHA512 ElGamalSecretKey
-        // derivation.
-        //
-        // Inputs:
-        //   signature = [0x42; 64]
-        //   salt      = b"solana-zk-sdk:ElGamalSecretKey:v1:hkdf-sha512"
-        //   info      = b"ElGamalSecretKey"
-        //   L         = 64 (reduced via Scalar::from_bytes_mod_order_wide)
-        let sig = Signature::from([0x42u8; 64]);
-        let key = ElGamalSecretKey::new_from_signature(&sig).unwrap();
-        let expected: [u8; ELGAMAL_SECRET_KEY_LEN] = [
-            0xe7, 0x03, 0x51, 0xd6, 0x6a, 0x1a, 0x3f, 0x88, 0x3c, 0xd8, 0x53, 0x64, 0x8b, 0xa2,
-            0x18, 0xfa, 0x39, 0x0a, 0x67, 0xdf, 0x61, 0x1d, 0x59, 0x7a, 0x0c, 0xf6, 0xd7, 0x7d,
-            0x92, 0x67, 0x45, 0x03,
-        ];
-        assert_eq!(
-            key.as_bytes(),
-            &expected,
-            "HKDF ElGamalSecretKey vector drift; computed {:02x?}",
-            key.as_bytes()
-        );
-    }
-
-    #[test]
     fn test_elgamal_legacy_known_vector_from_signature() {
         // Pinned canonical bytes for the SHA3-512 legacy derivation.
         let sig = Signature::from([0x42u8; 64]);
@@ -1489,48 +1348,16 @@ mod tests {
     }
 
     #[test]
-    fn test_elgamal_matches_single_hkdf_over_signature() {
-        // External-implementation interop contract: HKDF-SHA512 over the
-        // signature with the documented salt/info, expanded to 64 bytes, then
-        // reduced via `Scalar::from_bytes_mod_order_wide`, MUST equal the SDK
-        // scalar. Regression guard for the double-HKDF-Extract bug.
-        let sig = Signature::from([0x42u8; 64]);
-        let sdk_secret = ElGamalSecretKey::new_from_signature(&sig).unwrap();
-
-        let direct = Hkdf::<Sha512>::new(Some(ELGAMAL_HKDF_SALT), sig.as_ref());
-        let mut wide = [0u8; 64];
-        direct.expand(ELGAMAL_HKDF_INFO, &mut wide).unwrap();
-        let external_scalar = Scalar::from_bytes_mod_order_wide(&wide);
-
-        assert_eq!(sdk_secret.as_bytes(), external_scalar.as_bytes());
-    }
-
-    #[test]
-    fn test_elgamal_hkdf_signer_matches_signature_path() {
-        // `new_from_signer` should match `new_from_signature` over the
-        // signature the signer would produce for the same message.
-        let keypair = Keypair::new();
-        let public_seed = [0x11u8; 32];
-        let key_from_signer = ElGamalSecretKey::new_from_signer(&keypair, &public_seed).unwrap();
-
-        let message = [b"ElGamalSecretKey", public_seed.as_ref()].concat();
-        let sig = keypair.sign_message(&message);
-        let key_from_sig = ElGamalSecretKey::new_from_signature(&sig).unwrap();
-
-        assert_eq!(key_from_signer.as_bytes(), key_from_sig.as_bytes());
-    }
-
-    #[test]
-    fn test_elgamal_aekey_domain_separation_from_signature() {
-        // ElGamal and AeKey derivations over the same signature must produce
-        // unrelated key material. This is enforced by salt + info domain
-        // separation in the HKDF construction inside `from_seed`.
-        let sig = Signature::from([0x42u8; 64]);
-        let elgamal_secret = ElGamalSecretKey::new_from_signature(&sig).unwrap();
-        let ae_key = crate::encryption::auth_encryption::AeKey::new_from_signature(&sig).unwrap();
+    fn test_elgamal_aekey_unified_hkdf_separation() {
+        // Same IKM into ElGamalSecretKey::from_seed and AeKey::from_seed
+        // produces independent keys, courtesy of HKDF info-based separation
+        // (b"elgamal" vs b"ae" under the shared HKDF_SALT).
+        let ikm = [0x42u8; 64];
+        let elgamal_secret = ElGamalSecretKey::from_seed(&ikm).unwrap();
+        let ae_key = crate::encryption::auth_encryption::AeKey::from_seed(&ikm).unwrap();
 
         // The first 16 bytes of the ElGamal scalar and the AeKey would only
-        // collide if the salt+info domain separation were broken.
+        // collide if the info-based domain separation were broken.
         let elgamal_bytes = elgamal_secret.as_bytes();
         let ae_bytes: [u8; 16] = (&ae_key).into();
         assert_ne!(&elgamal_bytes[..16], &ae_bytes[..]);
