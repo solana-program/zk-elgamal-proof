@@ -8,12 +8,12 @@
 //!
 //! Callers have three entry points:
 //!
-//! - [`derive_confidential_keys`] — sign once with a Solana `Signer`, derive
+//! - [`derive_confidential_keys`]: sign once with a Solana `Signer`, derive
 //!   both keys.
-//! - [`derive_confidential_keys_from_signature`] — when the caller already
+//! - [`derive_confidential_keys_from_signature`]: when the caller already
 //!   holds a signature over the canonical message (e.g. produced via a
 //!   wallet-adapter signing flow or a KMS deterministic-sign call).
-//! - [`derive_confidential_keys_from_ikm`] — when the caller has raw input
+//! - [`derive_confidential_keys_from_ikm`]: when the caller has raw input
 //!   key material from any other source (WebAuthn PRF output, Secure Enclave
 //!   HMAC output, KMS `GenerateMac` output, a BIP39 seed, or HKDF over an
 //!   Ed25519 seed).

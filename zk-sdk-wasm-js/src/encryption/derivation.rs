@@ -68,9 +68,10 @@ impl ConfidentialKeys {
 
     /// Derives a `ConfidentialKeys` pair from raw input key material.
     ///
-    /// Use this when the caller already produced 32+ bytes of IKM via a
-    /// non-`Signer` path: WebAuthn PRF output, Secure Enclave HMAC output,
-    /// KMS `GenerateMac` output, HKDF over an Ed25519 seed, or a BIP39 seed.
+    /// Use this when the caller already produced 32 or more bytes of IKM
+    /// via a non-`Signer` path: WebAuthn PRF output, Secure Enclave HMAC
+    /// output, KMS `GenerateMac` output, HKDF over an Ed25519 seed, or a
+    /// BIP39 seed.
     #[wasm_bindgen(js_name = "fromIkm")]
     pub fn from_ikm(ikm: Uint8Array) -> Result<ConfidentialKeys, JsValue> {
         let mut bytes = vec![0u8; ikm.length() as usize];
