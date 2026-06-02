@@ -45,7 +45,7 @@ use {
     hkdf::Hkdf,
     sha2::Sha512,
     solana_signature::Signature,
-    solana_signer::{Signer, SignerError},
+    solana_signer::Signer,
     solana_zk_sdk_pod::encryption::AE_KEY_LEN,
     std::error,
     subtle::ConstantTimeEq,
@@ -85,22 +85,21 @@ pub fn derive_confidential_keys(
 ) -> Result<(ElGamalKeypair, AeKey), Box<dyn error::Error>> {
     let message = [HKDF_SALT, public_seed].concat();
     let signature = signer.try_sign_message(&message)?;
-
-    // Some `Signer` implementations return the default signature, which is not
-    // suitable for use as key material.
-    if bool::from(signature.as_ref().ct_eq(Signature::default().as_ref())) {
-        return Err(SignerError::Custom("Rejecting default signature".into()).into());
-    }
-
-    derive_confidential_keys_from_signature(&signature)
+    derive_confidential_keys_from_signature(&signature).map_err(Into::into)
 }
 
 /// Derives the confidential-balances key pair from a precomputed signature
 /// over the canonical derivation message.
+///
+/// Rejects the default (all-zero) signature: some `Signer` implementations
+/// return it instead of erroring, and the resulting keys would be predictable.
 pub fn derive_confidential_keys_from_signature(
     signature: &Signature,
-) -> Result<(ElGamalKeypair, AeKey), Box<dyn error::Error>> {
-    derive_confidential_keys_from_ikm(signature.as_ref()).map_err(Into::into)
+) -> Result<(ElGamalKeypair, AeKey), ElGamalError> {
+    if bool::from(signature.as_ref().ct_eq(Signature::default().as_ref())) {
+        return Err(ElGamalError::DefaultSignatureRejected);
+    }
+    derive_confidential_keys_from_ikm(signature.as_ref())
 }
 
 /// Derives the confidential-balances key pair from raw input key material.
@@ -251,5 +250,48 @@ mod tests {
         let ikm = [0x33u8; 64];
         let (kp, _ae) = derive_confidential_keys_from_ikm(&ikm).unwrap();
         assert_eq!(*kp.pubkey(), ElGamalPubkey::new(kp.secret()));
+    }
+
+    #[test]
+    fn test_external_hkdf_matches_sdk_output() {
+        // The documented interop contract: an external implementation
+        // (Web Crypto subtle.deriveBits, Apple CryptoKit HKDF<SHA512>, Go
+        // x/crypto/hkdf, ...) running HKDF-SHA512 with the published salt
+        // and info strings MUST produce the same bytes as the SDK. This
+        // test reproduces the spec from scratch and asserts byte-equality
+        // with the SDK output. Regression guard for any future drift in
+        // the HKDF chain shape (e.g., re-introducing a double-Extract or
+        // changing the info strings).
+        let ikm = [0x55u8; 64];
+        let (sdk_kp, sdk_ae) = derive_confidential_keys_from_ikm(&ikm).unwrap();
+
+        let hkdf = Hkdf::<Sha512>::new(Some(HKDF_SALT), &ikm);
+
+        let mut external_ae = [0u8; AE_KEY_LEN];
+        hkdf.expand(AE_HKDF_INFO, &mut external_ae).unwrap();
+
+        let mut external_wide = [0u8; 64];
+        hkdf.expand(ELGAMAL_HKDF_INFO, &mut external_wide).unwrap();
+        let external_scalar = Scalar::from_bytes_mod_order_wide(&external_wide);
+
+        assert_eq!(<[u8; AE_KEY_LEN]>::from(&sdk_ae), external_ae);
+        assert_eq!(sdk_kp.secret().as_bytes(), external_scalar.as_bytes());
+    }
+
+    #[test]
+    fn test_derive_confidential_keys_from_signature_rejects_default() {
+        let sig = Signature::default();
+        let err = derive_confidential_keys_from_signature(&sig).unwrap_err();
+        assert!(matches!(err, ElGamalError::DefaultSignatureRejected));
+    }
+
+    #[test]
+    fn test_derive_confidential_keys_rejects_null_signer() {
+        use solana_signer::null_signer::NullSigner;
+        // `NullSigner` returns the default signature for any message, so
+        // the signer-side path must surface a rejection rather than
+        // silently producing predictable keys.
+        let null_signer = NullSigner::new(&solana_address::Address::default());
+        assert!(derive_confidential_keys(&null_signer, &[0x11u8; 32]).is_err());
     }
 }
