@@ -39,7 +39,7 @@ serde_derive = "1.0.219"
 serde_json = "1.0.150"
 sha2 = "0.10.9"
 sha3 = "0.10.8"
-solana-address = { version = "2.5.0", default-features = false }
+solana-address = { version = "2.6.1", default-features = false }
 solana-derivation-path = "3.0.0"
 solana-instruction = { version = "3.0.0", default-features = false }
 solana-keypair = "3.0.1"
