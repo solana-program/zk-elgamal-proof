@@ -13,6 +13,7 @@
 #[macro_use]
 pub(crate) mod macros;
 pub mod auth_encryption;
+pub mod derivation;
 pub mod discrete_log;
 pub mod elgamal;
 pub mod grouped_elgamal;

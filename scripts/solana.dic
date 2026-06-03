@@ -79,9 +79,15 @@ multiscalar
 representable
 KDF
 HKDF
+HMAC
+IKM
+KMS
+PRF
 SHA512
+WebAuthn
 crypto
 pseudorandom
+reimplementations
 SDK
 Curve25519
 hashable
