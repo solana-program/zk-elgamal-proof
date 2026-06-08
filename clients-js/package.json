@@ -55,7 +55,7 @@
     "@solana/kit": "^6.9.0",
     "@solana/sysvars": "^6.9.0",
     "@solana/zk-sdk": "0.4.1",
-    "@types/node": "^25.9.1",
+    "@types/node": "^25.9.2",
     "ava": "^8.0.1",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
