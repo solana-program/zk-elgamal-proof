@@ -1,4 +1,4 @@
-1003
+1007
 config
 metadata
 json
@@ -86,8 +86,12 @@ PRF
 ECDSA
 SHA512
 WebAuthn
+WebAssembly
 authenticator/S
 passkey/S
+bundler/S
+iOS
+AWS
 crypto
 pseudorandom
 reimplementations
