@@ -1,4 +1,4 @@
-1000
+1003
 config
 metadata
 json
@@ -83,8 +83,11 @@ HMAC
 IKM
 KMS
 PRF
+ECDSA
 SHA512
 WebAuthn
+authenticator/S
+passkey/S
 crypto
 pseudorandom
 reimplementations

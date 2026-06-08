@@ -73,17 +73,33 @@ const MINIMUM_IKM_LEN: usize = 32;
 /// [`derive_confidential_keys_from_ikm`] directly.
 const MAXIMUM_IKM_LEN: usize = 65535;
 
+/// The canonical confidential-balances derivation message: `HKDF_SALT || public_seed`.
+///
+/// This single message is the input to every signing-style adapter: it is what an
+/// Ed25519 `Signer` signs ([`derive_confidential_keys`]) and what a WebAuthn passkey
+/// evaluates as its PRF input. `public_seed` is caller-controlled and granularity-
+/// agnostic; pass a wallet pubkey for per-wallet keying or a token-account pubkey for
+/// per-account keying.
+///
+/// WebAuthn note: browsers apply the mandatory `SHA-256("WebAuthn PRF" || 0x00 || input)`
+/// prefixing before the authenticator, so this message is passed to `prf.eval` as-is.
+/// Non-browser / direct-CTAP `hmac-secret` consumers MUST reproduce that prefixing over
+/// this message to derive byte-identical keys.
+pub fn confidential_derivation_message(public_seed: &[u8]) -> Vec<u8> {
+    [HKDF_SALT, public_seed].concat()
+}
+
 /// Signs the canonical derivation message with `signer` and derives the
 /// confidential-balances key pair.
 ///
-/// The signed message is `HKDF_SALT || public_seed`. `public_seed` is
+/// The signed message is [`confidential_derivation_message`]. `public_seed` is
 /// caller-controlled and granularity-agnostic; pass a wallet pubkey for
 /// per-wallet keying or a token-account pubkey for per-account keying.
 pub fn derive_confidential_keys(
     signer: &dyn Signer,
     public_seed: &[u8],
 ) -> Result<(ElGamalKeypair, AeKey), Box<dyn error::Error>> {
-    let message = [HKDF_SALT, public_seed].concat();
+    let message = confidential_derivation_message(public_seed);
     let signature = signer.try_sign_message(&message)?;
     derive_confidential_keys_from_signature(&signature).map_err(Into::into)
 }
@@ -178,7 +194,7 @@ mod tests {
 
         let (kp_signer, ae_signer) = derive_confidential_keys(&keypair, &public_seed).unwrap();
 
-        let message = [HKDF_SALT, public_seed.as_ref()].concat();
+        let message = confidential_derivation_message(&public_seed);
         let sig = keypair.sign_message(&message);
         let (kp_sig, ae_sig) = derive_confidential_keys_from_signature(&sig).unwrap();
 
@@ -187,6 +203,17 @@ mod tests {
             <[u8; AE_KEY_LEN]>::from(&ae_signer),
             <[u8; AE_KEY_LEN]>::from(&ae_sig)
         );
+    }
+
+    #[test]
+    fn test_confidential_derivation_message_format() {
+        // The canonical message is `HKDF_SALT || public_seed`, the single
+        // input shared by the Ed25519 signing path and the WebAuthn PRF path.
+        let public_seed = [0x44u8; 32];
+        let message = confidential_derivation_message(&public_seed);
+        assert_eq!(message, [HKDF_SALT, public_seed.as_ref()].concat());
+        assert!(message.starts_with(b"solana-conf-bal/v1"));
+        assert!(message.ends_with(&public_seed));
     }
 
     #[test]

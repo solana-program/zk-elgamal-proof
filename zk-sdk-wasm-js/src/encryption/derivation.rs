@@ -3,13 +3,18 @@ use {
     js_sys::Uint8Array,
     solana_signature::Signature,
     solana_zk_sdk::encryption::derivation::{
-        derive_confidential_keys_from_ikm, derive_confidential_keys_from_signature, HKDF_SALT,
+        confidential_derivation_message, derive_confidential_keys_from_ikm,
+        derive_confidential_keys_from_signature,
     },
     wasm_bindgen::prelude::{wasm_bindgen, JsValue},
 };
 
 /// Byte length of an ed25519 signature.
 const SIGNATURE_LEN: usize = 64;
+
+/// Accepted byte lengths for a WebAuthn PRF output: 32 bytes for a single
+/// `prf.results.first` evaluation, 64 bytes for `first || second` concatenated.
+const PRF_OUTPUT_LENS: [usize; 2] = [32, 64];
 
 /// Container returned by the unified confidential-balances key derivation.
 ///
@@ -36,7 +41,25 @@ impl ConfidentialKeys {
     pub fn signer_message(public_seed: Uint8Array) -> Vec<u8> {
         let mut seed = vec![0u8; public_seed.length() as usize];
         public_seed.copy_to(&mut seed);
-        [HKDF_SALT, seed.as_ref()].concat()
+        confidential_derivation_message(&seed)
+    }
+
+    /// Returns the canonical WebAuthn PRF evaluation input for `fromPrf`.
+    ///
+    /// Byte-identical to `signerMessage`: `b"solana-conf-bal/v1" || public_seed`.
+    /// Pass it to the authenticator as the `prf.eval.first` salt. The same
+    /// canonical message is signed in the Ed25519 path and PRF-evaluated in the
+    /// passkey path, so a single seed convention drives both adapters.
+    ///
+    /// Browsers apply the mandatory `SHA-256("WebAuthn PRF" || 0x00 || input)`
+    /// prefixing before the authenticator, so this message is passed as-is and
+    /// may be any length. Non-browser / direct-CTAP `hmac-secret` consumers MUST
+    /// reproduce that prefixing over this message to derive byte-identical keys.
+    #[wasm_bindgen(js_name = "prfInput")]
+    pub fn prf_input(public_seed: Uint8Array) -> Vec<u8> {
+        let mut seed = vec![0u8; public_seed.length() as usize];
+        public_seed.copy_to(&mut seed);
+        confidential_derivation_message(&seed)
     }
 
     /// Derives a `ConfidentialKeys` pair from a 64-byte ed25519 signature
@@ -81,6 +104,41 @@ impl ConfidentialKeys {
             .map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
+    /// Derives a `ConfidentialKeys` pair from a WebAuthn PRF output (the
+    /// passkey adapter).
+    ///
+    /// A passkey's ECDSA signing is randomized by spec, so signature-based
+    /// derivation is structurally broken on passkey authenticators. The PRF
+    /// (`hmac-secret`) extension is deterministic by construction and is the
+    /// only viable path: evaluate `prf` over the salt returned by `prfInput`,
+    /// then pass the result here.
+    ///
+    /// Accepts a 32-byte output (single `prf.results.first`) or a 64-byte
+    /// output (`first || second` concatenated). The all-zero output is rejected
+    /// as a non-functioning authenticator.
+    #[wasm_bindgen(js_name = "fromPrf")]
+    pub fn from_prf(prf_output: Uint8Array) -> Result<ConfidentialKeys, JsValue> {
+        let len = prf_output.length() as usize;
+        if !PRF_OUTPUT_LENS.contains(&len) {
+            return Err(JsValue::from_str(&format!(
+                "Invalid PRF output length: expected 32 or 64, got {len}"
+            )));
+        }
+        let mut bytes = vec![0u8; len];
+        prf_output.copy_to(&mut bytes);
+
+        if bytes.iter().all(|&b| b == 0) {
+            return Err(JsValue::from_str("Rejecting all-zero PRF output"));
+        }
+
+        derive_confidential_keys_from_ikm(&bytes)
+            .map(|(elgamal, ae)| Self {
+                elgamal: elgamal.into(),
+                ae: ae.into(),
+            })
+            .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
     /// Returns the ElGamal keypair component.
     pub fn elgamal(&self) -> ElGamalKeypair {
         ElGamalKeypair {
@@ -98,7 +156,7 @@ impl ConfidentialKeys {
 
 #[cfg(test)]
 mod tests {
-    use {super::*, wasm_bindgen_test::*};
+    use {super::*, solana_zk_sdk::encryption::derivation::HKDF_SALT, wasm_bindgen_test::*};
 
     #[wasm_bindgen_test]
     fn test_signer_message_format() {
@@ -167,5 +225,71 @@ mod tests {
     fn test_from_ikm_rejects_short() {
         let too_short = vec![0u8; 31];
         assert!(ConfidentialKeys::from_ikm(Uint8Array::from(too_short.as_slice())).is_err());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_prf_input_matches_signer_message() {
+        // The passkey PRF input is the same canonical message as the Ed25519
+        // signing path, so a single seed convention drives both adapters.
+        let seed = [9u8; 32];
+        let prf = ConfidentialKeys::prf_input(Uint8Array::from(seed.as_ref()));
+        let signer = ConfidentialKeys::signer_message(Uint8Array::from(seed.as_ref()));
+        assert_eq!(prf, signer);
+        assert!(prf.starts_with(b"solana-conf-bal/v1"));
+    }
+
+    #[wasm_bindgen_test]
+    fn test_from_prf_determinism() {
+        let prf_output = [3u8; 32];
+        let out = Uint8Array::from(prf_output.as_ref());
+
+        let keys_a = ConfidentialKeys::from_prf(out.clone()).unwrap();
+        let keys_b = ConfidentialKeys::from_prf(out).unwrap();
+        assert_eq!(
+            keys_a.elgamal().secret().to_bytes(),
+            keys_b.elgamal().secret().to_bytes()
+        );
+        assert_eq!(keys_a.ae().to_bytes(), keys_b.ae().to_bytes());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_from_prf_matches_from_ikm_over_same_bytes() {
+        // A PRF output is just IKM into the shared spine, so `fromPrf` and
+        // `fromIkm` over identical bytes must agree.
+        let prf_output = [5u8; 32];
+        let from_prf = ConfidentialKeys::from_prf(Uint8Array::from(prf_output.as_ref())).unwrap();
+        let from_ikm = ConfidentialKeys::from_ikm(Uint8Array::from(prf_output.as_ref())).unwrap();
+
+        assert_eq!(
+            from_prf.elgamal().secret().to_bytes(),
+            from_ikm.elgamal().secret().to_bytes()
+        );
+        assert_eq!(from_prf.ae().to_bytes(), from_ikm.ae().to_bytes());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_from_prf_accepts_64_byte_output() {
+        // `first || second` concatenation is a valid 64-byte PRF output.
+        let prf_output = [7u8; 64];
+        assert!(ConfidentialKeys::from_prf(Uint8Array::from(prf_output.as_ref())).is_ok());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_from_prf_rejects_wrong_length() {
+        for len in [31usize, 33, 48, 63, 65] {
+            let bad = vec![1u8; len];
+            assert!(
+                ConfidentialKeys::from_prf(Uint8Array::from(bad.as_slice())).is_err(),
+                "length {len} should be rejected"
+            );
+        }
+    }
+
+    #[wasm_bindgen_test]
+    fn test_from_prf_rejects_all_zero() {
+        let zero_32 = vec![0u8; 32];
+        assert!(ConfidentialKeys::from_prf(Uint8Array::from(zero_32.as_slice())).is_err());
+        let zero_64 = vec![0u8; 64];
+        assert!(ConfidentialKeys::from_prf(Uint8Array::from(zero_64.as_slice())).is_err());
     }
 }
