@@ -39,9 +39,7 @@ impl ConfidentialKeys {
     /// keying.
     #[wasm_bindgen(js_name = "signerMessage")]
     pub fn signer_message(public_seed: Uint8Array) -> Vec<u8> {
-        let mut seed = vec![0u8; public_seed.length() as usize];
-        public_seed.copy_to(&mut seed);
-        confidential_derivation_message(&seed)
+        confidential_derivation_message(&public_seed.to_vec())
     }
 
     /// Returns the canonical WebAuthn PRF evaluation input for `fromPrf`.
@@ -57,9 +55,7 @@ impl ConfidentialKeys {
     /// reproduce that prefixing over this message to derive byte-identical keys.
     #[wasm_bindgen(js_name = "prfInput")]
     pub fn prf_input(public_seed: Uint8Array) -> Vec<u8> {
-        let mut seed = vec![0u8; public_seed.length() as usize];
-        public_seed.copy_to(&mut seed);
-        confidential_derivation_message(&seed)
+        confidential_derivation_message(&public_seed.to_vec())
     }
 
     /// Derives a `ConfidentialKeys` pair from a 64-byte ed25519 signature
@@ -111,23 +107,25 @@ impl ConfidentialKeys {
     /// derivation is structurally broken on passkey authenticators. The PRF
     /// (`hmac-secret`) extension is deterministic by construction and is the
     /// only viable path: evaluate `prf` over the salt returned by `prfInput`,
-    /// then pass the result here.
+    /// then pass the result here as a `Uint8Array`. The browser exposes
+    /// `prf.results.first` as a raw `ArrayBuffer`, so wrap it with
+    /// `new Uint8Array(result)` before calling.
     ///
     /// Accepts a 32-byte output (single `prf.results.first`) or a 64-byte
     /// output (`first || second` concatenated). The all-zero output is rejected
     /// as a non-functioning authenticator.
     #[wasm_bindgen(js_name = "fromPrf")]
     pub fn from_prf(prf_output: Uint8Array) -> Result<ConfidentialKeys, JsValue> {
-        let len = prf_output.length() as usize;
-        if !PRF_OUTPUT_LENS.contains(&len) {
+        let bytes = prf_output.to_vec();
+        if !PRF_OUTPUT_LENS.contains(&bytes.len()) {
             return Err(JsValue::from_str(&format!(
-                "Invalid PRF output length: expected 32 or 64, got {len}"
+                "Invalid PRF output length: expected 32 or 64, got {}",
+                bytes.len()
             )));
         }
-        let mut bytes = vec![0u8; len];
-        prf_output.copy_to(&mut bytes);
 
-        if bytes.iter().all(|&b| b == 0) {
+        let is_all_zero = bytes.iter().fold(0u8, |acc, &b| acc | b) == 0;
+        if is_all_zero {
             return Err(JsValue::from_str("Rejecting all-zero PRF output"));
         }
 
