@@ -23,6 +23,7 @@ config = "scripts/spellcheck.toml"
 aes-gcm-siv = "0.11.1"
 base64 = { version = "0.22.1", default-features = false, features = ["alloc"] }
 bincode = "1.3.3"
+bip39 = { version = "2.2.2", features = ["rand"] }
 bytemuck = "1.25.0"
 bytemuck_derive = "1.10.2"
 curve25519-dalek = { version = "4.1.3", features = ["digest", "rand_core"] }
@@ -55,7 +56,6 @@ solana-zk-sdk-pod = { path = "zk-sdk-pod", version = "0.1.2" }
 solana-zk-sdk-wasm-js = { path = "zk-sdk-wasm-js", version = "0.1.0" }
 subtle = "2.6.1"
 thiserror = { version = "2.0.18", default-features = false }
-tiny-bip39 = "2.0.0"
 wasm-bindgen = "0.2"
 wasm-bindgen-test = "0.3"
 zeroize = { version = "1.8", default-features = false }
