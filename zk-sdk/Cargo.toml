@@ -40,9 +40,9 @@ thiserror = { workspace = true }
 zeroize = { workspace = true, features = ["zeroize_derive"] }
 
 [dev-dependencies]
+bip39 = { workspace = true }
 solana-address = { workspace = true, features = ["atomic", "bytemuck"] }
 solana-keypair = { workspace = true }
-tiny-bip39 = { workspace = true }
 
 [lints]
 workspace = true

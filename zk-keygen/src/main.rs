@@ -1,5 +1,5 @@
 use {
-    bip39::{Mnemonic, MnemonicType, Seed},
+    bip39::Mnemonic,
     clap::{crate_description, crate_name, Arg, ArgMatches, Command, PossibleValue},
     solana_clap_v3_utils::{
         input_parsers::{signer::SignerSourceParserBuilder, STDOUT_OUTFILE_TOKEN},
@@ -176,12 +176,11 @@ fn do_main(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
             }
 
             let word_count = try_get_word_count(matches)?.unwrap();
-            let mnemonic_type = MnemonicType::for_word_count(word_count)?;
             let language = try_get_language(matches)?.unwrap();
 
-            let mnemonic = Mnemonic::new(mnemonic_type, language);
+            let mnemonic = Mnemonic::generate_in(language, word_count)?;
             let (passphrase, passphrase_message) = acquire_passphrase_and_message(matches).unwrap();
-            let seed = Seed::new(&mnemonic, &passphrase);
+            let seed = mnemonic.to_seed(&passphrase);
 
             let silent = matches.try_contains_id("silent")?;
 
@@ -191,14 +190,14 @@ fn do_main(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
                         eprintln!("Generating a new ElGamal keypair");
                     }
 
-                    let elgamal_keypair = ElGamalKeypair::from_seed(seed.as_bytes())?;
+                    let elgamal_keypair = ElGamalKeypair::from_seed(&seed)?;
                     if let Some(outfile) = outfile {
                         output_encodable_key(&elgamal_keypair, outfile, "new ElGamal keypair")
                             .map_err(|err| format!("Unable to write {outfile}: {err}"))?;
                     }
 
                     if !silent {
-                        let phrase: &str = mnemonic.phrase();
+                        let phrase = mnemonic.to_string();
                         let divider = String::from_utf8(vec![b'='; phrase.len()]).unwrap();
                         println!(
                             "{}\npubkey: {}\n{}\nSave this seed phrase{} to recover your new ElGamal keypair:\n{}\n{}",
@@ -211,14 +210,14 @@ fn do_main(matches: &ArgMatches) -> Result<(), Box<dyn error::Error>> {
                         eprintln!("Generating a new AES128 encryption key");
                     }
 
-                    let aes_key = AeKey::from_seed(seed.as_bytes())?;
+                    let aes_key = AeKey::from_seed(&seed)?;
                     if let Some(outfile) = outfile {
                         output_encodable_key(&aes_key, outfile, "new AES128 key")
                             .map_err(|err| format!("Unable to write {outfile}: {err}"))?;
                     }
 
                     if !silent {
-                        let phrase: &str = mnemonic.phrase();
+                        let phrase = mnemonic.to_string();
                         let divider = String::from_utf8(vec![b'='; phrase.len()]).unwrap();
                         println!(
                             "{}\nSave this seed phrase{} to recover your new AES128 key:\n{}\n{}",

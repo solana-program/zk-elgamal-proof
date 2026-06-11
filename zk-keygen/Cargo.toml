@@ -23,6 +23,7 @@ name = "solana-zk-keygen"
 path = "src/main.rs"
 
 [dependencies]
+bip39 = { workspace = true, features = ["all-languages"] }
 bs58 = { workspace = true }
 clap = { version = "3.1.5", features = ["cargo", "derive"] }
 dirs-next = { workspace = true }
@@ -33,7 +34,6 @@ solana-signer = { workspace = true }
 solana-version = { workspace = true }
 solana-zk-sdk = { workspace = true }
 thiserror = { workspace = true }
-tiny-bip39 = { workspace = true }
 
 [dev-dependencies]
 solana-address = { workspace = true, features = ["rand"] }
