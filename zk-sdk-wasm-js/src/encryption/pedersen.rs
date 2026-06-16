@@ -5,6 +5,11 @@ use {
     wasm_bindgen::prelude::{wasm_bindgen, JsValue},
 };
 
+fn lo_hi_multiplier(bit_length: u8) -> Result<u64, JsValue> {
+    1u64.checked_shl(bit_length.into())
+        .ok_or_else(|| JsValue::from_str("bit length must be less than 64"))
+}
+
 #[wasm_bindgen]
 pub struct PedersenCommitment {
     pub(crate) inner: pedersen::PedersenCommitment,
@@ -14,6 +19,14 @@ crate::conversion::impl_inner_conversion!(PedersenCommitment, pedersen::Pedersen
 
 #[wasm_bindgen]
 impl PedersenCommitment {
+    /// Creates the identity Pedersen commitment.
+    #[wasm_bindgen(js_name = "zero")]
+    pub fn zero() -> Self {
+        Self {
+            inner: pedersen::PedersenCommitment::default(),
+        }
+    }
+
     /// Creates a Pedersen commitment from a 64-bit amount and a Pedersen opening.
     #[wasm_bindgen(js_name = from)]
     pub fn with_u64(amount: u64, opening: &PedersenOpening) -> Self {
@@ -47,6 +60,40 @@ impl PedersenCommitment {
     pub fn to_bytes(&self) -> Vec<u8> {
         self.inner.to_bytes().to_vec()
     }
+
+    /// Adds two Pedersen commitments.
+    #[wasm_bindgen(js_name = "add")]
+    pub fn add(&self, other: &PedersenCommitment) -> PedersenCommitment {
+        PedersenCommitment {
+            inner: self.inner + other.inner,
+        }
+    }
+
+    /// Subtracts another Pedersen commitment from this commitment.
+    #[wasm_bindgen(js_name = "subtract")]
+    pub fn subtract(&self, other: &PedersenCommitment) -> PedersenCommitment {
+        PedersenCommitment {
+            inner: self.inner - other.inner,
+        }
+    }
+
+    /// Multiplies a Pedersen commitment by a 64-bit scalar.
+    #[wasm_bindgen(js_name = "multiplyByU64")]
+    pub fn multiply_by_u64(&self, scalar: u64) -> PedersenCommitment {
+        PedersenCommitment {
+            inner: self.inner * scalar,
+        }
+    }
+
+    /// Combines low and high Pedersen commitments as `lo + hi * 2^bit_length`.
+    #[wasm_bindgen(js_name = "combineLoHi")]
+    pub fn combine_lo_hi(
+        lo: &PedersenCommitment,
+        hi: &PedersenCommitment,
+        bit_length: u8,
+    ) -> Result<PedersenCommitment, JsValue> {
+        Ok(lo.add(&hi.multiply_by_u64(lo_hi_multiplier(bit_length)?)))
+    }
 }
 
 #[wasm_bindgen]
@@ -58,12 +105,54 @@ crate::conversion::impl_inner_conversion!(PedersenOpening, pedersen::PedersenOpe
 
 #[wasm_bindgen]
 impl PedersenOpening {
+    /// Creates a zero Pedersen opening.
+    #[wasm_bindgen(js_name = "zero")]
+    pub fn zero() -> Self {
+        Self {
+            inner: pedersen::PedersenOpening::default(),
+        }
+    }
+
     /// Creates a new, random Pedersen opening.
     #[wasm_bindgen(constructor)]
     pub fn new_rand() -> Self {
         Self {
             inner: pedersen::PedersenOpening::new_rand(),
         }
+    }
+
+    /// Adds two Pedersen openings.
+    #[wasm_bindgen(js_name = "add")]
+    pub fn add(&self, other: &PedersenOpening) -> PedersenOpening {
+        PedersenOpening {
+            inner: &self.inner + &other.inner,
+        }
+    }
+
+    /// Subtracts another Pedersen opening from this opening.
+    #[wasm_bindgen(js_name = "subtract")]
+    pub fn subtract(&self, other: &PedersenOpening) -> PedersenOpening {
+        PedersenOpening {
+            inner: &self.inner - &other.inner,
+        }
+    }
+
+    /// Multiplies a Pedersen opening by a 64-bit scalar.
+    #[wasm_bindgen(js_name = "multiplyByU64")]
+    pub fn multiply_by_u64(&self, scalar: u64) -> PedersenOpening {
+        PedersenOpening {
+            inner: &self.inner * &scalar,
+        }
+    }
+
+    /// Combines low and high Pedersen openings as `lo + hi * 2^bit_length`.
+    #[wasm_bindgen(js_name = "combineLoHi")]
+    pub fn combine_lo_hi(
+        lo: &PedersenOpening,
+        hi: &PedersenOpening,
+        bit_length: u8,
+    ) -> Result<PedersenOpening, JsValue> {
+        Ok(lo.add(&hi.multiply_by_u64(lo_hi_multiplier(bit_length)?)))
     }
 }
 
@@ -110,6 +199,70 @@ mod tests {
         assert!(
             PedersenCommitment::from_bytes(Uint8Array::from(invalid_point_bytes.as_slice()))
                 .is_err()
+        );
+    }
+
+    #[wasm_bindgen_test]
+    fn test_opening_arithmetic_matches_commitment_arithmetic() {
+        let opening_lo = PedersenOpening::new_rand();
+        let opening_hi = PedersenOpening::new_rand();
+        let amount_lo = 5u64;
+        let amount_hi = 7u64;
+        let bit_length = 16u8;
+        let multiplier = 1u64 << bit_length;
+
+        let commitment_lo = PedersenCommitment::with_u64(amount_lo, &opening_lo);
+        let commitment_hi = PedersenCommitment::with_u64(amount_hi, &opening_hi);
+
+        let combined_opening =
+            PedersenOpening::combine_lo_hi(&opening_lo, &opening_hi, bit_length).unwrap();
+        let combined_commitment =
+            PedersenCommitment::combine_lo_hi(&commitment_lo, &commitment_hi, bit_length).unwrap();
+        let expected_commitment =
+            PedersenCommitment::with_u64(amount_lo + amount_hi * multiplier, &combined_opening);
+
+        assert_eq!(
+            combined_commitment.to_bytes(),
+            expected_commitment.to_bytes()
+        );
+    }
+
+    #[wasm_bindgen_test]
+    fn test_subtract_commitment_and_opening() {
+        let base_opening = PedersenOpening::new_rand();
+        let subtracted_opening = PedersenOpening::new_rand();
+        let base_amount = 42u64;
+        let subtracted_amount = 11u64;
+
+        let base_commitment = PedersenCommitment::with_u64(base_amount, &base_opening);
+        let subtracted_commitment =
+            PedersenCommitment::with_u64(subtracted_amount, &subtracted_opening);
+
+        let difference_opening = base_opening.subtract(&subtracted_opening);
+        let difference_commitment = base_commitment.subtract(&subtracted_commitment);
+        let expected_commitment =
+            PedersenCommitment::with_u64(base_amount - subtracted_amount, &difference_opening);
+
+        assert_eq!(
+            difference_commitment.to_bytes(),
+            expected_commitment.to_bytes()
+        );
+    }
+
+    #[wasm_bindgen_test]
+    fn test_zero_opening_and_commitment() {
+        let zero_opening = PedersenOpening::zero();
+        let random_opening = PedersenOpening::new_rand();
+        let random_commitment = PedersenCommitment::with_u64(9, &random_opening);
+
+        let zero_commitment = PedersenCommitment::zero();
+        assert_eq!(
+            random_opening.add(&zero_opening).inner.as_bytes(),
+            random_opening.inner.as_bytes()
+        );
+        assert_eq!(
+            random_commitment.add(&zero_commitment).to_bytes(),
+            random_commitment.to_bytes()
         );
     }
 }
