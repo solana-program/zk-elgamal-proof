@@ -35,7 +35,7 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/solana-program/zk-elgamal-proof"
+    "url": "git+https://github.com/solana-program/zk-elgamal-proof.git"
   },
   "bugs": {
     "url": "https://github.com/solana-program/zk-elgamal-proof/issues"
