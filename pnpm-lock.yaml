@@ -28,8 +28,8 @@ importers:
         specifier: ^0.16.0
         version: 0.16.0(@solana/kit@6.10.0(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10))
       '@solana-program/record':
-        specifier: ^0.1.0
-        version: 0.1.0(@solana/kit@6.10.0(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10))
+        specifier: ^0.2.0
+        version: 0.2.0(@solana/kit@6.10.0(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10))
       '@solana/kit':
         specifier: ^6.10.0
         version: 6.10.0(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)
@@ -834,10 +834,11 @@ packages:
     peerDependencies:
       '@solana/kit': ^6.4.0
 
-  '@solana-program/record@0.1.0':
-    resolution: {integrity: sha512-g7Ub3wYnzU9+Q/srLxhxMMfiDpt2lKjkG2XPGoXHToM7eOhGWY7fKfMaK8rv1mhpzoKEJwAC+HuK6pcnHVIciQ==}
+  '@solana-program/record@0.2.0':
+    resolution: {integrity: sha512-SH+85fxLlEj/vv8MIg22UR5s8IcCZyNZMsLX4LxX7gjY+FF8OVY8pnScZopzzfp5/dIq1k9+t3RLxG/hV15R3Q==}
+    engines: {node: '>=24.0.0'}
     peerDependencies:
-      '@solana/kit': ^5.0
+      '@solana/kit': ^6.4.0
 
   '@solana-program/system@0.12.2':
     resolution: {integrity: sha512-MaBeOxlvTruQhA7UYkOb3hVTEHPPagOtd+PvTm6a8rGgvEAP0kD4BbC37NceOaR4ABNqdaCmD5OMVRKgrE6KAg==}
@@ -4351,7 +4352,7 @@ snapshots:
     dependencies:
       '@solana/kit': 6.10.0(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)
 
-  '@solana-program/record@0.1.0(@solana/kit@6.10.0(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10))':
+  '@solana-program/record@0.2.0(@solana/kit@6.10.0(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10))':
     dependencies:
       '@solana/kit': 6.10.0(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)
 

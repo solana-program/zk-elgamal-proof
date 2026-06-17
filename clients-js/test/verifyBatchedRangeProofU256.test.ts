@@ -3,6 +3,10 @@ import {
   createDefaultSolanaClient,
   generateKeyPairSignerWithSol,
   sendAndConfirmInstructions,
+  createRecord,
+  createWriteInstruction,
+  RECORD_META_DATA_SIZE,
+  RECORD_CHUNK_SIZE_POST_INITIALIZE,
 } from './_setup';
 import { verifyBatchedRangeProofU256 } from '../src';
 import {
@@ -11,12 +15,6 @@ import {
   PedersenOpening,
 } from '@solana/zk-sdk/node';
 import { generateKeyPairSigner } from '@solana/kit';
-import {
-  createRecord,
-  createWriteInstruction,
-  RECORD_META_DATA_SIZE,
-  RECORD_CHUNK_SIZE_POST_INITIALIZE,
-} from '@solana-program/record';
 import { getSetComputeUnitLimitInstruction } from '@solana-program/compute-budget';
 
 const createValidProof = () => {

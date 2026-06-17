@@ -3,6 +3,9 @@ import {
   createDefaultSolanaClient,
   generateKeyPairSignerWithSol,
   sendAndConfirmInstructions,
+  createRecord,
+  createWriteInstruction,
+  RECORD_META_DATA_SIZE,
 } from './_setup';
 import { generateKeyPairSigner } from '@solana/kit';
 import { verifyCiphertextCommitmentEquality } from '../src';
@@ -12,11 +15,6 @@ import {
   PedersenOpening,
   PedersenCommitment,
 } from '@solana/zk-sdk/node';
-import {
-  createRecord,
-  createWriteInstruction,
-  RECORD_META_DATA_SIZE,
-} from '@solana-program/record';
 
 const createValidProof = () => {
   const keypair = new ElGamalKeypair();

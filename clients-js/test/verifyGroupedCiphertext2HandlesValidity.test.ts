@@ -3,6 +3,10 @@ import {
   createDefaultSolanaClient,
   generateKeyPairSignerWithSol,
   sendAndConfirmInstructions,
+  createRecord,
+  createWriteInstruction,
+  RECORD_META_DATA_SIZE,
+  RECORD_CHUNK_SIZE_POST_INITIALIZE,
 } from './_setup';
 import { generateKeyPairSigner } from '@solana/kit';
 import { verifyGroupedCiphertext2HandlesValidity } from '../src';
@@ -12,12 +16,6 @@ import {
   GroupedElGamalCiphertext2Handles,
   PedersenOpening,
 } from '@solana/zk-sdk/node';
-import {
-  createRecord,
-  createWriteInstruction,
-  RECORD_META_DATA_SIZE,
-  RECORD_CHUNK_SIZE_POST_INITIALIZE,
-} from '@solana-program/record';
 
 const createValidProof = () => {
   const destination1 = new ElGamalKeypair();

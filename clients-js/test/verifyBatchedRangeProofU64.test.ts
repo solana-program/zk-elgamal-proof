@@ -3,16 +3,14 @@ import {
   createDefaultSolanaClient,
   generateKeyPairSignerWithSol,
   sendAndConfirmInstructions,
-} from './_setup';
-import { verifyBatchedRangeProofU64 } from '../src';
-import { BatchedRangeProofU64Data, PedersenCommitment, PedersenOpening } from '@solana/zk-sdk/node';
-import { generateKeyPairSigner } from '@solana/kit';
-import {
   createRecord,
   createWriteInstruction,
   RECORD_META_DATA_SIZE,
   RECORD_CHUNK_SIZE_POST_INITIALIZE,
-} from '@solana-program/record';
+} from './_setup';
+import { verifyBatchedRangeProofU64 } from '../src';
+import { BatchedRangeProofU64Data, PedersenCommitment, PedersenOpening } from '@solana/zk-sdk/node';
+import { generateKeyPairSigner } from '@solana/kit';
 
 const createValidProof = () => {
   const amount1 = 255n; // 8-bit max
