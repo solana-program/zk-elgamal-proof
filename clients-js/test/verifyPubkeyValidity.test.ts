@@ -3,15 +3,13 @@ import {
   createDefaultSolanaClient,
   generateKeyPairSignerWithSol,
   sendAndConfirmInstructions,
+  createRecord,
+  createWriteInstruction,
+  RECORD_META_DATA_SIZE,
 } from './_setup';
 import { generateKeyPairSigner } from '@solana/kit';
 import { verifyPubkeyValidity } from '../src';
 import { ElGamalKeypair, PubkeyValidityProofData } from '@solana/zk-sdk/node';
-import {
-  createRecord,
-  createWriteInstruction,
-  RECORD_META_DATA_SIZE,
-} from '@solana-program/record';
 
 test('verifyPubkeyValidity: success with valid proof (no context state)', async t => {
   const client = createDefaultSolanaClient();
