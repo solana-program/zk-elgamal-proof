@@ -10,11 +10,11 @@
 
 use {
     crate::range_proof::errors::RangeProofGeneratorError,
-    curve25519_dalek::{
+    curve25519_dalek::ristretto::RistrettoPoint,
+    shake::{
         digest::{ExtendableOutput, Update, XofReader},
-        ristretto::RistrettoPoint,
+        Shake256, Shake256Reader,
     },
-    sha3::{Shake256, Shake256Reader},
 };
 
 /// The maximum number of generators that can be created.
