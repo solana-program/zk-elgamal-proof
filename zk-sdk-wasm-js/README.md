@@ -52,6 +52,17 @@ const ae = keys.ae();           // AeKey
 
 `signerMessage` and `prfInput` both take a caller-chosen `public_seed` that scopes the derivation. It is granularity-agnostic: pass a token-account pubkey for per-account keys, or a wallet pubkey for one key across all of a wallet's accounts. The SDK does not enforce a convention, but two wallets must agree on it (and on which adapter they use) to derive the same keys for the same account.
 
+For single-signer PDA wallets, use `pdaWalletPublicSeed` to bind the derived keys to the wallet program, wallet PDA, mint, and concrete token account:
+
+```js
+const publicSeed = ConfidentialKeys.pdaWalletPublicSeed(
+  programId.toBytes(),
+  walletPda.toBytes(),
+  mint.toBytes(),
+  tokenAccount.toBytes(),
+);
+```
+
 ### Passkeys (WebAuthn PRF)
 
 Passkey ECDSA signing is randomized by spec, so signature-based derivation is impossible on passkey authenticators. The PRF (`hmac-secret`) extension is deterministic by construction and is the only path. PRF must be enabled when the credential is **registered**; legacy credentials that predate it cannot be used.
