@@ -5,6 +5,7 @@ use {
     solana_zk_sdk::encryption::derivation::{
         confidential_derivation_message, derive_confidential_keys_from_ikm,
         derive_confidential_keys_from_signature,
+        pda_wallet_public_seed as sdk_pda_wallet_public_seed, PDA_WALLET_PUBLIC_SEED_FIELD_LEN,
     },
     wasm_bindgen::prelude::{wasm_bindgen, JsValue},
 };
@@ -15,6 +16,23 @@ const SIGNATURE_LEN: usize = 64;
 /// Accepted byte lengths for a WebAuthn PRF output: 32 bytes for a single
 /// `prf.results.first` evaluation, 64 bytes for `first || second` concatenated.
 const PRF_OUTPUT_LENS: [usize; 2] = [32, 64];
+
+fn copy_public_seed_field(
+    name: &str,
+    field: &Uint8Array,
+) -> Result<[u8; PDA_WALLET_PUBLIC_SEED_FIELD_LEN], JsValue> {
+    if field.length() as usize != PDA_WALLET_PUBLIC_SEED_FIELD_LEN {
+        return Err(JsValue::from_str(&format!(
+            "Invalid {name} length: expected {}, got {}",
+            PDA_WALLET_PUBLIC_SEED_FIELD_LEN,
+            field.length()
+        )));
+    }
+
+    let mut bytes = [0u8; PDA_WALLET_PUBLIC_SEED_FIELD_LEN];
+    field.copy_to(&mut bytes);
+    Ok(bytes)
+}
 
 /// Container returned by the unified confidential-balances key derivation.
 ///
@@ -56,6 +74,26 @@ impl ConfidentialKeys {
     #[wasm_bindgen(js_name = "prfInput")]
     pub fn prf_input(public_seed: Uint8Array) -> Vec<u8> {
         confidential_derivation_message(&public_seed.to_vec())
+    }
+
+    /// Returns the canonical `public_seed` for single-signer PDA wallet accounts.
+    ///
+    /// The output is `program_id || wallet_pda || mint || token_account`.
+    /// Pass it to `signerMessage` or `prfInput` so PDA/passkey wallets use a
+    /// consistent seed convention across implementations.
+    #[wasm_bindgen(js_name = "pdaWalletPublicSeed")]
+    pub fn pda_wallet_public_seed(
+        program_id: Uint8Array,
+        wallet_pda: Uint8Array,
+        mint: Uint8Array,
+        token_account: Uint8Array,
+    ) -> Result<Vec<u8>, JsValue> {
+        let program_id = copy_public_seed_field("program_id", &program_id)?;
+        let wallet_pda = copy_public_seed_field("wallet_pda", &wallet_pda)?;
+        let mint = copy_public_seed_field("mint", &mint)?;
+        let token_account = copy_public_seed_field("token_account", &token_account)?;
+
+        Ok(sdk_pda_wallet_public_seed(&program_id, &wallet_pda, &mint, &token_account).to_vec())
     }
 
     /// Derives a `ConfidentialKeys` pair from a 64-byte ed25519 signature
@@ -234,6 +272,55 @@ mod tests {
         let signer = ConfidentialKeys::signer_message(Uint8Array::from(seed.as_ref()));
         assert_eq!(prf, signer);
         assert!(prf.starts_with(b"solana-conf-bal/v1"));
+    }
+
+    #[wasm_bindgen_test]
+    fn test_pda_wallet_public_seed_format() {
+        let seed = ConfidentialKeys::pda_wallet_public_seed(
+            Uint8Array::from([0x11u8; 32].as_ref()),
+            Uint8Array::from([0x22u8; 32].as_ref()),
+            Uint8Array::from([0x33u8; 32].as_ref()),
+            Uint8Array::from([0x44u8; 32].as_ref()),
+        )
+        .unwrap();
+
+        assert_eq!(seed.len(), 128);
+        assert_eq!(&seed[0..32], [0x11u8; 32].as_ref());
+        assert_eq!(&seed[32..64], [0x22u8; 32].as_ref());
+        assert_eq!(&seed[64..96], [0x33u8; 32].as_ref());
+        assert_eq!(&seed[96..128], [0x44u8; 32].as_ref());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_pda_wallet_public_seed_rejects_wrong_length() {
+        let good = Uint8Array::from([0x11u8; 32].as_ref());
+        let bad = Uint8Array::from([0x22u8; 31].as_ref());
+
+        assert!(ConfidentialKeys::pda_wallet_public_seed(
+            bad.clone(),
+            good.clone(),
+            good.clone(),
+            good.clone(),
+        )
+        .is_err());
+        assert!(ConfidentialKeys::pda_wallet_public_seed(
+            good.clone(),
+            bad.clone(),
+            good.clone(),
+            good.clone(),
+        )
+        .is_err());
+        assert!(ConfidentialKeys::pda_wallet_public_seed(
+            good.clone(),
+            good.clone(),
+            bad.clone(),
+            good.clone(),
+        )
+        .is_err());
+        assert!(
+            ConfidentialKeys::pda_wallet_public_seed(good.clone(), good.clone(), good, bad,)
+                .is_err()
+        );
     }
 
     #[wasm_bindgen_test]

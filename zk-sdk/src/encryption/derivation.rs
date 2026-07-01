@@ -64,6 +64,12 @@ pub const AE_HKDF_INFO: &[u8] = b"ae";
 /// HKDF info string for the ElGamal secret scalar.
 pub const ELGAMAL_HKDF_INFO: &[u8] = b"elgamal";
 
+/// Byte length of a Solana address or pubkey field in a PDA-wallet public seed.
+pub const PDA_WALLET_PUBLIC_SEED_FIELD_LEN: usize = 32;
+
+/// Byte length of the canonical PDA-wallet public seed.
+pub const PDA_WALLET_PUBLIC_SEED_LEN: usize = PDA_WALLET_PUBLIC_SEED_FIELD_LEN * 4;
+
 /// Minimum acceptable IKM length when calling
 /// [`derive_confidential_keys_from_ikm`] directly. Matches the
 /// `ELGAMAL_SECRET_KEY_LEN` floor used elsewhere in the SDK.
@@ -87,6 +93,32 @@ const MAXIMUM_IKM_LEN: usize = 65535;
 /// this message to derive byte-identical keys.
 pub fn confidential_derivation_message(public_seed: &[u8]) -> Vec<u8> {
     [HKDF_SALT, public_seed].concat()
+}
+
+/// Returns the canonical `public_seed` for single-signer PDA wallet accounts.
+///
+/// The seed binds the confidential-balance keys to the wallet program, wallet
+/// PDA, mint, and concrete token account:
+///
+/// ```text
+/// program_id || wallet_pda || mint || token_account
+/// ```
+///
+/// Use this output as the `public_seed` for [`confidential_derivation_message`],
+/// [`derive_confidential_keys`], or the wasm `ConfidentialKeys.prfInput`
+/// passkey path.
+pub fn pda_wallet_public_seed(
+    program_id: &[u8; PDA_WALLET_PUBLIC_SEED_FIELD_LEN],
+    wallet_pda: &[u8; PDA_WALLET_PUBLIC_SEED_FIELD_LEN],
+    mint: &[u8; PDA_WALLET_PUBLIC_SEED_FIELD_LEN],
+    token_account: &[u8; PDA_WALLET_PUBLIC_SEED_FIELD_LEN],
+) -> [u8; PDA_WALLET_PUBLIC_SEED_LEN] {
+    let mut seed = [0u8; PDA_WALLET_PUBLIC_SEED_LEN];
+    seed[0..32].copy_from_slice(program_id);
+    seed[32..64].copy_from_slice(wallet_pda);
+    seed[64..96].copy_from_slice(mint);
+    seed[96..128].copy_from_slice(token_account);
+    seed
 }
 
 /// Signs the canonical derivation message with `signer` and derives the
@@ -214,6 +246,32 @@ mod tests {
         assert_eq!(message, [HKDF_SALT, public_seed.as_ref()].concat());
         assert!(message.starts_with(b"solana-conf-bal/v1"));
         assert!(message.ends_with(&public_seed));
+    }
+
+    #[test]
+    fn test_pda_wallet_public_seed_format() {
+        let program_id = [0x11u8; 32];
+        let wallet_pda = [0x22u8; 32];
+        let mint = [0x33u8; 32];
+        let token_account = [0x44u8; 32];
+
+        let seed = pda_wallet_public_seed(&program_id, &wallet_pda, &mint, &token_account);
+
+        assert_eq!(seed.len(), PDA_WALLET_PUBLIC_SEED_LEN);
+        assert_eq!(&seed[0..32], &program_id);
+        assert_eq!(&seed[32..64], &wallet_pda);
+        assert_eq!(&seed[64..96], &mint);
+        assert_eq!(&seed[96..128], &token_account);
+    }
+
+    #[test]
+    fn test_pda_wallet_public_seed_derivation_message_format() {
+        let seed = pda_wallet_public_seed(&[1u8; 32], &[2u8; 32], &[3u8; 32], &[4u8; 32]);
+        let message = confidential_derivation_message(&seed);
+
+        assert!(message.starts_with(HKDF_SALT));
+        assert_eq!(&message[HKDF_SALT.len()..], &seed);
+        assert_eq!(message.len(), HKDF_SALT.len() + PDA_WALLET_PUBLIC_SEED_LEN);
     }
 
     #[test]
