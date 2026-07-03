@@ -480,13 +480,17 @@ mod tests {
 
         let Q = RistrettoPoint::hash_from_bytes::<Sha3_512>(b"test point");
 
-        let a: Vec<_> = (0..n).map(|_| Scalar::random(&mut rand::rng())).collect();
-        let b: Vec<_> = (0..n).map(|_| Scalar::random(&mut rand::rng())).collect();
+        let a: Vec<_> = (0..n)
+            .map(|_| Scalar::random(&mut rand::rngs::OsRng))
+            .collect();
+        let b: Vec<_> = (0..n)
+            .map(|_| Scalar::random(&mut rand::rngs::OsRng))
+            .collect();
         let c = util::inner_product(&a, &b).unwrap();
 
         let G_factors: Vec<Scalar> = iter::repeat_n(Scalar::ONE, n).collect();
 
-        let y_inv = Scalar::random(&mut rand::rng());
+        let y_inv = Scalar::random(&mut rand::rngs::OsRng);
         let H_factors: Vec<Scalar> = util::exp_iter(y_inv).take(n).collect();
 
         // P would be determined upstream, but we need a correct P to check the proof.

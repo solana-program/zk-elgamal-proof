@@ -62,7 +62,7 @@ impl PubkeyValidityProof {
         let mut s_inv = s.invert();
 
         // generate a random masking factor that also serves as a nonce
-        let mut y = Scalar::random(&mut rand::rng());
+        let mut y = Scalar::random(&mut rand::rngs::OsRng);
         let Y = (&y * &(*H)).compress();
 
         // record masking factors in transcript and get challenges

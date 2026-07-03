@@ -83,7 +83,7 @@ pub struct PedersenOpening(Scalar);
 
 impl PedersenOpening {
     pub fn new_rand() -> Self {
-        PedersenOpening(Scalar::random(&mut rand::rng()))
+        PedersenOpening(Scalar::random(&mut rand::rngs::OsRng))
     }
 }
 
@@ -345,9 +345,8 @@ mod tests {
         let amount_0: u64 = 77;
         let amount_1: u64 = 57;
 
-        let rng = &mut rand::rng();
-        let opening_0 = PedersenOpening(Scalar::random(rng));
-        let opening_1 = PedersenOpening(Scalar::random(rng));
+        let opening_0 = PedersenOpening(Scalar::random(&mut rand::rngs::OsRng));
+        let opening_1 = PedersenOpening(Scalar::random(&mut rand::rngs::OsRng));
 
         let commitment_0 = Pedersen::with(amount_0, &opening_0);
         let commitment_1 = Pedersen::with(amount_1, &opening_1);
@@ -361,9 +360,8 @@ mod tests {
         let amount_0: u64 = 77;
         let amount_1: u64 = 57;
 
-        let rng = &mut rand::rng();
-        let opening_0 = PedersenOpening(Scalar::random(rng));
-        let opening_1 = PedersenOpening(Scalar::random(rng));
+        let opening_0 = PedersenOpening(Scalar::random(&mut rand::rngs::OsRng));
+        let opening_1 = PedersenOpening(Scalar::random(&mut rand::rngs::OsRng));
 
         let commitment_0 = Pedersen::with(amount_0, &opening_0);
         let commitment_1 = Pedersen::with(amount_1, &opening_1);
@@ -401,7 +399,7 @@ mod tests {
 
     #[test]
     fn test_pedersen_opening_bytes() {
-        let opening = PedersenOpening(Scalar::random(&mut rand::rng()));
+        let opening = PedersenOpening(Scalar::random(&mut rand::rngs::OsRng));
 
         let encoded = opening.to_bytes();
         let decoded = PedersenOpening::from_bytes(&encoded).unwrap();

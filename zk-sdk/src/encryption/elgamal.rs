@@ -59,7 +59,7 @@ impl ElGamal {
     /// This function is randomized. It internally samples a scalar element using `OsRng`.
     fn keygen() -> ElGamalKeypair {
         // secret scalar should be non-zero except with negligible probability
-        let s = Zeroizing::new(Scalar::random(&mut rand::rng()));
+        let s = Zeroizing::new(Scalar::random(&mut rand::rngs::OsRng));
         Self::keygen_with_scalar(&s)
     }
 
@@ -473,7 +473,7 @@ impl ElGamalSecretKey {
     ///
     /// This function is randomized. It internally samples a scalar element using `OsRng`.
     pub fn new_rand() -> Self {
-        ElGamalSecretKey(Scalar::random(&mut rand::rng()))
+        ElGamalSecretKey(Scalar::random(&mut rand::rngs::OsRng))
     }
 
     /// Derive an ElGamal secret key from an entropy seed.

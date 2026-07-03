@@ -63,7 +63,7 @@ impl ZeroCiphertextProof {
         let D = ciphertext.handle.get_point();
 
         // generate a random masking factor that also serves as a nonce
-        let mut y = Scalar::random(&mut rand::rng());
+        let mut y = Scalar::random(&mut rand::rngs::OsRng);
         let Y_P = (&y * P).compress();
         let Y_D = (&y * D).compress();
 
