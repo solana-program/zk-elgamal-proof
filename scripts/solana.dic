@@ -1,4 +1,4 @@
-1007
+1008
 config
 metadata
 json
@@ -87,6 +87,7 @@ ECDSA
 SHA512
 WebAuthn
 WebAssembly
+wasm
 authenticator/S
 passkey/S
 bundler/S
