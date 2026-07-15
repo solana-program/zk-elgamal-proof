@@ -42,16 +42,16 @@
   },
   "homepage": "https://github.com/solana-program/zk-elgamal-proof#readme",
   "dependencies": {
-    "@solana-program/system": "^0.12.2"
+    "@solana-program/system": "^0.13.0"
   },
   "peerDependencies": {
-    "@solana/kit": "^5.0"
+    "@solana/kit": "^7.0.0"
   },
   "devDependencies": {
     "@ava/typescript": "^7.0.0",
     "@eslint/js": "^10.0.1",
-    "@solana-program/compute-budget": "^0.16.0",
-    "@solana-program/record": "^0.2.0",
+    "@solana-program/compute-budget": "^0.17.0",
+    "@solana-program/record": "^0.3.0",
     "@solana/kit": "^7.0.0",
     "@solana/sysvars": "^7.0.0",
     "@solana/zk-sdk": "0.4.1",
