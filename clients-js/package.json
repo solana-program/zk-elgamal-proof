@@ -63,7 +63,7 @@
     "rimraf": "^6.1.2",
     "tsup": "^8.5.1",
     "typedoc": "^0.28.20",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "typescript-eslint": "^8.65.0"
   },
   "ava": {
