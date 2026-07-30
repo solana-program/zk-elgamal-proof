@@ -92,6 +92,15 @@ build-doc-%:
 test-doc-%:
 	cargo $(nightly) test --doc --all-features --manifest-path $(call make-path,$*)/Cargo.toml $(ARGS)
 
+format-check-js-zk-sdk-wasm-js:
+	@echo "No JS format check needed for zk-sdk-wasm-js"
+
+lint-js-zk-sdk-wasm-js:
+	@echo "No JS lint needed for zk-sdk-wasm-js"
+
+test-js-zk-sdk-wasm-js:
+	make test-wasm-js-zk-sdk-wasm-js
+
 format-check-js-%:
 	cd $(call make-path,$*) && pnpm install && pnpm format $(ARGS)
 

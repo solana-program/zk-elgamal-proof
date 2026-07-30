@@ -13,7 +13,6 @@ on:
           - zk-keygen
           - zk-sdk
           - zk-sdk-pod
-          - zk-sdk-wasm-js
       level:
         description: Level
         required: true
