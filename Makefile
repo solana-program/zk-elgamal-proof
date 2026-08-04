@@ -71,6 +71,9 @@ build-wasm-js-%:
 	wasm-pack build --target nodejs --out-dir dist/node --out-name index $(call make-path,$*)
 	wasm-pack build --target web --out-dir dist/web --out-name index $(call make-path,$*)
 	wasm-pack build --target bundler --out-dir dist/bundler --out-name index $(call make-path,$*)
+	# Remove wasm-pack's generated `.gitignore` files; npm honours them when
+	# packing and would strip the build output from the published tarball.
+	find $(call make-path,$*)/dist -name .gitignore -exec rm -f {} +
 
 test-wasm-js-%:
 	wasm-pack test --node $(call make-path,$*) $(ARGS)
