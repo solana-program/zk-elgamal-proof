@@ -99,6 +99,7 @@ lint-js-zk-sdk-wasm-js:
 	@echo "No JS lint needed for zk-sdk-wasm-js"
 
 test-js-zk-sdk-wasm-js:
+	make build-wasm-js-zk-sdk-wasm-js
 	make test-wasm-js-zk-sdk-wasm-js
 
 format-check-js-%:
