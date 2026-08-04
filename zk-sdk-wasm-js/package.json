@@ -28,5 +28,14 @@
   "scripts": {
     "build": "make -C .. build-wasm-js-zk-sdk-wasm-js",
     "prepublishOnly": "pnpm build"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/solana-program/zk-elgamal-proof.git",
+    "directory": "zk-sdk-wasm-js"
+  },
+  "bugs": {
+    "url": "https://github.com/solana-program/zk-elgamal-proof/issues"
+  },
+  "homepage": "https://github.com/solana-program/zk-elgamal-proof#readme"
 }
