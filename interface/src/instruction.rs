@@ -93,6 +93,12 @@ pub enum ProofInstruction {
     ///   i. `ZeroCiphertextProofData` if proof is provided as instruction data
     ///   ii. `u32` byte offset if proof is provided as an account
     ///
+    /// Note that the context state account is not required to be a signer and
+    /// MUST be included within the same Transaction as the system program's
+    /// `CreateAccount` instruction that creates the account being initialized.
+    /// Otherwise another party can acquire ownership of the uninitialized
+    /// account.
+    ///
     VerifyZeroCiphertext,
 
     /// Verify a ciphertext-ciphertext equality proof.
@@ -124,6 +130,12 @@ pub enum ProofInstruction {
     /// The instruction expects either:
     ///   i. `CiphertextCiphertextEqualityProofData` if proof is provided as instruction data
     ///   ii. `u32` byte offset if proof is provided as an account
+    ///
+    /// Note that the context state account is not required to be a signer and
+    /// MUST be included within the same Transaction as the system program's
+    /// `CreateAccount` instruction that creates the account being initialized.
+    /// Otherwise another party can acquire ownership of the uninitialized
+    /// account.
     ///
     VerifyCiphertextCiphertextEquality,
 
@@ -157,6 +169,12 @@ pub enum ProofInstruction {
     ///   i. `CiphertextCommitmentEqualityProofData` if proof is provided as instruction data
     ///   ii. `u32` byte offset if proof is provided as an account
     ///
+    /// Note that the context state account is not required to be a signer and
+    /// MUST be included within the same Transaction as the system program's
+    /// `CreateAccount` instruction that creates the account being initialized.
+    /// Otherwise another party can acquire ownership of the uninitialized
+    /// account.
+    ///
     VerifyCiphertextCommitmentEquality,
 
     /// Verify a public key validity zero-knowledge proof.
@@ -189,6 +207,12 @@ pub enum ProofInstruction {
     ///   i. `PubkeyValidityData` if proof is provided as instruction data
     ///   ii. `u32` byte offset if proof is provided as an account
     ///
+    /// Note that the context state account is not required to be a signer and
+    /// MUST be included within the same Transaction as the system program's
+    /// `CreateAccount` instruction that creates the account being initialized.
+    /// Otherwise another party can acquire ownership of the uninitialized
+    /// account.
+    ///
     VerifyPubkeyValidity,
 
     /// Verify a percentage-with-cap proof.
@@ -220,6 +244,12 @@ pub enum ProofInstruction {
     /// The instruction expects either:
     ///   i. `PercentageWithCapProofData` if proof is provided as instruction data
     ///   ii. `u32` byte offset if proof is provided as an account
+    ///
+    /// Note that the context state account is not required to be a signer and
+    /// MUST be included within the same Transaction as the system program's
+    /// `CreateAccount` instruction that creates the account being initialized.
+    /// Otherwise another party can acquire ownership of the uninitialized
+    /// account.
     ///
     VerifyPercentageWithCap,
 
@@ -260,6 +290,12 @@ pub enum ProofInstruction {
     ///   i. `BatchedRangeProofU64Data` if proof is provided as instruction data
     ///   ii. `u32` byte offset if proof is provided as an account
     ///
+    /// Note that the context state account is not required to be a signer and
+    /// MUST be included within the same Transaction as the system program's
+    /// `CreateAccount` instruction that creates the account being initialized.
+    /// Otherwise another party can acquire ownership of the uninitialized
+    /// account.
+    ///
     VerifyBatchedRangeProofU64,
 
     /// Verify 128-bit batched range proof.
@@ -292,6 +328,12 @@ pub enum ProofInstruction {
     /// The instruction expects either:
     ///   i. `BatchedRangeProofU128Data` if proof is provided as instruction data
     ///   ii. `u32` byte offset if proof is provided as an account
+    ///
+    /// Note that the context state account is not required to be a signer and
+    /// MUST be included within the same Transaction as the system program's
+    /// `CreateAccount` instruction that creates the account being initialized.
+    /// Otherwise another party can acquire ownership of the uninitialized
+    /// account.
     ///
     VerifyBatchedRangeProofU128,
 
@@ -326,6 +368,12 @@ pub enum ProofInstruction {
     ///   i. `BatchedRangeProofU256Data` if proof is provided as instruction data
     ///   ii. `u32` byte offset if proof is provided as an account
     ///
+    /// Note that the context state account is not required to be a signer and
+    /// MUST be included within the same Transaction as the system program's
+    /// `CreateAccount` instruction that creates the account being initialized.
+    /// Otherwise another party can acquire ownership of the uninitialized
+    /// account.
+    ///
     VerifyBatchedRangeProofU256,
 
     /// Verify a grouped-ciphertext with 2 handles validity proof.
@@ -358,6 +406,12 @@ pub enum ProofInstruction {
     /// The instruction expects either:
     ///   i. `GroupedCiphertext2HandlesValidityProofData` if proof is provided as instruction data
     ///   ii. `u32` byte offset if proof is provided as an account
+    ///
+    /// Note that the context state account is not required to be a signer and
+    /// MUST be included within the same Transaction as the system program's
+    /// `CreateAccount` instruction that creates the account being initialized.
+    /// Otherwise another party can acquire ownership of the uninitialized
+    /// account.
     ///
     VerifyGroupedCiphertext2HandlesValidity,
 
@@ -393,6 +447,12 @@ pub enum ProofInstruction {
     ///   i. `BatchedGroupedCiphertext2HandlesValidityProofData` if proof is provided as instruction data
     ///   ii. `u32` byte offset if proof is provided as an account
     ///
+    /// Note that the context state account is not required to be a signer and
+    /// MUST be included within the same Transaction as the system program's
+    /// `CreateAccount` instruction that creates the account being initialized.
+    /// Otherwise another party can acquire ownership of the uninitialized
+    /// account.
+    ///
     VerifyBatchedGroupedCiphertext2HandlesValidity,
 
     /// Verify a grouped-ciphertext with 3 handles validity proof.
@@ -425,6 +485,12 @@ pub enum ProofInstruction {
     /// The instruction expects either:
     ///   i. `GroupedCiphertext3HandlesValidityProofData` if proof is provided as instruction data
     ///   ii. `u32` byte offset if proof is provided as an account
+    ///
+    /// Note that the context state account is not required to be a signer and
+    /// MUST be included within the same Transaction as the system program's
+    /// `CreateAccount` instruction that creates the account being initialized.
+    /// Otherwise another party can acquire ownership of the uninitialized
+    /// account.
     ///
     VerifyGroupedCiphertext3HandlesValidity,
 
@@ -459,6 +525,12 @@ pub enum ProofInstruction {
     /// The instruction expects either:
     ///   i. `BatchedGroupedCiphertext3HandlesValidityProofData` if proof is provided as instruction data
     ///   ii. `u32` byte offset if proof is provided as an account
+    ///
+    /// Note that the context state account is not required to be a signer and
+    /// MUST be included within the same Transaction as the system program's
+    /// `CreateAccount` instruction that creates the account being initialized.
+    /// Otherwise another party can acquire ownership of the uninitialized
+    /// account.
     ///
     VerifyBatchedGroupedCiphertext3HandlesValidity,
 }
