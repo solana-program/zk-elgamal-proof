@@ -8,25 +8,25 @@ WebAssembly bindings for the Rust [`solana-zk-sdk`](https://github.com/solana-pr
 npm install @solana/zk-sdk
 ```
 
-The package ships three builds, one per `wasm-pack` target:
+The package ships three builds, one per `wasm-pack` target. Import the package root and the right one is selected for you; the subpaths are there when you need to pin a build explicitly:
 
 | Import | Target | Init |
 |---|---|---|
+| `@solana/zk-sdk` | anywhere — `node` gets the Node build, browser bundlers get the bundler build | none, ready on import |
 | `@solana/zk-sdk/node` | Node.js | none, ready on import |
 | `@solana/zk-sdk/web` | browser, no bundler | call the default `init()` once before use |
-| `@solana/zk-sdk/bundler` | Vite / webpack / etc. (package default) | none, the bundler loads the wasm |
+| `@solana/zk-sdk/bundler` | Vite / webpack / etc. | none, the bundler loads the wasm |
 
 ```js
-// Node
-import { ConfidentialKeys } from "@solana/zk-sdk/node";
-
-// Bundler (Vite, webpack)
-import { ConfidentialKeys } from "@solana/zk-sdk/bundler";
+// Anywhere
+import { ConfidentialKeys } from "@solana/zk-sdk";
 
 // Browser without a bundler
 import init, { ConfidentialKeys } from "@solana/zk-sdk/web";
 await init();
 ```
+
+The `web` build is the one case the root export cannot pick for you: it needs an explicit `init()`, so import it by subpath. `@solana/zk-sdk/bundler` also resolves to the Node build under the `node` condition — the ESM bundler build cannot load its `.wasm` outside a bundler, so a Node runtime (including the server side of a bundled app) is always served the Node build.
 
 ## Confidential-balances key derivation
 
@@ -68,7 +68,7 @@ const publicSeed = ConfidentialKeys.pdaWalletPublicSeed(
 Passkey ECDSA signing is randomized by spec, so signature-based derivation is impossible on passkey authenticators. The PRF (`hmac-secret`) extension is deterministic by construction and is the only path. PRF must be enabled when the credential is **registered**; legacy credentials that predate it cannot be used.
 
 ```js
-import { ConfidentialKeys } from "@solana/zk-sdk/bundler";
+import { ConfidentialKeys } from "@solana/zk-sdk";
 
 // 1. One-time, at credential registration (pure WebAuthn, not this SDK).
 //    Enabling PRF here is mandatory.
@@ -104,7 +104,7 @@ const keys = ConfidentialKeys.fromPrf(new Uint8Array(prf));
 For a normal Solana wallet, derive from a single `signMessage` over the canonical message.
 
 ```js
-import { ConfidentialKeys } from "@solana/zk-sdk/web";
+import { ConfidentialKeys } from "@solana/zk-sdk";
 
 const message = ConfidentialKeys.signerMessage(tokenAccount.toBytes());
 const signature = await wallet.signMessage(message);   // 64-byte Ed25519 signature

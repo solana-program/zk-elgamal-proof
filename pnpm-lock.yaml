@@ -72,6 +72,12 @@ importers:
 
   zk-sdk-wasm-js: {}
 
+  zk-sdk-wasm-js/examples/node-esm-integration:
+    dependencies:
+      '@solana/zk-sdk':
+        specifier: file:../..
+        version: link:../..
+
   zk-sdk-wasm-js/examples/node-integration:
     dependencies:
       '@solana/zk-sdk':

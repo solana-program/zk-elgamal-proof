@@ -80,6 +80,7 @@ test-wasm-js-%:
 	wasm-pack test --headless --firefox $(call make-path,$*) --features test-browser $(ARGS)
 	wasm-pack test --headless --chrome $(call make-path,$*) --features test-browser $(ARGS)
 	pnpm i --dir $(call make-path,$*)/examples/node-integration && pnpm test --dir $(call make-path,$*)/examples/node-integration
+	pnpm i --dir $(call make-path,$*)/examples/node-esm-integration && pnpm test --dir $(call make-path,$*)/examples/node-esm-integration
 	pnpm i --dir $(call make-path,$*)/examples/web-integration && \
 		pnpm i --dir $(call make-path,$*)/examples/vite-integration && \
 		pnpm i --dir $(call make-path,$*)/examples/webpack-integration && \

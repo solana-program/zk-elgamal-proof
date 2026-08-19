@@ -6,9 +6,24 @@
   "files": [
     "dist"
   ],
+  "main": "./dist/node/index.js",
   "types": "./dist/node/index.d.ts",
   "browser": "./dist/bundler/index.js",
   "exports": {
+    ".": {
+      "node": {
+        "types": "./dist/node/index.d.ts",
+        "default": "./dist/node/index.js"
+      },
+      "browser": {
+        "types": "./dist/bundler/index.d.ts",
+        "default": "./dist/bundler/index.js"
+      },
+      "default": {
+        "types": "./dist/bundler/index.d.ts",
+        "default": "./dist/bundler/index.js"
+      }
+    },
     "./node": {
       "import": "./dist/node/index.js",
       "require": "./dist/node/index.js",
@@ -20,9 +35,13 @@
       "types": "./dist/web/index.d.ts"
     },
     "./bundler": {
+      "node": {
+        "types": "./dist/node/index.d.ts",
+        "default": "./dist/node/index.js"
+      },
+      "types": "./dist/bundler/index.d.ts",
       "import": "./dist/bundler/index.js",
-      "default": "./dist/bundler/index.js",
-      "types": "./dist/bundler/index.d.ts"
+      "default": "./dist/bundler/index.js"
     }
   },
   "scripts": {
