@@ -1,0 +1,11 @@
+{
+  "name": "example-node-esm-integration",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node index.test.js"
+  },
+  "dependencies": {
+    "@solana/zk-sdk": "file:../.."
+  }
+}
