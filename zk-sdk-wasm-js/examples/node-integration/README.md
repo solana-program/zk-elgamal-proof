@@ -1,6 +1,6 @@
 ## How to Run
 
-You must first build the WASM artifacts. From the root directory of the WASM crate (`zk-sdk-wasm-js`):
+You must first build the WASM artifacts. From this directory:
 
 ```bash
 make -C ../../.. build-wasm-js-zk-sdk-wasm-js
