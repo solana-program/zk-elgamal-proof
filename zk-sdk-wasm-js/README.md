@@ -12,13 +12,13 @@ The package ships three builds, one per `wasm-pack` target. Import the package r
 
 | Import | Target | Init |
 |---|---|---|
-| `@solana/zk-sdk` | anywhere — `node` gets the Node build, browser bundlers get the bundler build | none, ready on import |
+| `@solana/zk-sdk` | Node and bundlers — `node` gets the Node build, browser bundlers get the bundler build | none, ready on import |
 | `@solana/zk-sdk/node` | Node.js | none, ready on import |
 | `@solana/zk-sdk/web` | browser, no bundler | call the default `init()` once before use |
 | `@solana/zk-sdk/bundler` | Vite / webpack / etc. | none, the bundler loads the wasm |
 
 ```js
-// Anywhere
+// Node or a bundler
 import { ConfidentialKeys } from "@solana/zk-sdk";
 
 // Browser without a bundler
