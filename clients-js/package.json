@@ -22,10 +22,10 @@
     "build": "rimraf dist && tsup && tsc -p ./tsconfig.declarations.json",
     "build:docs": "typedoc",
     "test": "tsc --noEmit && ava --serial --timeout=2m",
-    "lint": "eslint src",
-    "lint:fix": "eslint --fix src",
-    "format": "prettier --check src test",
-    "format:fix": "prettier --write src test",
+    "lint": "oxlint src",
+    "lint:fix": "oxlint --fix src",
+    "format": "oxfmt --check src test",
+    "format:fix": "oxfmt --write src test",
     "prepublishOnly": "pnpm build"
   },
   "publishConfig": {
@@ -49,7 +49,6 @@
   },
   "devDependencies": {
     "@ava/typescript": "^7.0.0",
-    "@eslint/js": "^10.0.1",
     "@solana-program/compute-budget": "^0.18.0",
     "@solana-program/record": "^0.4.0",
     "@solana/kit": "^8.0.0",
@@ -57,14 +56,12 @@
     "@solana/zk-sdk": "0.4.1",
     "@types/node": "^26.2.0",
     "ava": "^8.0.1",
-    "eslint": "^9.39.5",
-    "eslint-config-prettier": "^10.1.8",
-    "prettier": "^3.9.6",
+    "oxfmt": "^0.60.0",
+    "oxlint": "^1.75.0",
     "rimraf": "^6.1.2",
     "tsup": "^8.5.1",
     "typedoc": "^0.28.20",
-    "typescript": "^6.0.3",
-    "typescript-eslint": "^8.67.0"
+    "typescript": "^6.0.3"
   },
   "ava": {
     "nodeArguments": [

@@ -139,7 +139,8 @@ export interface VerifyProofInput<
   // Context State Accounts (Optional)
   contextState?: Address<TAccountContextState>;
   contextStateAuthority?:
-    Address<TAccountContextStateAuthority> | TransactionSigner<TAccountContextStateAuthority>;
+    | Address<TAccountContextStateAuthority>
+    | TransactionSigner<TAccountContextStateAuthority>;
 
   // Proof Source (Mutually Exclusive)
   offset?: number;

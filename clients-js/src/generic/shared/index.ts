@@ -15,7 +15,10 @@ import {
 export interface ResolvedAccount<
   T extends string = string,
   U extends Address<T> | ProgramDerivedAddress<T> | TransactionSigner<T> | null =
-    Address<T> | ProgramDerivedAddress<T> | TransactionSigner<T> | null,
+    | Address<T>
+    | ProgramDerivedAddress<T>
+    | TransactionSigner<T>
+    | null,
 > {
   isWritable: boolean;
   value: U;
