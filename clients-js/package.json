@@ -52,7 +52,7 @@
     "@solana-program/compute-budget": "^0.18.0",
     "@solana-program/record": "^0.4.0",
     "@solana/kit": "^8.1.0",
-    "@solana/sysvars": "^8.0.0",
+    "@solana/sysvars": "^8.1.0",
     "@solana/zk-sdk": "0.4.1",
     "@types/node": "^26.3.0",
     "ava": "^8.0.1",
