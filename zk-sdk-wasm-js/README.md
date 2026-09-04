@@ -50,9 +50,9 @@ const ae = keys.ae();           // AeKey
 
 ### The `public_seed`
 
-`signerMessage` and `prfInput` both take a caller-chosen `public_seed` that scopes the derivation. It is granularity-agnostic: pass a token-account pubkey for per-account keys, or a wallet pubkey for one key across all of a wallet's accounts. The SDK does not enforce a convention, but two wallets must agree on it (and on which adapter they use) to derive the same keys for the same account.
+`signerMessage` and `prfInput` both take a caller-chosen `public_seed` that scopes the derivation. The standard is an **empty seed** (`new Uint8Array(0)`): the derived keys are bound to the wallet alone, one key pair covering all of the wallet's confidential accounts, and they match what the Token-2022 clients and the confidential-transfer docs derive for the same wallet. Two wallets derive the same keys for the same account only if they use the same seed (and the same adapter), which is exactly why the empty seed is the standard.
 
-For single-signer PDA wallets, use `pdaWalletPublicSeed` to bind the derived keys to the wallet program, wallet PDA, mint, and concrete token account:
+A non-empty seed (e.g. a token-account pubkey for per-account keys) is still accepted for callers that need finer granularity, at the cost of that cross-client agreement. For single-signer PDA wallets specifically, use `pdaWalletPublicSeed` to bind the derived keys to the wallet program, wallet PDA, mint, and concrete token account:
 
 ```js
 const publicSeed = ConfidentialKeys.pdaWalletPublicSeed(
@@ -78,7 +78,7 @@ const cred = await navigator.credentials.create({
 const credentialId = new Uint8Array(cred.rawId);
 
 // 2. Per session: evaluate the PRF over our canonical input, then derive.
-const publicSeed = tokenAccount.toBytes();           // your granularity choice
+const publicSeed = new Uint8Array(0);                // standard: wallet-only keys
 const salt = ConfidentialKeys.prfInput(publicSeed);
 
 const assertion = await navigator.credentials.get({
@@ -106,7 +106,7 @@ For a normal Solana wallet, derive from a single `signMessage` over the canonica
 ```js
 import { ConfidentialKeys } from "@solana/zk-sdk";
 
-const message = ConfidentialKeys.signerMessage(tokenAccount.toBytes());
+const message = ConfidentialKeys.signerMessage(new Uint8Array(0));
 const signature = await wallet.signMessage(message);   // 64-byte Ed25519 signature
 const keys = ConfidentialKeys.fromSignature(signature);
 ```

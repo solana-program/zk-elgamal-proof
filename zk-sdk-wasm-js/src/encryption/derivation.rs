@@ -52,9 +52,11 @@ impl ConfidentialKeys {
     /// `fromSignature`.
     ///
     /// The message is `b"solana-conf-bal/v1" || public_seed`. `public_seed`
-    /// is caller-controlled and granularity-agnostic; pass a wallet pubkey
-    /// for per-wallet keying or a token-account pubkey for per-account
-    /// keying.
+    /// is caller-controlled; the standard is an empty seed, which binds the
+    /// derived keys to the signing wallet alone and matches the keys other
+    /// standard clients derive. Pass a non-empty seed (e.g. a token-account
+    /// pubkey) only when finer granularity is worth losing that cross-client
+    /// agreement.
     #[wasm_bindgen(js_name = "signerMessage")]
     pub fn signer_message(public_seed: Uint8Array) -> Vec<u8> {
         confidential_derivation_message(&public_seed.to_vec())
