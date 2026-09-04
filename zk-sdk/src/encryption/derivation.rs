@@ -28,10 +28,14 @@
 //!               )
 //! ```
 //!
-//! `public_seed` in the signing path is caller-controlled and granularity-
-//! agnostic: pass a wallet pubkey for registry-aligned per-wallet keying, or
-//! a token-account pubkey for per-account keying. The SDK does not enforce
-//! either convention.
+//! `public_seed` in the signing path is caller-controlled, but the ecosystem
+//! standard is wallet-only keying: pass an empty seed (`b""`) so the derived
+//! keys are bound to the signing wallet alone. This is what the Token-2022
+//! clients and the confidential-transfer documentation derive, so an empty
+//! seed is what makes keys portable across wallets and tooling. Non-empty
+//! seeds (a token-account pubkey, [`pda_wallet_public_seed`]) remain
+//! supported for callers that need finer granularity, at the cost of not
+//! matching the keys other clients derive for the same wallet.
 
 use {
     crate::{
@@ -83,9 +87,11 @@ const MAXIMUM_IKM_LEN: usize = 65535;
 ///
 /// This single message is the input to every signing-style adapter: it is what an
 /// Ed25519 `Signer` signs ([`derive_confidential_keys`]) and what a WebAuthn passkey
-/// evaluates as its PRF input. `public_seed` is caller-controlled and granularity-
-/// agnostic; pass a wallet pubkey for per-wallet keying or a token-account pubkey for
-/// per-account keying.
+/// evaluates as its PRF input. `public_seed` is caller-controlled; the standard is
+/// an empty seed (`b""`), which binds the derived keys to the wallet alone and
+/// matches the keys other standard clients derive. Pass a non-empty seed (e.g. a
+/// token-account pubkey) only when finer granularity is worth losing that
+/// cross-client agreement.
 ///
 /// WebAuthn note: browsers apply the mandatory `SHA-256("WebAuthn PRF" || 0x00 || input)`
 /// prefixing before the authenticator, so this message is passed to `prf.eval` as-is.
@@ -125,8 +131,10 @@ pub fn pda_wallet_public_seed(
 /// confidential-balances key pair.
 ///
 /// The signed message is [`confidential_derivation_message`]. `public_seed` is
-/// caller-controlled and granularity-agnostic; pass a wallet pubkey for
-/// per-wallet keying or a token-account pubkey for per-account keying.
+/// caller-controlled; the standard is an empty seed (`b""`), which binds the
+/// derived keys to `signer`'s wallet alone and matches the keys other standard
+/// clients derive. Pass a non-empty seed (e.g. a token-account pubkey) only
+/// when finer granularity is worth losing that cross-client agreement.
 pub fn derive_confidential_keys(
     signer: &dyn Signer,
     public_seed: &[u8],
