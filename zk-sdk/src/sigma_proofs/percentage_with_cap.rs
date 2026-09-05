@@ -34,7 +34,7 @@
 //! fee equation to hold in the integers, not just the scalar field.
 //!
 //! [`ZK ElGamal proof program`]: https://docs.anza.xyz/runtime/zk-elgamal-proof
-//! [`specification`](https://github.com/anza-xyz/agave/blob/master/docs/src/runtime/zk-docs/percentage_with_cap.pdf).
+//! [`specification`](https://github.com/anza-xyz/docs.anza.xyz/blob/main/src/runtime/zk-docs/percentage_with_cap.pdf).
 
 use {
     crate::{
@@ -91,7 +91,7 @@ impl PercentageWithCapProof {
     /// proof for the true condition and a simulated proof for the alternative.
     ///
     /// For a detailed explanation of the underlying protocol, see the
-    /// [design document](https://github.com/anza-xyz/agave/blob/master/docs/src/runtime/zk-docs/percentage_with_cap.pdf).
+    /// [design document](https://github.com/anza-xyz/docs.anza.xyz/blob/main/src/runtime/zk-docs/percentage_with_cap.pdf).
     ///
     /// Note: The function computes proofs for both conditions and selects the correct one in
     /// constant time to avoid leaking information through timing.
