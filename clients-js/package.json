@@ -42,7 +42,7 @@
   },
   "homepage": "https://github.com/solana-program/zk-elgamal-proof#readme",
   "dependencies": {
-    "@solana-program/system": "^0.14.0"
+    "@solana-program/system": "^0.14.1"
   },
   "peerDependencies": {
     "@solana/kit": "^8.2.0"
