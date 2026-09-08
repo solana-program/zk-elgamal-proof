@@ -52,9 +52,9 @@ impl ConfidentialKeys {
     /// `solana-conf-bal/v1` a Solana wallet signs once to derive its
     /// `ConfidentialKeys` pair via `fromSignature`.
     ///
-    /// The derived keys are bound to the signing wallet alone — one ElGamal
+    /// The derived keys are bound to the signing wallet alone (one ElGamal
     /// keypair and one AES key across all of the wallet's mints and token
-    /// accounts — and match what every other standard client derives for the
+    /// accounts) and match what every other standard client derives for the
     /// same wallet.
     ///
     /// Wallets SHOULD recognize these exact bytes, expose the signature only

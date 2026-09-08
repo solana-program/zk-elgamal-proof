@@ -36,13 +36,13 @@
 //!
 //! The standard is wallet-level keying with no seed: [`derive_confidential_keys`]
 //! signs the constant [`STANDARD_DERIVATION_MESSAGE`], so one wallet maps to one
-//! ElGamal keypair and one AE key across all mints and token accounts, and every
-//! standard client (Token-2022 JS/Rust/CLI, solana-go, this crate) derives the
-//! same bytes for the same wallet. The seeded path exists only for schemes that
+//! ElGamal keypair and one AES key across all mints and token accounts, and
+//! every standard client (Token-2022 JavaScript/Rust/CLI, solana-go, this
+//! crate) derives the same bytes for the same wallet. The seeded path exists only for schemes that
 //! genuinely need scoped keys, at the cost of that cross-client agreement.
 //!
 //! Wallet guidance: expose derivation through a dedicated API and refuse to sign
-//! messages starting with `solana-conf-bal/v1` through generic `signMessage` —
+//! messages starting with `solana-conf-bal/v1` through generic `signMessage`:
 //! a signature over the derivation message is equivalent to handing out the
 //! decryption keys.
 
@@ -150,10 +150,10 @@ pub fn pda_wallet_public_seed(
 /// [`STANDARD_DERIVATION_MESSAGE`] once with `signer` and derives the key pair
 /// from that single signature.
 ///
-/// The keys are bound to `signer`'s wallet alone — one ElGamal keypair and one
-/// AE key across all of the wallet's mints and token accounts — and are
-/// byte-identical to what every other standard client (Token-2022 JS/Rust/CLI,
-/// solana-go) derives for the same wallet.
+/// The keys are bound to `signer`'s wallet alone (one ElGamal keypair and one
+/// AES key across all of the wallet's mints and token accounts) and are
+/// byte-identical to what every other standard client (Token-2022
+/// JavaScript/Rust/CLI, solana-go) derives for the same wallet.
 pub fn derive_confidential_keys(
     signer: &dyn Signer,
 ) -> Result<(ElGamalKeypair, AeKey), Box<dyn error::Error>> {
@@ -164,7 +164,7 @@ pub fn derive_confidential_keys(
 /// `public_seed` and derives the confidential-balances key pair.
 ///
 /// The signed message is [`confidential_derivation_message`]. Use this only
-/// for schemes that genuinely need keys scoped more finely than the wallet —
+/// for schemes that genuinely need keys scoped more finely than the wallet:
 /// single-signer PDA wallets ([`pda_wallet_public_seed`]) or custom
 /// application keying. Keys derived with a non-empty seed will NOT match the
 /// standard keys other clients derive for the same wallet; for the standard
@@ -249,8 +249,10 @@ mod tests {
         let kp1 = Keypair::new();
         let kp2 = Keypair::new();
 
-        let (elgamal1, ae1) = derive_confidential_keys_with_seed(&kp1, Address::default().as_ref()).unwrap();
-        let (elgamal2, ae2) = derive_confidential_keys_with_seed(&kp2, Address::default().as_ref()).unwrap();
+        let (elgamal1, ae1) =
+            derive_confidential_keys_with_seed(&kp1, Address::default().as_ref()).unwrap();
+        let (elgamal2, ae2) =
+            derive_confidential_keys_with_seed(&kp2, Address::default().as_ref()).unwrap();
 
         assert_ne!(elgamal1.secret().as_bytes(), elgamal2.secret().as_bytes());
         assert_ne!(
@@ -266,7 +268,8 @@ mod tests {
         let keypair = Keypair::new();
         let public_seed = [0x22u8; 32];
 
-        let (kp_signer, ae_signer) = derive_confidential_keys_with_seed(&keypair, &public_seed).unwrap();
+        let (kp_signer, ae_signer) =
+            derive_confidential_keys_with_seed(&keypair, &public_seed).unwrap();
 
         let message = confidential_derivation_message(&public_seed);
         let sig = keypair.sign_message(&message);
