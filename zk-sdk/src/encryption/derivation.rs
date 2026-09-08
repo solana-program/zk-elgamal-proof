@@ -6,10 +6,16 @@
 //! signing message are protocol-identified (`solana-conf-bal/v1`) so that
 //! independent reimplementations on any platform derive byte-identical keys.
 //!
-//! Callers have three entry points:
+//! Callers have four entry points:
 //!
-//! - [`derive_confidential_keys`]: sign once with a Solana `Signer`, derive
-//!   both keys.
+//! - [`derive_confidential_keys`]: THE standard derivation. Sign
+//!   [`STANDARD_DERIVATION_MESSAGE`] once with a Solana `Signer`, derive both
+//!   keys. Keys are bound to the signing wallet alone and match what every
+//!   other standard client derives for the same wallet.
+//! - [`derive_confidential_keys_with_seed`]: non-standard, finer-grained
+//!   keying for callers that scope keys with a `public_seed` (single-signer
+//!   PDA wallets via [`pda_wallet_public_seed`], custom schemes). Keys derived
+//!   with a non-empty seed will not match other clients' standard keys.
 //! - [`derive_confidential_keys_from_signature`]: when the caller already
 //!   holds a signature over the canonical message (e.g. produced via a
 //!   wallet-adapter signing flow or a KMS deterministic-sign call).
@@ -28,14 +34,17 @@
 //!               )
 //! ```
 //!
-//! `public_seed` in the signing path is caller-controlled, but the ecosystem
-//! standard is wallet-only keying: pass an empty seed (`b""`) so the derived
-//! keys are bound to the signing wallet alone. This is what the Token-2022
-//! clients and the confidential-transfer documentation derive, so an empty
-//! seed is what makes keys portable across wallets and tooling. Non-empty
-//! seeds (a token-account pubkey, [`pda_wallet_public_seed`]) remain
-//! supported for callers that need finer granularity, at the cost of not
-//! matching the keys other clients derive for the same wallet.
+//! The standard is wallet-level keying with no seed: [`derive_confidential_keys`]
+//! signs the constant [`STANDARD_DERIVATION_MESSAGE`], so one wallet maps to one
+//! ElGamal keypair and one AE key across all mints and token accounts, and every
+//! standard client (Token-2022 JS/Rust/CLI, solana-go, this crate) derives the
+//! same bytes for the same wallet. The seeded path exists only for schemes that
+//! genuinely need scoped keys, at the cost of that cross-client agreement.
+//!
+//! Wallet guidance: expose derivation through a dedicated API and refuse to sign
+//! messages starting with `solana-conf-bal/v1` through generic `signMessage` —
+//! a signature over the derivation message is equivalent to handing out the
+//! decryption keys.
 
 use {
     crate::{
@@ -68,6 +77,18 @@ pub const AE_HKDF_INFO: &[u8] = b"ae";
 /// HKDF info string for the ElGamal secret scalar.
 pub const ELGAMAL_HKDF_INFO: &[u8] = b"elgamal";
 
+/// The standard derivation message: what a wallet signs to derive its
+/// confidential-balances keys via [`derive_confidential_keys`]. Equal to
+/// [`confidential_derivation_message`] with an empty seed, i.e. the constant
+/// bytes `solana-conf-bal/v1`.
+///
+/// Wallets SHOULD recognize these exact bytes, expose the signature only
+/// through a dedicated key-derivation API, and refuse any generic
+/// `signMessage` request whose message starts with this prefix: the resulting
+/// signature is the input key material for the wallet's confidential-balance
+/// decryption keys.
+pub const STANDARD_DERIVATION_MESSAGE: &[u8] = HKDF_SALT;
+
 /// Byte length of a Solana address or pubkey field in a PDA-wallet public seed.
 pub const PDA_WALLET_PUBLIC_SEED_FIELD_LEN: usize = 32;
 
@@ -86,12 +107,10 @@ const MAXIMUM_IKM_LEN: usize = 65535;
 /// The canonical confidential-balances derivation message: `HKDF_SALT || public_seed`.
 ///
 /// This single message is the input to every signing-style adapter: it is what an
-/// Ed25519 `Signer` signs ([`derive_confidential_keys`]) and what a WebAuthn passkey
-/// evaluates as its PRF input. `public_seed` is caller-controlled; the standard is
-/// an empty seed (`b""`), which binds the derived keys to the wallet alone and
-/// matches the keys other standard clients derive. Pass a non-empty seed (e.g. a
-/// token-account pubkey) only when finer granularity is worth losing that
-/// cross-client agreement.
+/// Ed25519 `Signer` signs and what a WebAuthn passkey evaluates as its PRF input.
+/// With an empty seed it equals [`STANDARD_DERIVATION_MESSAGE`], the standard
+/// wallet-level derivation. A non-empty seed is the non-standard, scoped path
+/// used by [`derive_confidential_keys_with_seed`].
 ///
 /// WebAuthn note: browsers apply the mandatory `SHA-256("WebAuthn PRF" || 0x00 || input)`
 /// prefixing before the authenticator, so this message is passed to `prf.eval` as-is.
@@ -111,8 +130,8 @@ pub fn confidential_derivation_message(public_seed: &[u8]) -> Vec<u8> {
 /// ```
 ///
 /// Use this output as the `public_seed` for [`confidential_derivation_message`],
-/// [`derive_confidential_keys`], or the wasm `ConfidentialKeys.prfInput`
-/// passkey path.
+/// [`derive_confidential_keys_with_seed`], or the wasm
+/// `ConfidentialKeys.prfInputWithSeed` passkey path.
 pub fn pda_wallet_public_seed(
     program_id: &[u8; PDA_WALLET_PUBLIC_SEED_FIELD_LEN],
     wallet_pda: &[u8; PDA_WALLET_PUBLIC_SEED_FIELD_LEN],
@@ -127,15 +146,30 @@ pub fn pda_wallet_public_seed(
     seed
 }
 
-/// Signs the canonical derivation message with `signer` and derives the
-/// confidential-balances key pair.
+/// THE standard confidential-balances derivation: signs
+/// [`STANDARD_DERIVATION_MESSAGE`] once with `signer` and derives the key pair
+/// from that single signature.
 ///
-/// The signed message is [`confidential_derivation_message`]. `public_seed` is
-/// caller-controlled; the standard is an empty seed (`b""`), which binds the
-/// derived keys to `signer`'s wallet alone and matches the keys other standard
-/// clients derive. Pass a non-empty seed (e.g. a token-account pubkey) only
-/// when finer granularity is worth losing that cross-client agreement.
+/// The keys are bound to `signer`'s wallet alone — one ElGamal keypair and one
+/// AE key across all of the wallet's mints and token accounts — and are
+/// byte-identical to what every other standard client (Token-2022 JS/Rust/CLI,
+/// solana-go) derives for the same wallet.
 pub fn derive_confidential_keys(
+    signer: &dyn Signer,
+) -> Result<(ElGamalKeypair, AeKey), Box<dyn error::Error>> {
+    derive_confidential_keys_with_seed(signer, b"")
+}
+
+/// Non-standard, scoped derivation: signs the canonical derivation message for
+/// `public_seed` and derives the confidential-balances key pair.
+///
+/// The signed message is [`confidential_derivation_message`]. Use this only
+/// for schemes that genuinely need keys scoped more finely than the wallet —
+/// single-signer PDA wallets ([`pda_wallet_public_seed`]) or custom
+/// application keying. Keys derived with a non-empty seed will NOT match the
+/// standard keys other clients derive for the same wallet; for the standard
+/// wallet-level keys use [`derive_confidential_keys`].
+pub fn derive_confidential_keys_with_seed(
     signer: &dyn Signer,
     public_seed: &[u8],
 ) -> Result<(ElGamalKeypair, AeKey), Box<dyn error::Error>> {
@@ -200,8 +234,8 @@ mod tests {
         let keypair = Keypair::new();
         let public_seed = [0x11u8; 32];
 
-        let (kp_a, ae_a) = derive_confidential_keys(&keypair, &public_seed).unwrap();
-        let (kp_b, ae_b) = derive_confidential_keys(&keypair, &public_seed).unwrap();
+        let (kp_a, ae_a) = derive_confidential_keys_with_seed(&keypair, &public_seed).unwrap();
+        let (kp_b, ae_b) = derive_confidential_keys_with_seed(&keypair, &public_seed).unwrap();
 
         assert_eq!(kp_a.secret().as_bytes(), kp_b.secret().as_bytes());
         assert_eq!(
@@ -215,8 +249,8 @@ mod tests {
         let kp1 = Keypair::new();
         let kp2 = Keypair::new();
 
-        let (elgamal1, ae1) = derive_confidential_keys(&kp1, Address::default().as_ref()).unwrap();
-        let (elgamal2, ae2) = derive_confidential_keys(&kp2, Address::default().as_ref()).unwrap();
+        let (elgamal1, ae1) = derive_confidential_keys_with_seed(&kp1, Address::default().as_ref()).unwrap();
+        let (elgamal2, ae2) = derive_confidential_keys_with_seed(&kp2, Address::default().as_ref()).unwrap();
 
         assert_ne!(elgamal1.secret().as_bytes(), elgamal2.secret().as_bytes());
         assert_ne!(
@@ -232,7 +266,7 @@ mod tests {
         let keypair = Keypair::new();
         let public_seed = [0x22u8; 32];
 
-        let (kp_signer, ae_signer) = derive_confidential_keys(&keypair, &public_seed).unwrap();
+        let (kp_signer, ae_signer) = derive_confidential_keys_with_seed(&keypair, &public_seed).unwrap();
 
         let message = confidential_derivation_message(&public_seed);
         let sig = keypair.sign_message(&message);
@@ -242,6 +276,65 @@ mod tests {
         assert_eq!(
             <[u8; AE_KEY_LEN]>::from(&ae_signer),
             <[u8; AE_KEY_LEN]>::from(&ae_sig)
+        );
+    }
+
+    #[test]
+    fn test_derive_confidential_keys_standard_vector() {
+        // Canonical cross-SDK vector for the standard (wallet-level, no seed)
+        // path. The same inputs and outputs are pinned in the Go port
+        // (solana-go zkencryption kdf_vectors.json, `keypair_a_empty_seed`)
+        // and the Token-2022 JS client tests; drift in any implementation
+        // fails that implementation's CI.
+        let signer_seed: [u8; 32] = [
+            0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee,
+            0xff, 0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc,
+            0xdd, 0xee, 0xff, 0x00,
+        ];
+        let keypair = Keypair::new_from_array(signer_seed);
+
+        let (kp, ae) = derive_confidential_keys(&keypair).unwrap();
+
+        let expected_ae: [u8; AE_KEY_LEN] = [
+            0x64, 0x17, 0xee, 0xdb, 0xcb, 0xe9, 0xc6, 0x4a, 0x72, 0x39, 0x57, 0x19, 0xec, 0x98,
+            0xcf, 0x6b,
+        ];
+        let expected_elgamal: [u8; 32] = [
+            0xbe, 0x5c, 0xce, 0x95, 0x1f, 0x42, 0xa2, 0xa8, 0x67, 0x7d, 0x1a, 0x56, 0xf0, 0x3a,
+            0xae, 0x7b, 0xff, 0x79, 0x5b, 0x38, 0xcf, 0x1c, 0x56, 0xc8, 0xcf, 0x3a, 0x4d, 0xae,
+            0x7d, 0x60, 0xe2, 0x05,
+        ];
+
+        assert_eq!(<[u8; AE_KEY_LEN]>::from(&ae), expected_ae);
+        assert_eq!(kp.secret().as_bytes(), &expected_elgamal);
+    }
+
+    #[test]
+    fn test_derive_confidential_keys_standard_matches_empty_seed() {
+        // The no-seed standard entry point, the seeded path with an empty
+        // seed, and `_from_signature` over STANDARD_DERIVATION_MESSAGE must
+        // all produce the same keys.
+        let keypair = Keypair::new();
+
+        let (kp_std, ae_std) = derive_confidential_keys(&keypair).unwrap();
+        let (kp_seeded, ae_seeded) = derive_confidential_keys_with_seed(&keypair, b"").unwrap();
+
+        let sig = keypair.sign_message(STANDARD_DERIVATION_MESSAGE);
+        let (kp_sig, ae_sig) = derive_confidential_keys_from_signature(&sig).unwrap();
+
+        assert_eq!(kp_std.secret().as_bytes(), kp_seeded.secret().as_bytes());
+        assert_eq!(kp_std.secret().as_bytes(), kp_sig.secret().as_bytes());
+        assert_eq!(
+            <[u8; AE_KEY_LEN]>::from(&ae_std),
+            <[u8; AE_KEY_LEN]>::from(&ae_seeded)
+        );
+        assert_eq!(
+            <[u8; AE_KEY_LEN]>::from(&ae_std),
+            <[u8; AE_KEY_LEN]>::from(&ae_sig)
+        );
+        assert_eq!(
+            STANDARD_DERIVATION_MESSAGE,
+            confidential_derivation_message(b"").as_slice()
         );
     }
 
@@ -385,6 +478,6 @@ mod tests {
         // the signer-side path must surface a rejection rather than
         // silently producing predictable keys.
         let null_signer = NullSigner::new(&solana_address::Address::default());
-        assert!(derive_confidential_keys(&null_signer, &[0x11u8; 32]).is_err());
+        assert!(derive_confidential_keys_with_seed(&null_signer, &[0x11u8; 32]).is_err());
     }
 }
