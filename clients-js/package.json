@@ -49,7 +49,7 @@
   },
   "devDependencies": {
     "@ava/typescript": "^7.0.0",
-    "@solana-program/compute-budget": "^0.18.0",
+    "@solana-program/compute-budget": "^0.18.1",
     "@solana-program/record": "^0.4.1",
     "@solana/kit": "^8.2.0",
     "@solana/sysvars": "^8.2.0",
