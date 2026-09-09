@@ -25,8 +25,8 @@ importers:
         specifier: ^0.18.0
         version: 0.18.0(@solana/kit@8.2.0(typescript@6.0.3))
       '@solana-program/record':
-        specifier: ^0.4.0
-        version: 0.4.0(@solana/kit@8.2.0(typescript@6.0.3))
+        specifier: ^0.4.1
+        version: 0.4.1(@solana/kit@8.2.0(typescript@6.0.3))
       '@solana/kit':
         specifier: ^8.2.0
         version: 8.2.0(typescript@6.0.3)
@@ -998,9 +998,8 @@ packages:
     peerDependencies:
       '@solana/kit': ^8.0.0
 
-  '@solana-program/record@0.4.0':
-    resolution: {integrity: sha512-d4HSGdfiY8TMJHprbw4Zo5ZI+FiMRrh7zJ9nrddAM59Qbp7Rl88wQdATedbs7cXqW8zE/VRHGYdajairqNrbYg==}
-    engines: {node: '>=24.0.0'}
+  '@solana-program/record@0.4.1':
+    resolution: {integrity: sha512-3iurtMAc3POMKVSZBqpNZQeoxAYVIxi0VZNOjkdaZqxr5glCxkWWruT8JekDwNFM0FnXxvtdu7tFFn3j6Kpegg==}
     peerDependencies:
       '@solana/kit': ^8.0.0
 
@@ -4181,7 +4180,7 @@ snapshots:
     dependencies:
       '@solana/kit': 8.2.0(typescript@6.0.3)
 
-  '@solana-program/record@0.4.0(@solana/kit@8.2.0(typescript@6.0.3))':
+  '@solana-program/record@0.4.1(@solana/kit@8.2.0(typescript@6.0.3))':
     dependencies:
       '@solana-program/system': 0.14.1(@solana/kit@8.2.0(typescript@6.0.3))
       '@solana/kit': 8.2.0(typescript@6.0.3)
