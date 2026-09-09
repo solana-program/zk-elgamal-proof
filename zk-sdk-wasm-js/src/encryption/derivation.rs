@@ -48,7 +48,7 @@ pub struct ConfidentialKeys {
 
 #[wasm_bindgen]
 impl ConfidentialKeys {
-    /// Returns THE standard derivation message: the constant bytes
+    /// Returns the standard derivation message: the constant bytes
     /// `solana-conf-bal/v1` a Solana wallet signs once to derive its
     /// `ConfidentialKeys` pair via `fromSignature`.
     ///
@@ -67,7 +67,7 @@ impl ConfidentialKeys {
         STANDARD_DERIVATION_MESSAGE.to_vec()
     }
 
-    /// Returns the NON-STANDARD, seed-scoped derivation message:
+    /// Returns the non-standard, seed-scoped derivation message:
     /// `b"solana-conf-bal/v1" || public_seed`.
     ///
     /// Use this only for schemes that genuinely need keys scoped more finely
@@ -96,7 +96,7 @@ impl ConfidentialKeys {
         STANDARD_DERIVATION_MESSAGE.to_vec()
     }
 
-    /// Returns the NON-STANDARD, seed-scoped WebAuthn PRF evaluation input:
+    /// Returns the non-standard, seed-scoped WebAuthn PRF evaluation input:
     /// byte-identical to `signerMessageWithSeed`. See `signerMessageWithSeed`
     /// for when a seed is appropriate; see `prfInput` for the standard path.
     #[wasm_bindgen(js_name = "prfInputWithSeed")]

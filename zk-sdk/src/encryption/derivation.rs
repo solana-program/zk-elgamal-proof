@@ -8,7 +8,7 @@
 //!
 //! Callers have four entry points:
 //!
-//! - [`derive_confidential_keys`]: THE standard derivation. Sign
+//! - [`derive_confidential_keys`]: the standard derivation. Sign
 //!   [`STANDARD_DERIVATION_MESSAGE`] once with a Solana `Signer`, derive both
 //!   keys. Keys are bound to the signing wallet alone and match what every
 //!   other standard client derives for the same wallet.
@@ -146,7 +146,7 @@ pub fn pda_wallet_public_seed(
     seed
 }
 
-/// THE standard confidential-balances derivation: signs
+/// the standard confidential-balances derivation: signs
 /// [`STANDARD_DERIVATION_MESSAGE`] once with `signer` and derives the key pair
 /// from that single signature.
 ///
