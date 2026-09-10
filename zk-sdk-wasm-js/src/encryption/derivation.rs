@@ -63,14 +63,13 @@ impl ConfidentialKeys {
     /// resulting signature is the input key material for the wallet's
     /// confidential-balance decryption keys.
     ///
-    /// Takes no arguments; passing one throws. JavaScript otherwise drops
-    /// extra arguments silently, so a caller on the pre-rename seeded
-    /// convention would derive different keys than intended without noticing.
+    /// Throws if given an argument; seed-scoped derivation is
+    /// `signerMessageWithSeed`.
     #[wasm_bindgen(js_name = "signerMessage")]
-    pub fn signer_message(unexpected_seed: Option<Uint8Array>) -> Result<Vec<u8>, JsValue> {
-        if unexpected_seed.is_some() {
+    pub fn signer_message(seed: Option<Uint8Array>) -> Result<Vec<u8>, JsValue> {
+        if seed.is_some() {
             return Err(JsValue::from_str(
-                "signerMessage takes no arguments; for seed-scoped (non-standard) derivation use signerMessageWithSeed",
+                "signerMessage takes no seed; use signerMessageWithSeed",
             ));
         }
         Ok(STANDARD_DERIVATION_MESSAGE.to_vec())
@@ -101,13 +100,13 @@ impl ConfidentialKeys {
     /// Non-browser / direct-CTAP `hmac-secret` consumers MUST reproduce that
     /// prefixing over this message to derive byte-identical keys.
     ///
-    /// Takes no arguments; passing one throws (see `signerMessage`). For
-    /// seed-scoped PRF input use `prfInputWithSeed`.
+    /// Throws if given an argument; seed-scoped PRF input is
+    /// `prfInputWithSeed`.
     #[wasm_bindgen(js_name = "prfInput")]
-    pub fn prf_input(unexpected_seed: Option<Uint8Array>) -> Result<Vec<u8>, JsValue> {
-        if unexpected_seed.is_some() {
+    pub fn prf_input(seed: Option<Uint8Array>) -> Result<Vec<u8>, JsValue> {
+        if seed.is_some() {
             return Err(JsValue::from_str(
-                "prfInput takes no arguments; for seed-scoped (non-standard) derivation use prfInputWithSeed",
+                "prfInput takes no seed; use prfInputWithSeed",
             ));
         }
         Ok(STANDARD_DERIVATION_MESSAGE.to_vec())
@@ -254,9 +253,8 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_standard_messages_reject_a_seed_argument() {
-        // JavaScript drops extra arguments silently, so the pre-rename seeded
-        // calling convention must fail loudly instead of deriving the
-        // standard keys.
+        // A stray seed argument must fail, not silently return the standard
+        // message.
         let seed = Uint8Array::from([7u8; 32].as_ref());
         assert!(ConfidentialKeys::signer_message(Some(seed.clone())).is_err());
         assert!(ConfidentialKeys::prf_input(Some(seed)).is_err());

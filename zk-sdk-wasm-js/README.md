@@ -40,7 +40,7 @@ There is one entry point per source of key material. Pick the one that matches h
 | Ed25519 wallet signature | `signerMessage` + `fromSignature` | today's universal wallet path |
 | Raw input key material | `fromIkm` | Secure Enclave / KMS HMAC, BIP39 seed, etc. |
 
-All three converge on the same spine, so `fromSignature(sig)`, `fromIkm(bytes)`, and `fromPrf(out)` over the same input bytes produce identical keys. In practice different adapters never produce the same input bytes for the same wallet; see the interchangeability note under The standard message.
+All three converge on the same spine, so `fromSignature(sig)`, `fromIkm(bytes)`, and `fromPrf(out)` over the same input bytes produce identical keys.
 
 ```js
 const keys = ConfidentialKeys.fromPrf(prfOutput);
@@ -50,11 +50,11 @@ const ae = keys.ae();           // AeKey
 
 ### The standard message
 
-`signerMessage()` and `prfInput()` take no arguments (passing one throws) and return the constant standard message, the bytes `solana-conf-bal/v1`. The derived keys are bound to the wallet alone: one key pair covering all of the wallet's confidential accounts. There is nothing to configure, which is the point: every standard client derives the same message because none of them can pass a different seed by accident.
+`signerMessage()` and `prfInput()` take no arguments and return the constant standard message, the bytes `solana-conf-bal/v1`. Passing a seed throws; seed-scoped derivation lives in `signerMessageWithSeed` and `prfInputWithSeed`. The derived keys are bound to the wallet alone, one key pair for all of the wallet's confidential accounts.
 
-The cross-SDK guarantee (byte-identical keys to the Token-2022 clients, the Rust and Go SDKs, and the confidential-transfer docs) applies to the canonical deterministic Ed25519 signing path: the same wallet key signing the same constant message. The adapters are not interchangeable with each other: a WebAuthn PRF evaluation and an Ed25519 signature over the same message produce different input key material and therefore different keys, and PRF/raw-IKM keys are reproducible only while the same credential or key material is used. Pick one adapter per account at provisioning and keep it.
+Keys match the other SDKs (the Token-2022 clients, Rust, Go) on the deterministic Ed25519 path, since they all sign the same constant message with the same wallet key. The PRF and raw-IKM paths feed different input material into the KDF, so they derive different keys for the same wallet and reproduce them only from the same credential or key material. An account keeps whichever adapter provisioned it.
 
-Wallets SHOULD refuse to sign any message starting with `solana-conf-bal/v1` through generic `signMessage` and expose the derivation signature only via a dedicated key-derivation capability: a signature over the derivation message is equivalent to handing out the account's decryption keys.
+Wallets SHOULD refuse to sign any message starting with `solana-conf-bal/v1` through generic `signMessage` and expose the derivation signature only via a dedicated key-derivation capability, since the signature is the account's decryption key material.
 
 ### Non-standard seed scoping
 
@@ -117,7 +117,7 @@ const signature = await wallet.signMessage(message);   // 64-byte Ed25519 signat
 const keys = ConfidentialKeys.fromSignature(signature);
 ```
 
-`wallet.signMessage` here stands for however the integration obtains the derivation signature. A wallet that implements the refusal recommendation above exposes this signature through a dedicated key-derivation capability rather than its generic `signMessage`; a filesystem or server-side signer signs the raw bytes directly. Reproducible derivation additionally requires the signer to be deterministic (RFC 8032) over these exact bytes: a randomized Ed25519 implementation returns a different valid signature each call and therefore different keys.
+`wallet.signMessage` stands in for whatever signing capability the integration has; a wallet that implements the refusal above provides this signature through a dedicated derivation API instead, and a filesystem or server signer just signs the bytes. The signer must be deterministic (RFC 8032): a randomized one returns a different signature, and different keys, on every call.
 
 The all-zero (default) signature is rejected: some signers return it instead of raising an error, and the resulting keys would be predictable.
 
