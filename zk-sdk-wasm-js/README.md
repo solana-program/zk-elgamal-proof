@@ -40,7 +40,7 @@ There is one entry point per source of key material. Pick the one that matches h
 | Ed25519 wallet signature | `signerMessage` + `fromSignature` | today's universal wallet path |
 | Raw input key material | `fromIkm` | Secure Enclave / KMS HMAC, BIP39 seed, etc. |
 
-All three converge on the same spine, so `fromSignature(sig)`, `fromIkm(bytes)`, and `fromPrf(out)` over the same bytes produce identical keys.
+All three converge on the same spine, so `fromSignature(sig)`, `fromIkm(bytes)`, and `fromPrf(out)` over the same input bytes produce identical keys. In practice different adapters never produce the same input bytes for the same wallet; see the interchangeability note under The standard message.
 
 ```js
 const keys = ConfidentialKeys.fromPrf(prfOutput);
@@ -50,9 +50,11 @@ const ae = keys.ae();           // AeKey
 
 ### The standard message
 
-`signerMessage()` and `prfInput()` take no arguments and return the constant standard message, the bytes `solana-conf-bal/v1`. The derived keys are bound to the wallet alone: one key pair covering all of the wallet's confidential accounts, byte-identical to what the Token-2022 clients, the Rust and Go SDKs, and the confidential-transfer docs derive for the same wallet. There is nothing to configure, which is the point: every standard client derives the same keys because none of them can pass a different seed by accident.
+`signerMessage()` and `prfInput()` take no arguments (passing one throws) and return the constant standard message, the bytes `solana-conf-bal/v1`. The derived keys are bound to the wallet alone: one key pair covering all of the wallet's confidential accounts. There is nothing to configure, which is the point: every standard client derives the same message because none of them can pass a different seed by accident.
 
-Wallets SHOULD refuse to sign any message starting with `solana-conf-bal/v1` through generic `signMessage` and expose derivation only via a dedicated flow: a signature over the derivation message is equivalent to handing out the account's decryption keys.
+The cross-SDK guarantee (byte-identical keys to the Token-2022 clients, the Rust and Go SDKs, and the confidential-transfer docs) applies to the canonical deterministic Ed25519 signing path: the same wallet key signing the same constant message. The adapters are not interchangeable with each other: a WebAuthn PRF evaluation and an Ed25519 signature over the same message produce different input key material and therefore different keys, and PRF/raw-IKM keys are reproducible only while the same credential or key material is used. Pick one adapter per account at provisioning and keep it.
+
+Wallets SHOULD refuse to sign any message starting with `solana-conf-bal/v1` through generic `signMessage` and expose the derivation signature only via a dedicated key-derivation capability: a signature over the derivation message is equivalent to handing out the account's decryption keys.
 
 ### Non-standard seed scoping
 
@@ -105,7 +107,7 @@ const keys = ConfidentialKeys.fromPrf(new Uint8Array(prf));
 
 ### Ed25519 wallet signature
 
-For a normal Solana wallet, derive from a single `signMessage` over the standard message.
+For a normal Solana wallet, derive from a single deterministic Ed25519 signature over the standard message.
 
 ```js
 import { ConfidentialKeys } from "@solana/zk-sdk";
@@ -114,6 +116,8 @@ const message = ConfidentialKeys.signerMessage();      // constant: "solana-conf
 const signature = await wallet.signMessage(message);   // 64-byte Ed25519 signature
 const keys = ConfidentialKeys.fromSignature(signature);
 ```
+
+`wallet.signMessage` here stands for however the integration obtains the derivation signature. A wallet that implements the refusal recommendation above exposes this signature through a dedicated key-derivation capability rather than its generic `signMessage`; a filesystem or server-side signer signs the raw bytes directly. Reproducible derivation additionally requires the signer to be deterministic (RFC 8032) over these exact bytes: a randomized Ed25519 implementation returns a different valid signature each call and therefore different keys.
 
 The all-zero (default) signature is rejected: some signers return it instead of raising an error, and the resulting keys would be predictable.
 
