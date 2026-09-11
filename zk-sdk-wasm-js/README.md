@@ -40,7 +40,7 @@ There is one entry point per source of key material. Pick the one that matches h
 | Ed25519 wallet signature | `signerMessage` + `fromSignature` | today's universal wallet path |
 | Raw input key material | `fromIkm` | Secure Enclave / KMS HMAC, BIP39 seed, etc. |
 
-All three converge on the same spine, so `fromSignature(sig)`, `fromIkm(bytes)`, and `fromPrf(out)` over the same bytes produce identical keys.
+All three converge on the same spine, so `fromSignature(sig)`, `fromIkm(bytes)`, and `fromPrf(out)` over the same input bytes produce identical keys.
 
 ```js
 const keys = ConfidentialKeys.fromPrf(prfOutput);
@@ -48,11 +48,17 @@ const elgamal = keys.elgamal(); // ElGamalKeypair
 const ae = keys.ae();           // AeKey
 ```
 
-### The `public_seed`
+### The standard message
 
-`signerMessage` and `prfInput` both take a caller-chosen `public_seed` that scopes the derivation. It is granularity-agnostic: pass a token-account pubkey for per-account keys, or a wallet pubkey for one key across all of a wallet's accounts. The SDK does not enforce a convention, but two wallets must agree on it (and on which adapter they use) to derive the same keys for the same account.
+`signerMessage()` and `prfInput()` take no arguments and return the constant standard message, the bytes `solana-conf-bal/v1`. Seed-scoped derivation lives in `signerMessageWithSeed` and `prfInputWithSeed`. The derived keys are bound to the wallet alone, one key pair for all of the wallet's confidential accounts.
 
-For single-signer PDA wallets, use `pdaWalletPublicSeed` to bind the derived keys to the wallet program, wallet PDA, mint, and concrete token account:
+Keys match the other SDKs (the Token-2022 clients, Rust, Go) on the deterministic Ed25519 path, since they all sign the same constant message with the same wallet key. The PRF and raw-IKM paths feed different input material into the KDF, so they derive different keys for the same wallet and reproduce them only from the same credential or key material. An account keeps whichever adapter provisioned it.
+
+Wallets SHOULD refuse to sign any message starting with `solana-conf-bal/v1` through generic `signMessage` and expose the derivation signature only via a dedicated key-derivation capability, since the signature is the account's decryption key material.
+
+### Non-standard seed scoping
+
+`signerMessageWithSeed(seed)` and `prfInputWithSeed(seed)` build `solana-conf-bal/v1 || seed` for schemes that genuinely need keys scoped more finely than the wallet. Keys derived from a non-empty seed will not match the standard keys other clients derive for the same wallet. For single-signer PDA wallets specifically, use `pdaWalletPublicSeed` to bind the derived keys to the wallet program, wallet PDA, mint, and concrete token account:
 
 ```js
 const publicSeed = ConfidentialKeys.pdaWalletPublicSeed(
@@ -61,6 +67,7 @@ const publicSeed = ConfidentialKeys.pdaWalletPublicSeed(
   mint.toBytes(),
   tokenAccount.toBytes(),
 );
+const message = ConfidentialKeys.signerMessageWithSeed(publicSeed);
 ```
 
 ### Passkeys (WebAuthn PRF)
@@ -77,9 +84,8 @@ const cred = await navigator.credentials.create({
 });
 const credentialId = new Uint8Array(cred.rawId);
 
-// 2. Per session: evaluate the PRF over our canonical input, then derive.
-const publicSeed = tokenAccount.toBytes();           // your granularity choice
-const salt = ConfidentialKeys.prfInput(publicSeed);
+// 2. Per session: evaluate the PRF over the standard input, then derive.
+const salt = ConfidentialKeys.prfInput();
 
 const assertion = await navigator.credentials.get({
   publicKey: {
@@ -97,19 +103,21 @@ const keys = ConfidentialKeys.fromPrf(new Uint8Array(prf));
 
 `fromPrf` accepts a 32-byte output (a single `prf.results.first`) or a 64-byte output (`first || second` concatenated), and rejects an all-zero result.
 
-`prfInput` returns the canonical message `solana-conf-bal/v1 || public_seed`, byte-identical to `signerMessage`. It is passed to `prf.eval.first` as-is: browsers apply the mandatory `SHA-256("WebAuthn PRF" || 0x00 || input)` prefixing before the authenticator, so the input length is unconstrained and must not be pre-hashed. A non-browser or direct-CTAP `hmac-secret` consumer must reproduce that prefixing over this message to derive matching keys.
+`prfInput` returns the standard message `solana-conf-bal/v1`, byte-identical to `signerMessage` (`prfInputWithSeed` mirrors `signerMessageWithSeed` for non-standard scoping). It is passed to `prf.eval.first` as-is: browsers apply the mandatory `SHA-256("WebAuthn PRF" || 0x00 || input)` prefixing before the authenticator, so the input must not be pre-hashed. A non-browser or direct-CTAP `hmac-secret` consumer must reproduce that prefixing over this message to derive matching keys.
 
 ### Ed25519 wallet signature
 
-For a normal Solana wallet, derive from a single `signMessage` over the canonical message.
+For a normal Solana wallet, derive from a single deterministic Ed25519 signature over the standard message.
 
 ```js
 import { ConfidentialKeys } from "@solana/zk-sdk";
 
-const message = ConfidentialKeys.signerMessage(tokenAccount.toBytes());
+const message = ConfidentialKeys.signerMessage();      // constant: "solana-conf-bal/v1"
 const signature = await wallet.signMessage(message);   // 64-byte Ed25519 signature
 const keys = ConfidentialKeys.fromSignature(signature);
 ```
+
+`wallet.signMessage` stands in for whatever signing capability the integration has; a wallet that implements the refusal above provides this signature through a dedicated derivation API instead, and a filesystem or server signer just signs the bytes. The signer must be deterministic (RFC 8032): a randomized one returns a different signature, and different keys, on every call.
 
 The all-zero (default) signature is rejected: some signers return it instead of raising an error, and the resulting keys would be predictable.
 
