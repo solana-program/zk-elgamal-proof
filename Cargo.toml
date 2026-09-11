@@ -43,7 +43,8 @@ sha3 = "0.10.8"
 shake = "0.1.0"
 solana-address = { version = "2.5.0", default-features = false }
 solana-derivation-path = "3.0.0"
-solana-instruction = { version = "3.0.0", default-features = false }
+solana-instruction = { version = "4.0.0", default-features = false }
+solana-instruction-error = "3.0.0"
 solana-keypair = "3.0.1"
 solana-nullable = "1.1.1"
 solana-sdk-ids = "3.1.0"

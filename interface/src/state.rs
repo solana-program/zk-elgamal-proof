@@ -5,7 +5,7 @@ use {
     core::mem::size_of,
     num_traits::ToPrimitive,
     solana_address::Address,
-    solana_instruction::error::{InstructionError, InstructionError::InvalidAccountData},
+    solana_instruction_error::{InstructionError, InstructionError::InvalidAccountData},
 };
 
 /// The on-chain state for a verified zero-knowledge proof statement.
