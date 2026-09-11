@@ -50,7 +50,7 @@ const ae = keys.ae();           // AeKey
 
 ### The standard message
 
-`signerMessage()` and `prfInput()` take no arguments and return the constant standard message, the bytes `solana-conf-bal/v1`. Passing a seed throws; seed-scoped derivation lives in `signerMessageWithSeed` and `prfInputWithSeed`. The derived keys are bound to the wallet alone, one key pair for all of the wallet's confidential accounts.
+`signerMessage()` and `prfInput()` take no arguments and return the constant standard message, the bytes `solana-conf-bal/v1`. Seed-scoped derivation lives in `signerMessageWithSeed` and `prfInputWithSeed`. The derived keys are bound to the wallet alone, one key pair for all of the wallet's confidential accounts.
 
 Keys match the other SDKs (the Token-2022 clients, Rust, Go) on the deterministic Ed25519 path, since they all sign the same constant message with the same wallet key. The PRF and raw-IKM paths feed different input material into the KDF, so they derive different keys for the same wallet and reproduce them only from the same credential or key material. An account keeps whichever adapter provisioned it.
 
