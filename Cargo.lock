@@ -1172,7 +1172,7 @@ dependencies = [
 
 [[package]]
 name = "solana-zk-elgamal-proof-interface"
-version = "0.1.3"
+version = "1.0.0"
 dependencies = [
  "bytemuck",
  "bytemuck_derive",
