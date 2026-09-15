@@ -384,6 +384,68 @@ impl TryFrom<PodAeCiphertext> for AeCiphertext {
 mod tests {
     use super::*;
 
+    // Generated with aes-gcm-siv 0.11.1 (aes 0.8.4), an empty associated-data
+    // field, and COMPATIBILITY_AMOUNT.to_le_bytes(). The serialized format is
+    // a 12-byte nonce followed by 8 encrypted balance bytes and a 16-byte tag.
+    // Keep these bytes fixed so dependency upgrades cannot silently change
+    // the format of balances already stored in accounts.
+    const COMPATIBILITY_KEY: [u8; AE_KEY_LEN] = [
+        0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e,
+        0x0f,
+    ];
+    const COMPATIBILITY_AMOUNT: u64 = 0x0102_0304_0506_0708;
+    const COMPATIBILITY_CIPHERTEXT: [u8; AE_CIPHERTEXT_LEN] = [
+        0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x5a, 0x37, 0xbc,
+        0xf1, 0x4e, 0x84, 0x2c, 0x24, 0x03, 0x54, 0x2b, 0x6b, 0x74, 0xe9, 0x8f, 0x1e, 0x17, 0x8a,
+        0x2a, 0xac, 0x29, 0x21, 0x05, 0xe4,
+    ];
+
+    #[test]
+    fn test_aes_gcm_siv_0_11_1_compatibility() {
+        let key = AeKey::from(COMPATIBILITY_KEY);
+        let ciphertext = AeCiphertext::from_bytes(&COMPATIBILITY_CIPHERTEXT).unwrap();
+        assert_eq!(ciphertext.to_bytes(), COMPATIBILITY_CIPHERTEXT);
+        assert_eq!(ciphertext.decrypt(&key), Some(COMPATIBILITY_AMOUNT));
+
+        // A fixed nonce lets us also verify that new ciphertext is compatible
+        // with the old implementation. Production encryption generates a nonce.
+        let encrypted = Aes128GcmSiv::new(&COMPATIBILITY_KEY.into())
+            .encrypt(
+                &ciphertext.nonce.into(),
+                COMPATIBILITY_AMOUNT.to_le_bytes().as_slice(),
+            )
+            .unwrap();
+        assert_eq!(encrypted.as_slice(), &COMPATIBILITY_CIPHERTEXT[NONCE_LEN..]);
+    }
+
+    #[test]
+    fn test_tampered_tag_fails_decryption() {
+        const TAG_OFFSET: usize = NONCE_LEN + std::mem::size_of::<u64>();
+        let key = AeKey::from(COMPATIBILITY_KEY);
+
+        // Exercise every tag bit, including both halves of the 128-bit tag,
+        // to guard the authentication comparison across dependency upgrades.
+        for byte_index in TAG_OFFSET..AE_CIPHERTEXT_LEN {
+            for bit_mask in [1, 2, 4, 8, 16, 32, 64, 128] {
+                let mut tampered = COMPATIBILITY_CIPHERTEXT;
+                tampered[byte_index] ^= bit_mask;
+                let ciphertext = AeCiphertext::from_bytes(&tampered).unwrap();
+                assert!(
+                    ciphertext.decrypt(&key).is_none(),
+                    "accepted modified tag at byte {byte_index}, mask {bit_mask:#04x}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_decryption_with_wrong_key_fails() {
+        let ciphertext = AeCiphertext::from_bytes(&COMPATIBILITY_CIPHERTEXT).unwrap();
+        let mut wrong_key = COMPATIBILITY_KEY;
+        wrong_key[0] ^= 1;
+        assert!(ciphertext.decrypt(&AeKey::from(wrong_key)).is_none());
+    }
+
     #[test]
     fn test_aes_encrypt_decrypt_correctness() {
         let key = AeKey::new_rand();

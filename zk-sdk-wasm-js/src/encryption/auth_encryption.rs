@@ -134,6 +134,28 @@ mod tests {
     use {super::*, wasm_bindgen_test::*};
 
     #[wasm_bindgen_test]
+    fn test_aes_gcm_siv_0_11_1_ciphertext_compatibility() {
+        // Same fixed aes-gcm-siv 0.11.1 vector as the SDK test. Verify that
+        // ciphertext stored before the upgrade also decrypts in JS runtimes.
+        let key_bytes = [
+            0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d,
+            0x0e, 0x0f,
+        ];
+        let ciphertext_bytes = [
+            0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x5a, 0x37,
+            0xbc, 0xf1, 0x4e, 0x84, 0x2c, 0x24, 0x03, 0x54, 0x2b, 0x6b, 0x74, 0xe9, 0x8f, 0x1e,
+            0x17, 0x8a, 0x2a, 0xac, 0x29, 0x21, 0x05, 0xe4,
+        ];
+        let key = AeKey::from_bytes(Uint8Array::from(key_bytes.as_slice())).unwrap();
+        let ciphertext =
+            AeCiphertext::from_bytes(Uint8Array::from(ciphertext_bytes.as_slice())).unwrap();
+
+        assert_eq!(ciphertext.to_bytes(), ciphertext_bytes);
+        assert_eq!(key.decrypt(&ciphertext), Ok(0x0102_0304_0506_0708));
+        assert_eq!(ciphertext.decrypt(&key), Some(0x0102_0304_0506_0708));
+    }
+
+    #[wasm_bindgen_test]
     fn test_ae_key_roundtrip() {
         let key = AeKey::new_rand();
         let key_bytes = key.to_bytes();
