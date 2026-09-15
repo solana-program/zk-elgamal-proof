@@ -134,7 +134,7 @@ mod tests {
     use {super::*, wasm_bindgen_test::*};
 
     #[wasm_bindgen_test]
-    fn test_aes_gcm_siv_0_11_1_ciphertext_compatibility() {
+    fn test_aes_ciphertext_compatibility() {
         // Same fixed aes-gcm-siv 0.11.1 vector as the SDK test. Verify that
         // ciphertext stored before the upgrade also decrypts in JS runtimes.
         let key_bytes = [

@@ -401,7 +401,7 @@ mod tests {
     ];
 
     #[test]
-    fn test_aes_gcm_siv_0_11_1_compatibility() {
+    fn test_aes_ciphertext_compatibility() {
         let key = AeKey::from(COMPATIBILITY_KEY);
         let ciphertext = AeCiphertext::from_bytes(&COMPATIBILITY_CIPHERTEXT).unwrap();
         assert_eq!(ciphertext.to_bytes(), COMPATIBILITY_CIPHERTEXT);
