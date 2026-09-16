@@ -31,25 +31,16 @@ pub(crate) fn batched_range_proof_transcript(context: &BatchedRangeProofContext)
 }
 
 #[allow(non_snake_case)]
-pub(crate) fn build_batched_range_proof_context<C, PC, A, B, O, PO>(
-    commitments: C,
-    amounts: A,
-    bit_lengths: B,
-    openings: O,
+pub(crate) fn build_batched_range_proof_context<PC, PO>(
+    commitments: &[PC],
+    amounts: &[u64],
+    bit_lengths: &[usize],
+    openings: &[PO],
 ) -> Result<BatchedRangeProofContext, ProofGenerationError>
 where
-    C: AsRef<[PC]>,
     PC: Borrow<PedersenCommitment>,
-    A: AsRef<[u64]>,
-    B: AsRef<[usize]>,
-    O: AsRef<[PO]>,
     PO: Borrow<PedersenOpening>,
 {
-    let commitments = commitments.as_ref();
-    let amounts = amounts.as_ref();
-    let bit_lengths = bit_lengths.as_ref();
-    let openings = openings.as_ref();
-
     // the number of commitments is capped at 8
     let num_commitments = commitments.len();
     if num_commitments > MAX_COMMITMENTS
@@ -63,10 +54,7 @@ where
     let mut pod_commitments = [PodPedersenCommitment::zeroed(); MAX_COMMITMENTS];
     for (i, commitment) in commitments.iter().enumerate() {
         let commitment = commitment.borrow();
-        // all-zero commitment is invalid
-        //
-        // this check only exists in the prover logic to enforce safe practice
-        // identity commitments are not rejected by range proof verification logic itself
+        // Identity commitments are invalid and encode the unused context slots.
         if commitment.get_point().is_identity() {
             return Err(ProofGenerationError::InvalidCommitment);
         }
