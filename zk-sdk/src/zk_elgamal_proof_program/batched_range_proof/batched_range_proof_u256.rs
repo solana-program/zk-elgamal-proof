@@ -17,6 +17,17 @@ use {
 
 const BATCHED_RANGE_PROOF_U256_BIT_LENGTH: usize = 256;
 
+/// Builds a batched range proof with a total bit length of 256.
+///
+/// Inputs may be vectors, arrays, or slices. Commitments and openings may contain
+/// owned values or references. Arrays and slices avoid allocating input vectors;
+/// proof generation still allocates internally.
+///
+/// All inputs must have the same length, with at most eight commitments. Each bit
+/// length must be between 1 and 64, and their sum must be 256.
+///
+/// See [`super::build_batched_range_proof_u64_data`] for an example and notes on
+/// collection type inference.
 pub fn build_batched_range_proof_u256_data<C, PC, A, B, O, PO>(
     commitments: C,
     amounts: A,
@@ -31,11 +42,13 @@ where
     O: AsRef<[PO]>,
     PO: Borrow<PedersenOpening>,
 {
-    // Range proof on 256 bit length could potentially result in an unexpected behavior and
-    // therefore, restrict the bit length to be at most 128. This check is not needed for the
-    // `BatchedRangeProofU64` or `BatchedRangeProofU128`.
+    let commitments = commitments.as_ref();
+    let amounts = amounts.as_ref();
+    let bit_lengths = bit_lengths.as_ref();
+    let openings = openings.as_ref();
+
+    // Each amount is a `u64`, so an individual bit length must not exceed 64.
     if bit_lengths
-        .as_ref()
         .iter()
         .any(|length| *length > MAX_SINGLE_BIT_LENGTH)
     {
@@ -44,7 +57,6 @@ where
 
     // the sum of the bit lengths must be 256
     let batched_bit_length = bit_lengths
-        .as_ref()
         .iter()
         .try_fold(0_usize, |acc, &x| acc.checked_add(x))
         .ok_or(ProofGenerationError::IllegalAmountBitLength)?;
@@ -52,8 +64,7 @@ where
         return Err(ProofGenerationError::IllegalAmountBitLength);
     }
 
-    let context =
-        build_batched_range_proof_context(&commitments, &amounts, &bit_lengths, &openings)?;
+    let context = build_batched_range_proof_context(commitments, amounts, bit_lengths, openings)?;
 
     let mut transcript = batched_range_proof_transcript(&context);
     let proof = RangeProof::new(amounts, bit_lengths, openings, &mut transcript)?
@@ -121,7 +132,7 @@ mod test {
         let (commitment_8, opening_8) = Pedersen::new(amount_8);
 
         let proof_data = build_batched_range_proof_u256_data(
-            &[
+            [
                 &commitment_1,
                 &commitment_2,
                 &commitment_3,
@@ -131,11 +142,11 @@ mod test {
                 &commitment_7,
                 &commitment_8,
             ],
-            &[
+            [
                 amount_1, amount_2, amount_3, amount_4, amount_5, amount_6, amount_7, amount_8,
             ],
-            &[32, 32, 32, 32, 32, 32, 32, 32],
-            &[
+            [32, 32, 32, 32, 32, 32, 32, 32],
+            [
                 &opening_1, &opening_2, &opening_3, &opening_4, &opening_5, &opening_6, &opening_7,
                 &opening_8,
             ],
@@ -163,7 +174,7 @@ mod test {
         let (commitment_8, opening_8) = Pedersen::new(amount_8);
 
         let proof_data = build_batched_range_proof_u256_data(
-            &[
+            [
                 &commitment_1,
                 &commitment_2,
                 &commitment_3,
@@ -173,11 +184,11 @@ mod test {
                 &commitment_7,
                 &commitment_8,
             ],
-            &[
+            [
                 amount_1, amount_2, amount_3, amount_4, amount_5, amount_6, amount_7, amount_8,
             ],
-            &[32, 32, 32, 32, 32, 32, 32, 32],
-            &[
+            [32, 32, 32, 32, 32, 32, 32, 32],
+            [
                 &opening_1, &opening_2, &opening_3, &opening_4, &opening_5, &opening_6, &opening_7,
                 &opening_8,
             ],

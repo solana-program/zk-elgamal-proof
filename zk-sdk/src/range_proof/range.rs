@@ -67,9 +67,9 @@ impl RangeProof {
     /// the caller (the main protocol) must hash these public statement prior to invoking this
     /// constructor.
     ///
-    /// # Panics
-    /// This function will panic if the `openings` vector does not contain the same number
-    /// of elements as the `amounts` and `bit_lengths` vectors.
+    /// # Errors
+    /// Returns [`RangeProofGenerationError::VectorLengthMismatch`] if `amounts`,
+    /// `bit_lengths`, and `openings` do not have the same length.
     #[allow(clippy::many_single_char_names)]
     pub fn new<A, B, O, PO>(
         amounts: A,
@@ -378,8 +378,7 @@ impl RangeProof {
             .zip(concat_z_and_2.iter())
             .map(|((s_i_inv, exp_y_inv), z_and_2)| z + exp_y_inv * (zz * z_and_2 - b * s_i_inv));
 
-        let basepoint_scalar =
-            w * (self.t_x - a * b) + d * (delta(&bit_lengths, &y, &z) - self.t_x);
+        let basepoint_scalar = w * (self.t_x - a * b) + d * (delta(bit_lengths, &y, &z) - self.t_x);
         let value_commitment_scalars = util::exp_iter(z).take(m).map(|z_exp| d * zz * z_exp);
 
         // 4. Perform the final "mega-check"
@@ -619,9 +618,8 @@ mod tests {
         )
     }
 
-    // We used to require passing owned vectors to `RangeProof::new` and
-    // `RangeProof::verify`. Make sure that the new API based on `AsRef` is
-    // backwards compatible.
+    // Keep coverage for the original vector input types accepted by
+    // `RangeProof::new` and `RangeProof::verify`.
     #[test]
     fn test_single_rangeproof_vectors() {
         let (comm, open) = Pedersen::new(55_u64);
@@ -652,17 +650,17 @@ mod tests {
         let mut transcript_verify = Transcript::new_zk_elgamal_transcript(b"Test");
 
         let proof = RangeProof::new(
-            &[55, 77, 99],
-            &[64, 32, 32],
-            &[&open_1, &open_2, &open_3],
+            [55, 77, 99],
+            [64, 32, 32],
+            [&open_1, &open_2, &open_3],
             &mut transcript_create,
         )
         .unwrap();
 
         proof
             .verify(
-                &[&comm_1, &comm_2, &comm_3],
-                &[64, 32, 32],
+                [&comm_1, &comm_2, &comm_3],
+                [64, 32, 32],
                 &mut transcript_verify,
             )
             .unwrap();
@@ -728,8 +726,8 @@ mod tests {
 
         proof
             .verify(
-                &[&commitment_1, &commitment_2, &commitment_3],
-                &[64, 32, 32],
+                [&commitment_1, &commitment_2, &commitment_3],
+                [64, 32, 32],
                 &mut transcript_verify,
             )
             .unwrap()
