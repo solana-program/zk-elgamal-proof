@@ -21,27 +21,19 @@ fn bench_range_proof_verification(c: &mut Criterion) {
     let (commitments, openings): (Vec<_>, Vec<_>) =
         amounts.iter().map(|&amount| Pedersen::new(amount)).unzip();
 
-    let proof_u64 = build_batched_range_proof_u64_data(
-        commitments[..1].iter().collect(),
-        amounts[..1].to_vec(),
-        vec![64],
-        openings[..1].iter().collect(),
-    )
-    .unwrap();
+    let proof_u64 =
+        build_batched_range_proof_u64_data(&commitments[..1], &amounts[..1], [64], &openings[..1])
+            .unwrap();
     let proof_u128 = build_batched_range_proof_u128_data(
-        commitments[..4].iter().collect(),
-        amounts[..4].to_vec(),
-        vec![64, 16, 32, 16],
-        openings[..4].iter().collect(),
+        &commitments[..4],
+        &amounts[..4],
+        [64, 16, 32, 16],
+        &openings[..4],
     )
     .unwrap();
-    let proof_u256 = build_batched_range_proof_u256_data(
-        commitments.iter().collect(),
-        amounts.to_vec(),
-        vec![64, 64, 64, 32, 32],
-        openings.iter().collect(),
-    )
-    .unwrap();
+    let proof_u256 =
+        build_batched_range_proof_u256_data(&commitments, amounts, [64, 64, 64, 32, 32], &openings)
+            .unwrap();
 
     let mut group = c.benchmark_group("range_proof_verification");
     group.bench_function("u64", |b| {
