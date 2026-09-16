@@ -641,6 +641,58 @@ mod tests {
     }
 
     #[test]
+    fn test_mismatched_input_lengths() {
+        let (commitment, opening) = Pedersen::new(55_u64);
+        let mut transcript_create = Transcript::new_zk_elgamal_transcript(b"Test");
+
+        assert_eq!(
+            RangeProof::new([55], [32, 32], [&opening], &mut transcript_create).err(),
+            Some(RangeProofGenerationError::VectorLengthMismatch),
+        );
+
+        let no_openings: [&PedersenOpening; 0] = [];
+        assert_eq!(
+            RangeProof::new([55], [64], no_openings, &mut transcript_create).err(),
+            Some(RangeProofGenerationError::VectorLengthMismatch),
+        );
+
+        let proof = RangeProof::new([55], [64], [&opening], &mut transcript_create).unwrap();
+        let mut transcript_verify = Transcript::new_zk_elgamal_transcript(b"Test");
+        assert_eq!(
+            proof
+                .verify([commitment], [], &mut transcript_verify)
+                .unwrap_err(),
+            RangeProofVerificationError::VectorLengthMismatch,
+        );
+    }
+
+    #[test]
+    fn test_identity_commitment_rejected() {
+        let mut transcript_create = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut transcript_verify = Transcript::new_zk_elgamal_transcript(b"Test");
+
+        // Zero with a zero opening has an identity commitment. Its algebraic proof
+        // is valid, but the verifier must explicitly reject the commitment.
+        let proof = RangeProof::new(
+            [0],
+            [64],
+            [PedersenOpening::default()],
+            &mut transcript_create,
+        )
+        .unwrap();
+        assert_eq!(
+            proof
+                .verify(
+                    [PedersenCommitment::default()],
+                    [64],
+                    &mut transcript_verify
+                )
+                .unwrap_err(),
+            RangeProofVerificationError::AlgebraicRelation,
+        );
+    }
+
+    #[test]
     fn test_aggregated_rangeproof() {
         let (comm_1, open_1) = Pedersen::new(55_u64);
         let (comm_2, open_2) = Pedersen::new(77_u64);
