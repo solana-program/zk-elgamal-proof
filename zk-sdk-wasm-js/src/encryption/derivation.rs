@@ -63,9 +63,16 @@ impl ConfidentialKeys {
     /// resulting signature is the input key material for the wallet's
     /// confidential-balance decryption keys.
     ///
+    /// Throws if given an argument; seed-scoped derivation is
+    /// `signerMessageWithSeed`.
     #[wasm_bindgen(js_name = "signerMessage")]
-    pub fn signer_message() -> Vec<u8> {
-        STANDARD_DERIVATION_MESSAGE.to_vec()
+    pub fn signer_message(seed: Option<Uint8Array>) -> Result<Vec<u8>, JsValue> {
+        if seed.is_some() {
+            return Err(JsValue::from_str(
+                "signerMessage takes no arguments, use signerMessageWithSeed",
+            ));
+        }
+        Ok(STANDARD_DERIVATION_MESSAGE.to_vec())
     }
 
     /// Returns the non-standard, seed-scoped derivation message:
@@ -93,9 +100,16 @@ impl ConfidentialKeys {
     /// Non-browser / direct-CTAP `hmac-secret` consumers MUST reproduce that
     /// prefixing over this message to derive byte-identical keys.
     ///
+    /// Throws if given an argument; seed-scoped derivation is
+    /// `prfInputWithSeed`.
     #[wasm_bindgen(js_name = "prfInput")]
-    pub fn prf_input() -> Vec<u8> {
-        STANDARD_DERIVATION_MESSAGE.to_vec()
+    pub fn prf_input(seed: Option<Uint8Array>) -> Result<Vec<u8>, JsValue> {
+        if seed.is_some() {
+            return Err(JsValue::from_str(
+                "prfInput takes no arguments, use prfInputWithSeed",
+            ));
+        }
+        Ok(STANDARD_DERIVATION_MESSAGE.to_vec())
     }
 
     /// Returns the non-standard, seed-scoped WebAuthn PRF evaluation input:
@@ -229,12 +243,24 @@ mod tests {
         // The standard message is the bare protocol identifier: what a wallet
         // signs once to derive its wallet-level keys, and the exact prefix
         // wallets should refuse through generic signMessage.
-        let msg = ConfidentialKeys::signer_message();
+        let msg = ConfidentialKeys::signer_message(None).unwrap();
         assert_eq!(msg, b"solana-conf-bal/v1");
         assert_eq!(
             msg,
             ConfidentialKeys::signer_message_with_seed(Uint8Array::from([].as_ref()))
         );
+    }
+
+    #[wasm_bindgen_test]
+    fn test_standard_messages_reject_a_seed() {
+        for seed in [[7u8; 32].as_ref(), [].as_ref()] {
+            let seed = Uint8Array::from(seed);
+            assert!(ConfidentialKeys::signer_message(Some(seed.clone())).is_err());
+            assert!(ConfidentialKeys::prf_input(Some(seed)).is_err());
+        }
+
+        assert!(ConfidentialKeys::signer_message(None).is_ok());
+        assert!(ConfidentialKeys::prf_input(None).is_ok());
     }
 
     #[wasm_bindgen_test]
@@ -340,8 +366,8 @@ mod tests {
         // The passkey PRF input is the same canonical message as the Ed25519
         // signing path, in both the standard and the seeded variants.
         assert_eq!(
-            ConfidentialKeys::prf_input(),
-            ConfidentialKeys::signer_message()
+            ConfidentialKeys::prf_input(None).unwrap(),
+            ConfidentialKeys::signer_message(None).unwrap()
         );
 
         let seed = [9u8; 32];
