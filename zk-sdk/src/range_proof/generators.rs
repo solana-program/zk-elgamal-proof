@@ -15,10 +15,17 @@ use {
         digest::{ExtendableOutput, Update, XofReader},
         Shake256, Shake256Reader,
     },
+    std::sync::LazyLock,
 };
 
 /// The maximum number of generators that can be created.
 const MAX_GENERATOR_LENGTH: usize = u32::MAX as usize;
+
+pub(super) const CACHED_GENERATOR_LENGTH: usize = 256;
+
+// Smaller proofs use prefixes of this set.
+pub(super) static CACHED_GENERATORS: LazyLock<RangeProofGens> =
+    LazyLock::new(|| RangeProofGens::new(CACHED_GENERATOR_LENGTH).unwrap());
 
 /// A factory for creating an effectively infinite stream of generator points.
 ///
@@ -178,5 +185,74 @@ impl<'a> Iterator for GensIter<'a> {
     fn size_hint(&self) -> (usize, Option<usize>) {
         let size = self.n - self.gen_idx;
         (size, Some(size))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn cached_generators_match_uncached() {
+        let cached = &*CACHED_GENERATORS;
+        for n in [0, 1, 2, 3, 8, 32, 63, 64, 65, 127, 128, 129, 255, 256] {
+            let uncached = RangeProofGens::new(n).unwrap();
+            assert!(cached.G(n).eq(uncached.G(n)));
+            assert!(cached.H(n).eq(uncached.H(n)));
+            assert!(cached
+                .G(n)
+                .chain(cached.H(n))
+                .map(|p| p.compress())
+                .eq(uncached.G(n).chain(uncached.H(n)).map(|p| p.compress())));
+        }
+    }
+
+    #[cfg(target_pointer_width = "64")]
+    #[test]
+    fn oversized_generators_are_rejected() {
+        let n = MAX_GENERATOR_LENGTH + 1;
+        assert_eq!(
+            RangeProofGens::new(n).err(),
+            Some(RangeProofGeneratorError::MaximumGeneratorLengthExceeded),
+        );
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn concurrent_access_shares_generators() {
+        use std::{sync::Barrier, thread};
+
+        let barrier = Barrier::new(9);
+        thread::scope(|scope| {
+            let handles: Vec<_> = (0..8)
+                .map(|i| {
+                    let barrier = &barrier;
+                    scope.spawn(move || {
+                        barrier.wait();
+                        let n = [64, 128, 256][i % 3];
+                        let gens = &*CACHED_GENERATORS;
+                        assert!(gens.G(n).eq(RangeProofGens::new(n).unwrap().G(n)));
+                        gens
+                    })
+                })
+                .collect();
+            barrier.wait();
+            for handle in handles {
+                assert!(std::ptr::eq(handle.join().unwrap(), &*CACHED_GENERATORS));
+            }
+        });
+    }
+
+    #[test]
+    fn retained_cache_memory() {
+        let gens = &*CACHED_GENERATORS;
+        let heap_bytes =
+            (gens.G_vec.capacity() + gens.H_vec.capacity()) * std::mem::size_of::<RistrettoPoint>();
+        assert_eq!(gens.G_vec.capacity(), CACHED_GENERATOR_LENGTH);
+        assert_eq!(gens.H_vec.capacity(), CACHED_GENERATOR_LENGTH);
+        let static_bytes = std::mem::size_of_val(&CACHED_GENERATORS);
+        let message =
+            format!("generator cache: {heap_bytes} heap bytes + {static_bytes} static bytes");
+        println!("{message}");
     }
 }
