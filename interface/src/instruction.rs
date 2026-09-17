@@ -40,13 +40,14 @@
 //! [`context-state`]: https://docs.solanalabs.com/runtime/zk-token-proof#context-data
 
 use {
-    crate::proof_data::ZkProofData,
+    crate::proof_data::{ProofType, ZkProofData},
     alloc::vec,
     bytemuck::{bytes_of, Pod},
     num_derive::{FromPrimitive, ToPrimitive},
     num_traits::{FromPrimitive, ToPrimitive},
     solana_address::Address,
     solana_instruction::{AccountMeta, Instruction},
+    solana_instruction_error::InstructionError,
 };
 
 #[derive(Clone, Copy, Debug, FromPrimitive, ToPrimitive, PartialEq, Eq)]
@@ -562,6 +563,37 @@ pub fn close_context_state(
     }
 }
 
+impl TryFrom<ProofType> for ProofInstruction {
+    type Error = InstructionError;
+
+    /// Return the verification instruction, rejecting `ProofType::Uninitialized`.
+    fn try_from(proof_type: ProofType) -> Result<Self, Self::Error> {
+        Ok(match proof_type {
+            ProofType::Uninitialized => return Err(InstructionError::InvalidInstructionData),
+            ProofType::ZeroCiphertext => Self::VerifyZeroCiphertext,
+            ProofType::CiphertextCiphertextEquality => Self::VerifyCiphertextCiphertextEquality,
+            ProofType::CiphertextCommitmentEquality => Self::VerifyCiphertextCommitmentEquality,
+            ProofType::PubkeyValidity => Self::VerifyPubkeyValidity,
+            ProofType::PercentageWithCap => Self::VerifyPercentageWithCap,
+            ProofType::BatchedRangeProofU64 => Self::VerifyBatchedRangeProofU64,
+            ProofType::BatchedRangeProofU128 => Self::VerifyBatchedRangeProofU128,
+            ProofType::BatchedRangeProofU256 => Self::VerifyBatchedRangeProofU256,
+            ProofType::GroupedCiphertext2HandlesValidity => {
+                Self::VerifyGroupedCiphertext2HandlesValidity
+            }
+            ProofType::BatchedGroupedCiphertext2HandlesValidity => {
+                Self::VerifyBatchedGroupedCiphertext2HandlesValidity
+            }
+            ProofType::GroupedCiphertext3HandlesValidity => {
+                Self::VerifyGroupedCiphertext3HandlesValidity
+            }
+            ProofType::BatchedGroupedCiphertext3HandlesValidity => {
+                Self::VerifyBatchedGroupedCiphertext3HandlesValidity
+            }
+        })
+    }
+}
+
 impl ProofInstruction {
     pub fn encode_verify_proof<T, U>(
         &self,
@@ -572,6 +604,12 @@ impl ProofInstruction {
         T: Pod + ZkProofData<U>,
         U: Pod,
     {
+        assert_eq!(
+            Self::try_from(T::PROOF_TYPE),
+            Ok(*self),
+            "proof instruction does not match proof type"
+        );
+
         let accounts = if let Some(context_state_info) = context_state_info {
             vec![
                 AccountMeta::new(*context_state_info.context_state_account, false),
@@ -628,6 +666,10 @@ impl ProofInstruction {
         T: Pod + ZkProofData<U>,
         U: Pod,
     {
+        if Self::instruction_type(input)? != Self::try_from(T::PROOF_TYPE).ok()? {
+            return None;
+        }
+
         input
             .get(1..)
             .and_then(|data| bytemuck::try_from_bytes(data).ok())
