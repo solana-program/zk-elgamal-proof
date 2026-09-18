@@ -3,7 +3,7 @@ use {
         encryption::pedersen::{Pedersen, PedersenCommitment, PedersenOpening, G, H},
         range_proof::{
             errors::{RangeProofGenerationError, RangeProofVerificationError},
-            generators::RangeProofGens,
+            generators::{RangeProofGens, CACHED_GENERATORS, CACHED_GENERATOR_LENGTH},
             inner_product::InnerProductProof,
             util,
         },
@@ -96,8 +96,14 @@ impl RangeProof {
             return Err(RangeProofGenerationError::VectorLengthMismatch);
         }
 
-        let bp_gens = RangeProofGens::new(nm)
-            .map_err(|_| RangeProofGenerationError::MaximumGeneratorLengthExceeded)?;
+        let owned_generators;
+        let bp_gens = if nm <= CACHED_GENERATOR_LENGTH {
+            &*CACHED_GENERATORS
+        } else {
+            owned_generators = RangeProofGens::new(nm)
+                .map_err(|_| RangeProofGenerationError::MaximumGeneratorLengthExceeded)?;
+            &owned_generators
+        };
 
         transcript.range_proof_domain_separator(nm as u64);
 
@@ -296,8 +302,14 @@ impl RangeProof {
             return Err(RangeProofVerificationError::InvalidBitSize);
         }
 
-        let bp_gens = RangeProofGens::new(nm)
-            .map_err(|_| RangeProofVerificationError::MaximumGeneratorLengthExceeded)?;
+        let owned_generators;
+        let bp_gens = if nm <= CACHED_GENERATOR_LENGTH {
+            &*CACHED_GENERATORS
+        } else {
+            owned_generators = RangeProofGens::new(nm)
+                .map_err(|_| RangeProofVerificationError::MaximumGeneratorLengthExceeded)?;
+            &owned_generators
+        };
 
         transcript.range_proof_domain_separator(nm as u64);
 
@@ -589,6 +601,36 @@ mod tests {
             transcript_create.challenge_scalar(b"test"),
             transcript_verify.challenge_scalar(b"test"),
         )
+    }
+
+    #[test]
+    fn test_rangeproof_above_cached_capacity() {
+        let (comm, open) = Pedersen::new(55_u64);
+        let num_commitments = 2 * CACHED_GENERATOR_LENGTH / 64;
+        let bit_lengths = vec![64; num_commitments];
+        let mut transcript_create = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut transcript_verify = Transcript::new_zk_elgamal_transcript(b"Test");
+
+        let proof = RangeProof::new(
+            vec![55; num_commitments],
+            bit_lengths.clone(),
+            vec![&open; num_commitments],
+            &mut transcript_create,
+        )
+        .unwrap();
+
+        proof
+            .verify(
+                vec![&comm; num_commitments],
+                bit_lengths,
+                &mut transcript_verify,
+            )
+            .unwrap();
+
+        assert_eq!(
+            transcript_create.challenge_scalar(b"test"),
+            transcript_verify.challenge_scalar(b"test"),
+        );
     }
 
     #[test]
