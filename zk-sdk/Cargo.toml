@@ -42,8 +42,13 @@ zeroize = { workspace = true, features = ["zeroize_derive"] }
 
 [dev-dependencies]
 bip39 = { workspace = true }
+criterion = { workspace = true }
 solana-address = { workspace = true, features = ["atomic", "bytemuck"] }
 solana-keypair = { workspace = true }
+
+[[bench]]
+name = "range_proof"
+harness = false
 
 [lints]
 workspace = true
