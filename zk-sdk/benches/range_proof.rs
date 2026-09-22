@@ -11,11 +11,16 @@ use {
 };
 
 fn bench_range_proof_verification(c: &mut Criterion) {
-    let amounts = [55_u64, 77, 99, 11, 33];
+    let amounts = [
+        u64::MAX,
+        u64::from(u16::MAX),
+        u64::from(u32::MAX),
+        0,
+        1 << 31,
+    ];
     let (commitments, openings): (Vec<_>, Vec<_>) =
         amounts.iter().map(|&amount| Pedersen::new(amount)).unzip();
 
-    // Generate proofs and warm the generator cache before timing verification.
     let proof_u64 = build_batched_range_proof_u64_data(
         commitments[..1].iter().collect(),
         amounts[..1].to_vec(),

@@ -246,13 +246,7 @@ mod tests {
     #[test]
     fn retained_cache_memory() {
         let gens = &*CACHED_GENERATORS;
-        let heap_bytes =
-            (gens.G_vec.capacity() + gens.H_vec.capacity()) * std::mem::size_of::<RistrettoPoint>();
         assert_eq!(gens.G_vec.capacity(), CACHED_GENERATOR_LENGTH);
         assert_eq!(gens.H_vec.capacity(), CACHED_GENERATOR_LENGTH);
-        let static_bytes = std::mem::size_of_val(&CACHED_GENERATORS);
-        let message =
-            format!("generator cache: {heap_bytes} heap bytes + {static_bytes} static bytes");
-        println!("{message}");
     }
 }
