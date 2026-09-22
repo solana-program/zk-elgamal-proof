@@ -40,13 +40,14 @@
 //! [`context-state`]: https://docs.solanalabs.com/runtime/zk-token-proof#context-data
 
 use {
-    crate::proof_data::ZkProofData,
+    crate::proof_data::{ProofType, ZkProofData},
     alloc::vec,
     bytemuck::{bytes_of, Pod},
     num_derive::{FromPrimitive, ToPrimitive},
     num_traits::{FromPrimitive, ToPrimitive},
     solana_address::Address,
     solana_instruction::{AccountMeta, Instruction},
+    solana_instruction_error::InstructionError,
 };
 
 #[derive(Clone, Copy, Debug, FromPrimitive, ToPrimitive, PartialEq, Eq)]
@@ -562,6 +563,37 @@ pub fn close_context_state(
     }
 }
 
+impl TryFrom<ProofType> for ProofInstruction {
+    type Error = InstructionError;
+
+    /// Return the verification instruction, rejecting `ProofType::Uninitialized`.
+    fn try_from(proof_type: ProofType) -> Result<Self, Self::Error> {
+        Ok(match proof_type {
+            ProofType::Uninitialized => return Err(InstructionError::InvalidInstructionData),
+            ProofType::ZeroCiphertext => Self::VerifyZeroCiphertext,
+            ProofType::CiphertextCiphertextEquality => Self::VerifyCiphertextCiphertextEquality,
+            ProofType::CiphertextCommitmentEquality => Self::VerifyCiphertextCommitmentEquality,
+            ProofType::PubkeyValidity => Self::VerifyPubkeyValidity,
+            ProofType::PercentageWithCap => Self::VerifyPercentageWithCap,
+            ProofType::BatchedRangeProofU64 => Self::VerifyBatchedRangeProofU64,
+            ProofType::BatchedRangeProofU128 => Self::VerifyBatchedRangeProofU128,
+            ProofType::BatchedRangeProofU256 => Self::VerifyBatchedRangeProofU256,
+            ProofType::GroupedCiphertext2HandlesValidity => {
+                Self::VerifyGroupedCiphertext2HandlesValidity
+            }
+            ProofType::BatchedGroupedCiphertext2HandlesValidity => {
+                Self::VerifyBatchedGroupedCiphertext2HandlesValidity
+            }
+            ProofType::GroupedCiphertext3HandlesValidity => {
+                Self::VerifyGroupedCiphertext3HandlesValidity
+            }
+            ProofType::BatchedGroupedCiphertext3HandlesValidity => {
+                Self::VerifyBatchedGroupedCiphertext3HandlesValidity
+            }
+        })
+    }
+}
+
 impl ProofInstruction {
     pub fn encode_verify_proof<T, U>(
         &self,
@@ -572,6 +604,12 @@ impl ProofInstruction {
         T: Pod + ZkProofData<U>,
         U: Pod,
     {
+        assert_eq!(
+            Self::try_from(T::PROOF_TYPE),
+            Ok(*self),
+            "proof instruction does not match proof type"
+        );
+
         let accounts = if let Some(context_state_info) = context_state_info {
             vec![
                 AccountMeta::new(*context_state_info.context_state_account, false),
@@ -628,8 +666,192 @@ impl ProofInstruction {
         T: Pod + ZkProofData<U>,
         U: Pod,
     {
+        if Self::instruction_type(input)? != Self::try_from(T::PROOF_TYPE).ok()? {
+            return None;
+        }
+
         input
             .get(1..)
             .and_then(|data| bytemuck::try_from_bytes(data).ok())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use {super::*, crate::proof_data::*, bytemuck::Zeroable, core::mem::size_of};
+
+    // These fixtures exercise serialization, not cryptographic proof verification.
+    fn proof_fixture<T: Pod>() -> T {
+        bytemuck::pod_read_unaligned(&vec![0x5a; size_of::<T>()])
+    }
+
+    fn check_instruction_bytes_and_accounts<T, U>(instruction_type: ProofInstruction, tag: u8)
+    where
+        T: Pod + ZkProofData<U>,
+        U: Pod,
+    {
+        let proof = proof_fixture::<T>();
+        let context_account = Address::new_from_array([1; 32]);
+        let context_authority = Address::new_from_array([2; 32]);
+        let context_info = ContextStateInfo {
+            context_state_account: &context_account,
+            context_state_authority: &context_authority,
+        };
+
+        for context in [None, Some(context_info)] {
+            let expected_accounts = if context.is_some() {
+                vec![
+                    AccountMeta::new(context_account, false),
+                    AccountMeta::new_readonly(context_authority, false),
+                ]
+            } else {
+                vec![]
+            };
+            let instruction = instruction_type.encode_verify_proof(context, &proof);
+            let mut expected_data = vec![tag];
+            expected_data.extend_from_slice(bytes_of(&proof));
+            assert_eq!(instruction.program_id, crate::id());
+            assert_eq!(instruction.accounts, expected_accounts);
+            assert_eq!(instruction.data, expected_data);
+            assert_eq!(
+                ProofInstruction::instruction_type(&instruction.data),
+                Some(instruction_type)
+            );
+            let decoded = ProofInstruction::proof_data::<T, U>(&instruction.data).unwrap();
+            assert_eq!(bytes_of(decoded), bytes_of(&proof));
+            assert_eq!(bytes_of(decoded).as_ptr(), instruction.data[1..].as_ptr());
+        }
+    }
+
+    fn check_rejects_other_tags<T, U>(tag: u8)
+    where
+        T: Pod + ZkProofData<U>,
+        U: Pod,
+    {
+        let mut data = vec![tag];
+        data.extend_from_slice(bytes_of(&proof_fixture::<T>()));
+        for other_tag in 0..=u8::MAX {
+            if other_tag != tag {
+                data[0] = other_tag;
+                assert!(
+                    ProofInstruction::proof_data::<T, U>(&data).is_none(),
+                    "accepted tag {other_tag} for proof tag {tag}"
+                );
+            }
+        }
+    }
+
+    fn check_rejects_wrong_lengths<T, U>(tag: u8)
+    where
+        T: Pod + ZkProofData<U>,
+        U: Pod,
+    {
+        let mut data = vec![tag];
+        data.extend_from_slice(bytes_of(&proof_fixture::<T>()));
+        // Includes empty input, the tag alone, an account offset, and truncated proofs.
+        for len in 0..data.len() {
+            assert!(ProofInstruction::proof_data::<T, U>(&data[..len]).is_none());
+        }
+        data.push(0);
+        assert!(ProofInstruction::proof_data::<T, U>(&data).is_none());
+    }
+
+    macro_rules! test_proof_types {
+        ($($name:ident: $proof:ty => $instruction:ident = $tag:literal),+ $(,)?) => {
+            $(
+                #[test]
+                fn $name() {
+                    check_instruction_bytes_and_accounts::<$proof, _>(ProofInstruction::$instruction, $tag);
+                    check_rejects_wrong_lengths::<$proof, _>($tag);
+                    check_rejects_other_tags::<$proof, _>($tag);
+                }
+            )+
+        };
+    }
+
+    // Pin the wire tags independently of either enum's numeric representation.
+    test_proof_types! {
+        zero_ciphertext: ZeroCiphertextProofData => VerifyZeroCiphertext = 1,
+        ciphertext_ciphertext_equality:
+            CiphertextCiphertextEqualityProofData => VerifyCiphertextCiphertextEquality = 2,
+        ciphertext_commitment_equality:
+            CiphertextCommitmentEqualityProofData => VerifyCiphertextCommitmentEquality = 3,
+        pubkey_validity: PubkeyValidityProofData => VerifyPubkeyValidity = 4,
+        percentage_with_cap: PercentageWithCapProofData => VerifyPercentageWithCap = 5,
+        batched_range_u64: BatchedRangeProofU64Data => VerifyBatchedRangeProofU64 = 6,
+        batched_range_u128: BatchedRangeProofU128Data => VerifyBatchedRangeProofU128 = 7,
+        batched_range_u256: BatchedRangeProofU256Data => VerifyBatchedRangeProofU256 = 8,
+        grouped_2_handles:
+            GroupedCiphertext2HandlesValidityProofData => VerifyGroupedCiphertext2HandlesValidity = 9,
+        batched_grouped_2_handles:
+            BatchedGroupedCiphertext2HandlesValidityProofData => VerifyBatchedGroupedCiphertext2HandlesValidity = 10,
+        grouped_3_handles:
+            GroupedCiphertext3HandlesValidityProofData => VerifyGroupedCiphertext3HandlesValidity = 11,
+        batched_grouped_3_handles:
+            BatchedGroupedCiphertext3HandlesValidityProofData => VerifyBatchedGroupedCiphertext3HandlesValidity = 12,
+    }
+
+    #[test]
+    #[should_panic]
+    fn encode_rejects_mismatched_proof_type() {
+        ProofInstruction::VerifyZeroCiphertext
+            .encode_verify_proof(None, &PubkeyValidityProofData::zeroed());
+    }
+
+    #[test]
+    #[should_panic]
+    fn encode_rejects_close_context_state() {
+        ProofInstruction::CloseContextState
+            .encode_verify_proof(None, &PubkeyValidityProofData::zeroed());
+    }
+
+    #[test]
+    #[should_panic]
+    fn encode_rejects_equal_length_proof_type() {
+        ProofInstruction::VerifyGroupedCiphertext3HandlesValidity.encode_verify_proof(
+            None,
+            &BatchedGroupedCiphertext2HandlesValidityProofData::zeroed(),
+        );
+    }
+
+    #[test]
+    fn decode_rejects_equal_length_proof_types() {
+        type Batched = BatchedGroupedCiphertext2HandlesValidityProofData;
+        type Grouped = GroupedCiphertext3HandlesValidityProofData;
+        assert_eq!(size_of::<Batched>(), 416);
+        assert_eq!(size_of::<Grouped>(), 416);
+
+        let batched = ProofInstruction::VerifyBatchedGroupedCiphertext2HandlesValidity
+            .encode_verify_proof(None, &Batched::zeroed());
+        assert!(ProofInstruction::proof_data::<Grouped, _>(&batched.data).is_none());
+        let grouped = ProofInstruction::VerifyGroupedCiphertext3HandlesValidity
+            .encode_verify_proof(None, &Grouped::zeroed());
+        assert!(ProofInstruction::proof_data::<Batched, _>(&grouped.data).is_none());
+    }
+
+    // ZkProofData is public and downstream implementations can select Uninitialized.
+    #[derive(Clone, Copy, bytemuck_derive::Pod, bytemuck_derive::Zeroable)]
+    #[repr(transparent)]
+    struct UninitializedProof(u8);
+
+    impl ZkProofData<u8> for UninitializedProof {
+        const PROOF_TYPE: ProofType = ProofType::Uninitialized;
+
+        fn context_data(&self) -> &u8 {
+            &self.0
+        }
+    }
+
+    #[test]
+    #[should_panic]
+    fn encode_rejects_uninitialized_proof_type() {
+        ProofInstruction::CloseContextState.encode_verify_proof(None, &UninitializedProof(0));
+    }
+
+    #[test]
+    fn decode_rejects_uninitialized_proof_type() {
+        for tag in 0..=u8::MAX {
+            assert!(ProofInstruction::proof_data::<UninitializedProof, _>(&[tag, 0]).is_none());
+        }
     }
 }
