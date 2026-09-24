@@ -1,3 +1,11 @@
+//! Generation and verification of batched range proofs.
+//!
+//! Each proof has between 1 and 8 active commitments, with individual bit lengths in `1..=64`.
+//! Their sum must be exactly 64, 128, or 256 bits for the corresponding proof builder and verifier.
+//! Builders accept only active components and zero-pad the resulting [`BatchedRangeProofContext`].
+//! Verifiers require all unused trailing commitments and bit lengths to be zero; zero bit lengths
+//! are not valid for active components.
+
 pub mod batched_range_proof_u128;
 pub mod batched_range_proof_u256;
 pub mod batched_range_proof_u64;
@@ -17,7 +25,7 @@ use {
 };
 pub use {batched_range_proof_u128::*, batched_range_proof_u256::*, batched_range_proof_u64::*};
 
-/// A bit length in a batched range proof must be at most 64.
+/// An active bit length in a batched range proof must be in `1..=64`.
 ///
 /// Although the batched proof supports a total of 256 bits, individual components are restricted
 /// to `u64` amounts (64 bits).

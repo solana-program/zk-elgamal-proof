@@ -23,8 +23,9 @@ const BATCHED_RANGE_PROOF_U256_BIT_LENGTH: usize = 256;
 /// owned values or references. Arrays and slices avoid allocating input vectors;
 /// proof generation still allocates internally.
 ///
-/// All inputs must have the same length, with at most eight commitments. Each bit
-/// length must be between 1 and 64, and their sum must be 256.
+/// All inputs must have the same length, with 1 to 8 active commitments. Each bit
+/// length must be in `1..=64`, and their sum must be 256.
+/// Supply only active components; unused context slots are zero-padded automatically.
 ///
 /// See [`super::build_batched_range_proof_u64_data`] for an example and notes on
 /// collection type inference.

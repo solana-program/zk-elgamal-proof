@@ -21,8 +21,9 @@ use {
 /// owned values or references. Arrays and slices avoid allocating input vectors;
 /// proof generation still allocates internally.
 ///
-/// All inputs must have the same length, with at most eight commitments. Each bit
-/// length must be between 1 and 64, and their sum must be 64.
+/// All inputs must have the same length, with 1 to 8 active commitments. Each bit
+/// length must be in `1..=64`, and their sum must be 64.
+/// Supply only active components; unused context slots are zero-padded automatically.
 ///
 /// When collecting inputs, specify the collection type, for example
 /// `collect::<Vec<_>>()`. Empty commitment or opening collections also need an
