@@ -6,7 +6,8 @@
 //! because it decrypts in constant time. A custodian whose key management system only holds the
 //! ElGamal key has to go through `available_balance` instead, which means solving a discrete log.
 //!
-//! This example measures what that costs and where it stops working. Run with:
+//! This example measures what that costs, where it stops working, and how
+//! `decrypt_u32_with_lower_bound` gets past the ceiling. Run with:
 //!
 //! ```text
 //! cargo run --release --example decrypt_available_balance
@@ -90,13 +91,14 @@ fn main() {
         report(&format!("{threads} thread(s)"), TWO32 - 1, decoded, secs);
     }
 
-    println!("\nSubtracting a known lower bound first");
+    println!("\nRecovering past the ceiling with a known lower bound");
     let balance = 1_000_000_000_000_u64;
     let ciphertext = simulate_available_balance(&keypair, &[balance], &[]);
-    for hint in [balance - 500, balance / 2] {
-        let residual = ciphertext.subtract_amount(hint);
-        let (decoded, secs) = decrypt_timed(&residual, secret, None);
-        let label = format!("hint {hint} (delta {})", balance - hint);
-        report(&label, balance - hint, decoded, secs);
+    for lower_bound in [balance - 500, balance - TWO32 + 1, balance - TWO32] {
+        let start = Instant::now();
+        let decoded = ciphertext.decrypt_u32_with_lower_bound(secret, lower_bound);
+        let secs = start.elapsed().as_secs_f64();
+        let label = format!("bound {lower_bound} (delta {})", balance - lower_bound);
+        report(&label, balance, decoded, secs);
     }
 }
