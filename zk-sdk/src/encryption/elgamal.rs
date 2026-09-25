@@ -1086,7 +1086,7 @@ mod tests {
     use {
         super::*,
         crate::encryption::pedersen::Pedersen,
-        bip39::{Language, Mnemonic},
+        bip39::{Language, Mnemonic, WordCount},
         std::fs::{self, File},
     };
 
@@ -1377,7 +1377,7 @@ mod tests {
 
     #[test]
     fn test_keypair_from_seed_phrase_and_passphrase() {
-        let mnemonic = Mnemonic::generate_in(Language::English, 12).unwrap();
+        let mnemonic = Mnemonic::generate_in(Language::English, WordCount::Words12).unwrap();
         let passphrase = "42";
         let seed = mnemonic.to_seed(passphrase);
         let expected_keypair = ElGamalKeypair::from_seed(seed.as_ref()).unwrap();
