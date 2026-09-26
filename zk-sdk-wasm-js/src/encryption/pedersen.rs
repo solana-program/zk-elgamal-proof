@@ -1,7 +1,7 @@
 use {
     js_sys::Uint8Array,
     solana_zk_sdk::encryption::pedersen,
-    solana_zk_sdk_pod::encryption::PEDERSEN_COMMITMENT_LEN,
+    solana_zk_sdk_pod::encryption::{PEDERSEN_COMMITMENT_LEN, PEDERSEN_OPENING_LEN},
     wasm_bindgen::prelude::{wasm_bindgen, JsValue},
 };
 
@@ -121,6 +121,32 @@ impl PedersenOpening {
         }
     }
 
+    /// Deserializes a Pedersen opening from a 32-byte canonical scalar.
+    /// Throws an error if the bytes are invalid.
+    #[wasm_bindgen(js_name = "fromBytes")]
+    pub fn from_bytes(uint8_array: Uint8Array) -> Result<PedersenOpening, JsValue> {
+        if uint8_array.length() as usize != PEDERSEN_OPENING_LEN {
+            return Err(JsValue::from_str(&format!(
+                "Invalid byte length for PedersenOpening: expected {}, got {}",
+                PEDERSEN_OPENING_LEN,
+                uint8_array.length()
+            )));
+        }
+
+        let mut bytes = [0u8; PEDERSEN_OPENING_LEN];
+        uint8_array.copy_to(&mut bytes);
+
+        pedersen::PedersenOpening::from_bytes(&bytes)
+            .map(|inner| Self { inner })
+            .ok_or_else(|| JsValue::from_str("Invalid bytes for PedersenOpening"))
+    }
+
+    /// Serializes the Pedersen opening to a byte array.
+    #[wasm_bindgen(js_name = "toBytes")]
+    pub fn to_bytes(&self) -> Vec<u8> {
+        self.inner.to_bytes().to_vec()
+    }
+
     /// Adds two Pedersen openings.
     #[wasm_bindgen(js_name = "add")]
     pub fn add(&self, other: &PedersenOpening) -> PedersenOpening {
@@ -158,7 +184,7 @@ impl PedersenOpening {
 
 #[cfg(test)]
 mod tests {
-    use {super::*, wasm_bindgen_test::*};
+    use {super::*, crate::encryption::elgamal::ElGamalKeypair, wasm_bindgen_test::*};
 
     #[wasm_bindgen_test]
     fn test_opening_creation() {
@@ -166,6 +192,47 @@ mod tests {
         let opening2 = PedersenOpening::new_rand();
 
         assert_ne!(opening1.inner.as_bytes(), opening2.inner.as_bytes());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_opening_bytes_roundtrip() {
+        let opening = PedersenOpening::new_rand();
+        let bytes = opening.to_bytes();
+        assert_eq!(bytes.len(), PEDERSEN_OPENING_LEN);
+
+        let recovered_opening =
+            PedersenOpening::from_bytes(Uint8Array::from(bytes.as_slice())).unwrap();
+        assert_eq!(bytes, recovered_opening.to_bytes());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_opening_from_bytes_with_invalid_length() {
+        let short_bytes = vec![0; 31];
+        assert!(PedersenOpening::from_bytes(Uint8Array::from(short_bytes.as_slice())).is_err());
+
+        let long_bytes = vec![0; 33];
+        assert!(PedersenOpening::from_bytes(Uint8Array::from(long_bytes.as_slice())).is_err());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_opening_from_bytes_with_non_canonical_scalar() {
+        let invalid_scalar_bytes = vec![0xFF; 32];
+        assert!(
+            PedersenOpening::from_bytes(Uint8Array::from(invalid_scalar_bytes.as_slice())).is_err()
+        );
+    }
+
+    #[wasm_bindgen_test]
+    fn test_opening_bytes_roundtrip_preserves_encryption() {
+        let keypair = ElGamalKeypair::new_rand();
+        let opening = PedersenOpening::new_rand();
+        let bytes = opening.to_bytes();
+        let recovered_opening =
+            PedersenOpening::from_bytes(Uint8Array::from(bytes.as_slice())).unwrap();
+
+        let ciphertext = keypair.pubkey().encrypt_with(42, &opening);
+        let recovered_ciphertext = keypair.pubkey().encrypt_with(42, &recovered_opening);
+        assert_eq!(ciphertext.to_bytes(), recovered_ciphertext.to_bytes());
     }
 
     #[wasm_bindgen_test]
