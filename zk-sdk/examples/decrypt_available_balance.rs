@@ -13,6 +13,8 @@
 //! cargo run --release --example decrypt_available_balance
 //! ```
 
+#![allow(clippy::arithmetic_side_effects)]
+
 use {
     solana_zk_sdk::encryption::elgamal::{ElGamalCiphertext, ElGamalKeypair, ElGamalSecretKey},
     std::{num::NonZeroUsize, time::Instant},
