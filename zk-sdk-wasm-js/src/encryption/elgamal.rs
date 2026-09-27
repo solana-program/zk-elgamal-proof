@@ -266,13 +266,13 @@ impl ElGamalCiphertext {
         (self.inner * scalar).into()
     }
 
-    /// Adds an unencrypted 64-bit amount, preserving the opening and decryption handle.
+    /// Adds a 64-bit plaintext amount, preserving the opening and decryption handle.
     #[wasm_bindgen(js_name = "addAmount")]
     pub fn add_amount(&self, amount: u64) -> ElGamalCiphertext {
         self.inner.add_amount(amount).into()
     }
 
-    /// Subtracts an unencrypted 64-bit amount, preserving the opening and decryption handle.
+    /// Subtracts a 64-bit plaintext amount, preserving the opening and decryption handle.
     #[wasm_bindgen(js_name = "subtractAmount")]
     pub fn subtract_amount(&self, amount: u64) -> ElGamalCiphertext {
         self.inner.subtract_amount(amount).into()
