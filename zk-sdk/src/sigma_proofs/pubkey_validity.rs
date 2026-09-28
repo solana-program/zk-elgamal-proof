@@ -164,8 +164,7 @@ mod test {
     use {
         super::*,
         bytemuck::Zeroable,
-        curve25519::traits::Identity,
-        solana_address::Address,
+        curve25519_dalek::traits::Identity,
         solana_keypair::Keypair,
         solana_zk_sdk_pod::{
             encryption::elgamal::PodElGamalPubkey, sigma_proofs::PodPubkeyValidityProof,
@@ -187,8 +186,8 @@ mod test {
             .unwrap();
 
         // derived ElGamal keypair
-        let keypair =
-            ElGamalKeypair::new_from_signer(&Keypair::new(), Address::default().as_ref()).unwrap();
+        let (keypair, _ae_key) =
+            crate::encryption::derivation::derive_confidential_keys(&Keypair::new()).unwrap();
 
         let mut prover_transcript = Transcript::new_zk_elgamal_transcript(b"test");
         let mut verifier_transcript = Transcript::new_zk_elgamal_transcript(b"test");

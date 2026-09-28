@@ -12,6 +12,7 @@ env:
   RUST_PACKAGES: "['interface', 'zk-sdk', 'zk-sdk-pod', 'zk-sdk-wasm-js']"
   WASM_PACKAGES: "['zk-sdk-wasm-js']"
   WASM_JS_PACKAGES: "['zk-sdk-wasm-js']"
+  NO_STD_ALLOC_PACKAGES: "['interface', 'zk-sdk-pod']"
 
 jobs:
   set_env:
@@ -25,6 +26,7 @@ jobs:
       WASM_JS_PACKAGES: ${{ steps.compute.outputs.WASM_JS_PACKAGES }}
       RUST_TOOLCHAIN_NIGHTLY: ${{ steps.compute.outputs.RUST_TOOLCHAIN_NIGHTLY }}
       SOLANA_CLI_VERSION: ${{ steps.compute.outputs.SOLANA_CLI_VERSION }}
+      NO_STD_ALLOC_PACKAGES: ${{ steps.compute.outputs.NO_STD_ALLOC_PACKAGES }}
     steps:
       - name: Git Checkout
         uses: actions/checkout@v4
@@ -40,6 +42,7 @@ jobs:
           echo "WASM_JS_PACKAGES=${{ env.WASM_JS_PACKAGES }}" >> $GITHUB_OUTPUT
           echo "RUST_TOOLCHAIN_NIGHTLY=$(make rust-toolchain-nightly)" >> "$GITHUB_OUTPUT"
           echo "SOLANA_CLI_VERSION=$(make solana-cli-version)" >> "$GITHUB_OUTPUT"
+          echo "NO_STD_ALLOC_PACKAGES=${{ env.NO_STD_ALLOC_PACKAGES }}" >> $GITHUB_OUTPUT
 
   main:
     needs: set_env
@@ -53,3 +56,5 @@ jobs:
       rustfmt-toolchain: ${{ needs.set_env.outputs.RUST_TOOLCHAIN_NIGHTLY }}
       clippy-toolchain: ${{ needs.set_env.outputs.RUST_TOOLCHAIN_NIGHTLY }}
       solana-cli-version: ${{ needs.set_env.outputs.SOLANA_CLI_VERSION }}
+      no-std-toolchain: ${{ needs.set_env.outputs.RUST_TOOLCHAIN_NIGHTLY }}
+      no-std-alloc-packages: ${{ needs.set_env.outputs.NO_STD_ALLOC_PACKAGES }}

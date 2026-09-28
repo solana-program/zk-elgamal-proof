@@ -36,7 +36,7 @@ impl BatchedGroupedCiphertext2HandlesValidityProofData {
         opening_lo: &PedersenOpening,
         opening_hi: &PedersenOpening,
     ) -> Result<BatchedGroupedCiphertext2HandlesValidityProofData, JsValue> {
-        zk_elgamal_proof_program::new_batched_grouped_ciphertext_2_handles_validity_proof_data(
+        zk_elgamal_proof_program::build_batched_grouped_ciphertext_2_handles_validity_proof_data(
             &first_pubkey.inner,
             &second_pubkey.inner,
             &grouped_ciphertext_lo.inner,

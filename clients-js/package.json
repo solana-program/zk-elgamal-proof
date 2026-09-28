@@ -1,6 +1,6 @@
 {
   "name": "@solana-program/zk-elgamal-proof",
-  "version": "0.0.0",
+  "version": "0.4.0",
   "description": "JavaScript client for the ZK ElGamal Proof program",
   "sideEffects": false,
   "module": "./dist/src/index.mjs",
@@ -22,10 +22,10 @@
     "build": "rimraf dist && tsup && tsc -p ./tsconfig.declarations.json",
     "build:docs": "typedoc",
     "test": "tsc --noEmit && ava --serial --timeout=2m",
-    "lint": "eslint src",
-    "lint:fix": "eslint --fix src",
-    "format": "prettier --check src test",
-    "format:fix": "prettier --write src test",
+    "lint": "oxlint src",
+    "lint:fix": "oxlint --fix src",
+    "format": "oxfmt --check src test",
+    "format:fix": "oxfmt --write src test",
     "prepublishOnly": "pnpm build"
   },
   "publishConfig": {
@@ -35,36 +35,33 @@
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/solana-program/zk-elgamal-proof"
+    "url": "git+https://github.com/solana-program/zk-elgamal-proof.git"
   },
   "bugs": {
     "url": "https://github.com/solana-program/zk-elgamal-proof/issues"
   },
   "homepage": "https://github.com/solana-program/zk-elgamal-proof#readme",
   "dependencies": {
-    "@solana-program/system": "^0.12.0"
+    "@solana-program/system": "^0.15.0"
   },
   "peerDependencies": {
-    "@solana/kit": "^5.0"
+    "@solana/kit": "^8.3.0"
   },
   "devDependencies": {
-    "@ava/typescript": "^6.0.0",
-    "@eslint/js": "^10.0.1",
-    "@solana-program/compute-budget": "^0.15.0",
-    "@solana-program/record": "^0.1.0",
-    "@solana/kit": "^6.7.0",
-    "@solana/sysvars": "^6.7.0",
-    "@solana/zk-sdk": "0.3.1",
-    "@types/node": "^25.5.2",
-    "ava": "^7.0.0",
-    "eslint": "^9.39.4",
-    "eslint-config-prettier": "^10.1.8",
-    "prettier": "^3.8.1",
+    "@ava/typescript": "^7.0.0",
+    "@solana-program/compute-budget": "^0.19.0",
+    "@solana-program/record": "^0.5.0",
+    "@solana/kit": "^8.3.0",
+    "@solana/sysvars": "^8.3.0",
+    "@solana/zk-sdk": "0.4.1",
+    "@types/node": "^26.6.1",
+    "ava": "^8.0.1",
+    "oxfmt": "^0.70.0",
+    "oxlint": "^1.85.0",
     "rimraf": "^6.1.2",
     "tsup": "^8.5.1",
-    "typedoc": "^0.28.18",
-    "typescript": "^5.9.3",
-    "typescript-eslint": "^8.58.1"
+    "typedoc": "^0.28.20",
+    "typescript": "^6.0.3"
   },
   "ava": {
     "nodeArguments": [

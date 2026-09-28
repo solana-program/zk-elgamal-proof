@@ -47,12 +47,6 @@ pub enum DiscreteLogError {
 /// The goal of discrete log is to find x such that `x * generator = target`.
 #[derive(Serialize, Deserialize, Copy, Clone, Debug, Eq, PartialEq)]
 pub struct DiscreteLog {
-    /// Generator point for discrete log
-    #[deprecated(
-        since = "4.1.0",
-        note = "The discrete log implementation is G-only. This field will be removed in a future version."
-    )]
-    pub generator: RistrettoPoint,
     /// Target point for discrete log
     pub target: RistrettoPoint,
     /// Number of threads used for discrete log computation
@@ -98,32 +92,11 @@ pub static DECODE_PRECOMPUTATION_FOR_G: std::sync::LazyLock<DecodePrecomputation
 
 /// Solves the discrete log instance using a 16/16 bit offline/online split
 impl DiscreteLog {
-    /// Discrete log instance constructor for an arbitrary generator.
-    ///
-    /// Default number of threads set to 1.
-    #[deprecated(
-        since = "4.1.0",
-        note = "Use `DiscreteLog::new_for_g` instead. The implementation is optimized for the Ristretto basepoint G only and will produce incorrect results for other generators."
-    )]
-    pub fn new(generator: RistrettoPoint, target: RistrettoPoint) -> Self {
-        Self {
-            #[allow(deprecated)]
-            generator,
-            target,
-            num_threads: None,
-            range_bound: (TWO16 as usize).try_into().unwrap(),
-            step_point: G,
-            compression_batch_size: 32.try_into().unwrap(),
-        }
-    }
-
     /// Discrete log instance constructor for a fixed generator.
     ///
     /// Default number of threads set to 1.
     pub fn new_for_g(target: RistrettoPoint) -> Self {
         Self {
-            #[allow(deprecated)]
-            generator: G,
             target,
             num_threads: None,
             range_bound: (TWO16 as usize).try_into().unwrap(),

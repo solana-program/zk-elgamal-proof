@@ -37,7 +37,7 @@ impl BatchedGroupedCiphertext3HandlesValidityProofData {
         opening_lo: &PedersenOpening,
         opening_hi: &PedersenOpening,
     ) -> Result<BatchedGroupedCiphertext3HandlesValidityProofData, JsValue> {
-        zk_elgamal_proof_program::new_batched_grouped_ciphertext_3_handles_validity_proof_data(
+        zk_elgamal_proof_program::build_batched_grouped_ciphertext_3_handles_validity_proof_data(
             &first_pubkey.inner,
             &second_pubkey.inner,
             &third_pubkey.inner,

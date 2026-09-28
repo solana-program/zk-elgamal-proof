@@ -13,6 +13,7 @@ use {
 ///
 /// This proof certifies that a batch of Pedersen commitments encrypt values
 /// that are within specified bit ranges, summing up to 64 bits in total.
+/// Each individual bit length must be in `1..=64`.
 #[wasm_bindgen]
 pub struct BatchedRangeProofU64Data {
     pub(crate) inner: proof_data::BatchedRangeProofU64Data,
@@ -29,6 +30,8 @@ impl BatchedRangeProofU64Data {
     ///
     /// The function takes arrays of Pedersen commitments, amounts (as `BigUint64Array`),
     /// bit lengths (as `Uint8Array`), and Pedersen openings. The sum of bit lengths must be 64.
+    /// Each array must contain 1 to 8 active components, with each bit length in `1..=64`.
+    /// Supply only active components; unused context slots are zero-padded automatically.
     ///
     /// # Arguments
     ///

@@ -3,6 +3,9 @@ import {
   createDefaultSolanaClient,
   generateKeyPairSignerWithSol,
   sendAndConfirmInstructions,
+  createRecord,
+  createWriteInstruction,
+  RECORD_META_DATA_SIZE,
 } from './_setup';
 import { generateKeyPairSigner } from '@solana/kit';
 import { verifyPercentageWithCap } from '../src';
@@ -11,11 +14,6 @@ import {
   PedersenOpening,
   PercentageWithCapProofData,
 } from '@solana/zk-sdk/node';
-import {
-  createRecord,
-  createWriteInstruction,
-  RECORD_META_DATA_SIZE,
-} from '@solana-program/record';
 
 test('verifyPercentageWithCap: success with valid proof (no context state)', async t => {
   const client = createDefaultSolanaClient();

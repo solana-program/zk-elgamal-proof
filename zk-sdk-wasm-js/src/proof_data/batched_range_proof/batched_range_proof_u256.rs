@@ -13,7 +13,7 @@ use {
 ///
 /// This proof certifies that a batch of Pedersen commitments encrypt values
 /// that are within specified bit ranges, summing up to 256 bits in total.
-/// Each individual bit length must not exceed 128.
+/// Each individual bit length must be in `1..=64`.
 #[wasm_bindgen]
 pub struct BatchedRangeProofU256Data {
     pub(crate) inner: proof_data::BatchedRangeProofU256Data,
@@ -29,8 +29,9 @@ impl BatchedRangeProofU256Data {
     /// Creates a new 256-bit batched range proof.
     ///
     /// The function takes arrays of Pedersen commitments, amounts (as `BigUint64Array`),
-    /// bit lengths (as `Uint8Array`), and Pedersen openings. The sum of bit lengths must be 256,
-    /// and each bit length must be a power of two less than or equal to 128.
+    /// bit lengths (as `Uint8Array`), and Pedersen openings. The sum of bit lengths must be 256.
+    /// Each array must contain 1 to 8 active components, with each bit length in `1..=64`.
+    /// Supply only active components; unused context slots are zero-padded automatically.
     ///
     /// # Arguments
     ///
@@ -174,8 +175,8 @@ mod tests {
         // Verification must fail because the first amount doesn't fit in 32 bits.
         assert!(proof_invalid.verify().is_err());
 
-        // Case 3: Failure (Individual bit length > 128)
-        // Setup: 32 bits + 224 bits = 256 bits. 224 > 128.
+        // Case 3: Failure (Individual bit length > 64)
+        // Setup: 32 bits + 224 bits = 256 bits. 224 > 64.
 
         // Regenerate inputs.
         let amount_1_valid = 1_u64;
@@ -189,11 +190,11 @@ mod tests {
             vec![commitment_1_valid, commitment_2_valid].into_boxed_slice();
         let amounts_invalid_len =
             BigUint64Array::from(vec![amount_1_valid, amount_2_valid].as_slice());
-        // Note: 224 is also not a power of two, but the SDK checks the > 128 constraint first for U256.
+        // The aggregate total is correct, but the second component exceeds 64 bits.
         let bit_lengths_for_invalid = Uint8Array::from(vec![32_u8, 224_u8].as_slice());
         let openings_invalid_len = vec![opening_1_valid, opening_2_valid].into_boxed_slice();
 
-        // Proof generation itself should fail due to bit length > 128
+        // Proof generation itself should fail due to bit length > 64.
         let proof_gen_result = BatchedRangeProofU256Data::new(
             commitments_invalid_len,
             amounts_invalid_len,
@@ -223,7 +224,7 @@ mod tests {
         );
         assert!(result.is_err());
 
-        // Case 5: Failure (Bit length not a power of two)
+        // Case 5: Failure (Both individual bit lengths exceed 64)
         let amounts_vec_case5 = vec![1_u64, 2_u64];
         let openings_vec_case5: Vec<_> = (0..2).map(|_| PedersenOpening::new_rand()).collect();
         let commitments_vec_case5: Vec<_> = amounts_vec_case5
@@ -232,7 +233,7 @@ mod tests {
             .map(|(amount, opening)| PedersenCommitment::with_u64(*amount, opening))
             .collect();
 
-        // 96 and 160 are not powers of two. Sum is 256.
+        // Both 96 and 160 exceed 64. Sum is 256.
         let bit_lengths_not_pow2 = Uint8Array::from(vec![160_u8, 96_u8].as_slice());
 
         let result_pow2 = BatchedRangeProofU256Data::new(
@@ -241,7 +242,7 @@ mod tests {
             bit_lengths_not_pow2,
             openings_vec_case5.into_boxed_slice(),
         );
-        // Proof generation should fail because the structure is invalid.
+        // Proof generation should fail because the individual bit lengths are invalid.
         assert!(result_pow2.is_err());
     }
 

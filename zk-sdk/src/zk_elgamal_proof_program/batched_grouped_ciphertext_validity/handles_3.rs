@@ -21,7 +21,7 @@ use {
 };
 
 #[allow(clippy::too_many_arguments)]
-pub fn new_batched_grouped_ciphertext_3_handles_validity_proof_data(
+pub fn build_batched_grouped_ciphertext_3_handles_validity_proof_data(
     first_pubkey: &ElGamalPubkey,
     second_pubkey: &ElGamalPubkey,
     third_pubkey: &ElGamalPubkey,
@@ -152,7 +152,7 @@ mod test {
             &opening_hi,
         );
 
-        let proof_data = new_batched_grouped_ciphertext_3_handles_validity_proof_data(
+        let proof_data = build_batched_grouped_ciphertext_3_handles_validity_proof_data(
             first_pubkey,
             second_pubkey,
             third_pubkey,
@@ -168,7 +168,7 @@ mod test {
         assert!(proof_data.verify_proof().is_ok());
 
         let other_keypair = ElGamalKeypair::new_rand();
-        let result = new_batched_grouped_ciphertext_3_handles_validity_proof_data(
+        let result = build_batched_grouped_ciphertext_3_handles_validity_proof_data(
             first_keypair.pubkey(),
             second_keypair.pubkey(),
             other_keypair.pubkey(), // Mismatch: Ciphertext was encrypted with `third_keypair`

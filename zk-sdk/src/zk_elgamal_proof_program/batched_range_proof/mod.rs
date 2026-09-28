@@ -1,3 +1,11 @@
+//! Generation and verification of batched range proofs.
+//!
+//! Each proof has between 1 and 8 active commitments, with individual bit lengths in `1..=64`.
+//! Their sum must be exactly 64, 128, or 256 bits for the corresponding proof builder and verifier.
+//! Builders accept only active components and zero-pad the resulting [`BatchedRangeProofContext`].
+//! Verifiers require all unused trailing commitments and bit lengths to be zero; zero bit lengths
+//! are not valid for active components.
+
 pub mod batched_range_proof_u128;
 pub mod batched_range_proof_u256;
 pub mod batched_range_proof_u64;
@@ -13,11 +21,11 @@ use {
     merlin::Transcript,
     solana_zk_elgamal_proof_interface::proof_data::{BatchedRangeProofContext, MAX_COMMITMENTS},
     solana_zk_sdk_pod::encryption::pedersen::PodPedersenCommitment,
-    std::convert::TryInto,
+    std::{borrow::Borrow, convert::TryInto},
 };
 pub use {batched_range_proof_u128::*, batched_range_proof_u256::*, batched_range_proof_u64::*};
 
-/// A bit length in a batched range proof must be at most 64.
+/// An active bit length in a batched range proof must be in `1..=64`.
 ///
 /// Although the batched proof supports a total of 256 bits, individual components are restricted
 /// to `u64` amounts (64 bits).
@@ -31,12 +39,16 @@ pub(crate) fn batched_range_proof_transcript(context: &BatchedRangeProofContext)
 }
 
 #[allow(non_snake_case)]
-pub(crate) fn build_batched_range_proof_context(
-    commitments: &[&PedersenCommitment],
+pub(crate) fn build_batched_range_proof_context<PC, PO>(
+    commitments: &[PC],
     amounts: &[u64],
     bit_lengths: &[usize],
-    openings: &[&PedersenOpening],
-) -> Result<BatchedRangeProofContext, ProofGenerationError> {
+    openings: &[PO],
+) -> Result<BatchedRangeProofContext, ProofGenerationError>
+where
+    PC: Borrow<PedersenCommitment>,
+    PO: Borrow<PedersenOpening>,
+{
     // the number of commitments is capped at 8
     let num_commitments = commitments.len();
     if num_commitments > MAX_COMMITMENTS
@@ -49,10 +61,8 @@ pub(crate) fn build_batched_range_proof_context(
 
     let mut pod_commitments = [PodPedersenCommitment::zeroed(); MAX_COMMITMENTS];
     for (i, commitment) in commitments.iter().enumerate() {
-        // all-zero commitment is invalid
-        //
-        // this check only exists in the prover logic to enforce safe practice
-        // identity commitments are not rejected by range proof verification logic itself
+        let commitment = commitment.borrow();
+        // Identity commitments are invalid and encode the unused context slots.
         if commitment.get_point().is_identity() {
             return Err(ProofGenerationError::InvalidCommitment);
         }

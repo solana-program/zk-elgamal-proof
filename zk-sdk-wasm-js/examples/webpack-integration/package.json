@@ -9,9 +9,9 @@
     "@solana/zk-sdk": "file:../.."
   },
   "devDependencies": {
-    "webpack": "^5.105.4",
-    "webpack-cli": "^7.0.2",
-    "webpack-dev-server": "^5.2.3",
-    "html-webpack-plugin": "^5.6.6"
+    "webpack": "^5.111.1",
+    "webpack-cli": "^7.2.3",
+    "webpack-dev-server": "^6.0.0",
+    "html-webpack-plugin": "^5.6.8"
   }
 }

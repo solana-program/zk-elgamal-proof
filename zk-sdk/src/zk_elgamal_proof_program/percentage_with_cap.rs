@@ -32,14 +32,11 @@ pub fn build_percentage_with_cap_proof_data(
     if *percentage_commitment != Pedersen::with(percentage_amount, percentage_opening) {
         return Err(ProofGenerationError::InconsistentInput);
     }
-    // Verify delta commitment
-    if *delta_commitment != Pedersen::with(delta_amount, delta_opening) {
-        return Err(ProofGenerationError::InconsistentInput);
-    }
     // Verify claimed commitment
     if *claimed_commitment != Pedersen::with(delta_amount, claimed_opening) {
         return Err(ProofGenerationError::InconsistentInput);
     }
+    // By design, the delta amount can be inconsistent with the delta commitment
 
     let pod_percentage_commitment = PodPedersenCommitment(percentage_commitment.to_bytes());
     let pod_delta_commitment = PodPedersenCommitment(delta_commitment.to_bytes());
@@ -173,5 +170,38 @@ mod test {
         );
 
         assert_eq!(result, Err(ProofGenerationError::InconsistentInput));
+    }
+
+    #[test]
+    fn test_percentage_with_cap_instruction_inconsistent_delta_amount() {
+        let transfer_amount: u64 = 100;
+        let max_value: u64 = 3;
+        let percentage_amount: u64 = 3;
+        let percentage_rate: u64 = 400;
+
+        let (transfer_amount_commitment, transfer_amount_opening) = Pedersen::new(transfer_amount);
+        let (percentage_commitment, percentage_opening) = Pedersen::new(percentage_amount);
+        let delta_commitment =
+            &percentage_commitment * 10_000 - &transfer_amount_commitment * percentage_rate;
+        let delta_opening =
+            &percentage_opening * 10_000 - &transfer_amount_opening * percentage_rate;
+        let (claimed_commitment, claimed_opening) = Pedersen::new(0_u64);
+
+        let delta_amount: u64 = 0; // inconsistent delta amount
+
+        let proof_data = build_percentage_with_cap_proof_data(
+            &percentage_commitment,
+            &percentage_opening,
+            percentage_amount,
+            &delta_commitment,
+            &delta_opening,
+            delta_amount,
+            &claimed_commitment,
+            &claimed_opening,
+            max_value,
+        )
+        .unwrap();
+
+        assert!(proof_data.verify_proof().is_ok());
     }
 }

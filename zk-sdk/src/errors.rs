@@ -29,6 +29,8 @@ pub enum ElGamalError {
     KeypairDeserialization,
     #[error("failed to deserialize secret key")]
     SecretKeyDeserialization,
+    #[error("rejecting default signature as key material")]
+    DefaultSignatureRejected,
 }
 
 #[derive(Error, Clone, Debug, Eq, PartialEq)]

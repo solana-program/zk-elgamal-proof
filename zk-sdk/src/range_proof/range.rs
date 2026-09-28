@@ -3,7 +3,7 @@ use {
         encryption::pedersen::{Pedersen, PedersenCommitment, PedersenOpening, G, H},
         range_proof::{
             errors::{RangeProofGenerationError, RangeProofVerificationError},
-            generators::RangeProofGens,
+            generators::{RangeProofGens, CACHED_GENERATORS, CACHED_GENERATOR_LENGTH},
             inner_product::InnerProductProof,
             util,
         },
@@ -25,6 +25,7 @@ use {
         },
         UNIT_LEN,
     },
+    std::borrow::Borrow,
     subtle::{Choice, ConditionallySelectable},
     zeroize::Zeroize,
 };
@@ -65,16 +66,26 @@ impl RangeProof {
     /// the caller (the main protocol) must hash these public statement prior to invoking this
     /// constructor.
     ///
-    /// # Panics
-    /// This function will panic if the `openings` vector does not contain the same number
-    /// of elements as the `amounts` and `bit_lengths` vectors.
+    /// # Errors
+    /// Returns [`RangeProofGenerationError::VectorLengthMismatch`] if `amounts`,
+    /// `bit_lengths`, and `openings` do not have the same length.
     #[allow(clippy::many_single_char_names)]
-    pub fn new(
-        amounts: Vec<u64>,
-        bit_lengths: Vec<usize>,
-        openings: Vec<&PedersenOpening>,
+    pub fn new<A, B, O, PO>(
+        amounts: A,
+        bit_lengths: B,
+        openings: O,
         transcript: &mut Transcript,
-    ) -> Result<Self, RangeProofGenerationError> {
+    ) -> Result<Self, RangeProofGenerationError>
+    where
+        A: AsRef<[u64]>,
+        B: AsRef<[usize]>,
+        O: AsRef<[PO]>,
+        PO: Borrow<PedersenOpening>,
+    {
+        let amounts = amounts.as_ref();
+        let bit_lengths = bit_lengths.as_ref();
+        let openings = openings.as_ref();
+
         // 1. Validate inputs
         let m = amounts.len();
         if bit_lengths.len() != m || openings.len() != m {
@@ -95,8 +106,14 @@ impl RangeProof {
             return Err(RangeProofGenerationError::VectorLengthMismatch);
         }
 
-        let bp_gens = RangeProofGens::new(nm)
-            .map_err(|_| RangeProofGenerationError::MaximumGeneratorLengthExceeded)?;
+        let owned_generators;
+        let bp_gens = if nm <= CACHED_GENERATOR_LENGTH {
+            &*CACHED_GENERATORS
+        } else {
+            owned_generators = RangeProofGens::new(nm)
+                .map_err(|_| RangeProofGenerationError::MaximumGeneratorLengthExceeded)?;
+            &owned_generators
+        };
 
         transcript.range_proof_domain_separator(nm as u64);
 
@@ -203,7 +220,7 @@ impl RangeProof {
         let mut exp_z = z;
         for opening in openings {
             exp_z *= z;
-            agg_opening += exp_z * opening.get_scalar();
+            agg_opening += exp_z * opening.borrow().get_scalar();
         }
 
         let t_blinding_poly = util::Poly2(
@@ -277,19 +294,27 @@ impl RangeProof {
     /// single large multiscalar multiplication (`mega_check`) for efficiency. This
     /// check simultaneously verifies all aspects of the proof.
     #[allow(clippy::many_single_char_names)]
-    pub fn verify(
+    pub fn verify<C, PC, B>(
         &self,
-        comms: Vec<&PedersenCommitment>,
-        bit_lengths: Vec<usize>,
+        comms: C,
+        bit_lengths: B,
         transcript: &mut Transcript,
-    ) -> Result<(), RangeProofVerificationError> {
+    ) -> Result<(), RangeProofVerificationError>
+    where
+        C: AsRef<[PC]>,
+        PC: Borrow<PedersenCommitment>,
+        B: AsRef<[usize]>,
+    {
+        let comms = comms.as_ref();
+        let bit_lengths = bit_lengths.as_ref();
+
         // 1. Validate inputs and reconstruct challenges from the transcript.
         if comms.len() != bit_lengths.len() {
             return Err(RangeProofVerificationError::VectorLengthMismatch);
         }
 
         // explicitly reject identity commitments.
-        if comms.iter().any(|c| c.get_point().is_identity()) {
+        if comms.iter().any(|c| c.borrow().get_point().is_identity()) {
             return Err(RangeProofVerificationError::AlgebraicRelation);
         }
 
@@ -299,8 +324,14 @@ impl RangeProof {
             return Err(RangeProofVerificationError::InvalidBitSize);
         }
 
-        let bp_gens = RangeProofGens::new(nm)
-            .map_err(|_| RangeProofVerificationError::MaximumGeneratorLengthExceeded)?;
+        let owned_generators;
+        let bp_gens = if nm <= CACHED_GENERATOR_LENGTH {
+            &*CACHED_GENERATORS
+        } else {
+            owned_generators = RangeProofGens::new(nm)
+                .map_err(|_| RangeProofVerificationError::MaximumGeneratorLengthExceeded)?;
+            &owned_generators
+        };
 
         transcript.range_proof_domain_separator(nm as u64);
 
@@ -362,8 +393,7 @@ impl RangeProof {
             .zip(concat_z_and_2.iter())
             .map(|((s_i_inv, exp_y_inv), z_and_2)| z + exp_y_inv * (zz * z_and_2 - b * s_i_inv));
 
-        let basepoint_scalar =
-            w * (self.t_x - a * b) + d * (delta(&bit_lengths, &y, &z) - self.t_x);
+        let basepoint_scalar = w * (self.t_x - a * b) + d * (delta(bit_lengths, &y, &z) - self.t_x);
         let value_commitment_scalars = util::exp_iter(z).take(m).map(|z_exp| d * zz * z_exp);
 
         // 4. Perform the final "mega-check"
@@ -390,7 +420,7 @@ impl RangeProof {
                 .chain(self.ipp_proof.R_vec.iter().map(|R| R.decompress()))
                 .chain(bp_gens.G(nm).map(|&x| Some(x)))
                 .chain(bp_gens.H(nm).map(|&x| Some(x)))
-                .chain(comms.iter().map(|V| Some(*V.get_point()))),
+                .chain(comms.iter().map(|V| Some(*V.borrow().get_point()))),
         )
         .ok_or(RangeProofVerificationError::MultiscalarMul)?;
 
@@ -571,11 +601,42 @@ mod tests {
         solana_zk_sdk_pod::{
             encryption::pedersen::PodPedersenCommitment, range_proof::PodRangeProofU128,
         },
-        std::str::FromStr,
+        std::{slice, str::FromStr},
     };
 
     #[test]
     fn test_single_rangeproof() {
+        let (comm, open) = Pedersen::new(55_u64);
+
+        let mut transcript_create = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut transcript_verify = Transcript::new_zk_elgamal_transcript(b"Test");
+
+        let proof = RangeProof::new(
+            slice::from_ref(&55),
+            slice::from_ref(&32),
+            slice::from_ref(&open),
+            &mut transcript_create,
+        )
+        .unwrap();
+
+        proof
+            .verify(
+                slice::from_ref(&comm),
+                slice::from_ref(&32),
+                &mut transcript_verify,
+            )
+            .unwrap();
+
+        assert_eq!(
+            transcript_create.challenge_scalar(b"test"),
+            transcript_verify.challenge_scalar(b"test"),
+        )
+    }
+
+    // Keep coverage for the original vector input types accepted by
+    // `RangeProof::new` and `RangeProof::verify`.
+    #[test]
+    fn test_single_rangeproof_vectors() {
         let (comm, open) = Pedersen::new(55_u64);
 
         let mut transcript_create = Transcript::new_zk_elgamal_transcript(b"Test");
@@ -595,6 +656,88 @@ mod tests {
     }
 
     #[test]
+    fn test_rangeproof_above_cached_capacity() {
+        let (comm, open) = Pedersen::new(55_u64);
+        let num_commitments = 2 * CACHED_GENERATOR_LENGTH / 64;
+        let bit_lengths = vec![64; num_commitments];
+        let mut transcript_create = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut transcript_verify = Transcript::new_zk_elgamal_transcript(b"Test");
+
+        let proof = RangeProof::new(
+            vec![55; num_commitments],
+            bit_lengths.clone(),
+            vec![&open; num_commitments],
+            &mut transcript_create,
+        )
+        .unwrap();
+
+        proof
+            .verify(
+                vec![&comm; num_commitments],
+                bit_lengths,
+                &mut transcript_verify,
+            )
+            .unwrap();
+
+        assert_eq!(
+            transcript_create.challenge_scalar(b"test"),
+            transcript_verify.challenge_scalar(b"test"),
+        );
+    }
+
+    #[test]
+    fn test_mismatched_input_lengths() {
+        let (commitment, opening) = Pedersen::new(55_u64);
+        let mut transcript_create = Transcript::new_zk_elgamal_transcript(b"Test");
+
+        assert_eq!(
+            RangeProof::new([55], [32, 32], [&opening], &mut transcript_create).err(),
+            Some(RangeProofGenerationError::VectorLengthMismatch),
+        );
+
+        let no_openings: [&PedersenOpening; 0] = [];
+        assert_eq!(
+            RangeProof::new([55], [64], no_openings, &mut transcript_create).err(),
+            Some(RangeProofGenerationError::VectorLengthMismatch),
+        );
+
+        let proof = RangeProof::new([55], [64], [&opening], &mut transcript_create).unwrap();
+        let mut transcript_verify = Transcript::new_zk_elgamal_transcript(b"Test");
+        assert_eq!(
+            proof
+                .verify([commitment], [], &mut transcript_verify)
+                .unwrap_err(),
+            RangeProofVerificationError::VectorLengthMismatch,
+        );
+    }
+
+    #[test]
+    fn test_identity_commitment_rejected() {
+        let mut transcript_create = Transcript::new_zk_elgamal_transcript(b"Test");
+        let mut transcript_verify = Transcript::new_zk_elgamal_transcript(b"Test");
+
+        // Zero with a zero opening has an identity commitment. Its algebraic proof
+        // is valid, but the verifier must explicitly reject the commitment.
+        let proof = RangeProof::new(
+            [0],
+            [64],
+            [PedersenOpening::default()],
+            &mut transcript_create,
+        )
+        .unwrap();
+        assert_eq!(
+            proof
+                .verify(
+                    [PedersenCommitment::default()],
+                    [64],
+                    &mut transcript_verify
+                )
+                .unwrap_err(),
+            RangeProofVerificationError::AlgebraicRelation,
+        );
+    }
+
+    #[test]
     fn test_aggregated_rangeproof() {
         let (comm_1, open_1) = Pedersen::new(55_u64);
         let (comm_2, open_2) = Pedersen::new(77_u64);
@@ -604,17 +747,17 @@ mod tests {
         let mut transcript_verify = Transcript::new_zk_elgamal_transcript(b"Test");
 
         let proof = RangeProof::new(
-            vec![55, 77, 99],
-            vec![64, 32, 32],
-            vec![&open_1, &open_2, &open_3],
+            [55, 77, 99],
+            [64, 32, 32],
+            [&open_1, &open_2, &open_3],
             &mut transcript_create,
         )
         .unwrap();
 
         proof
             .verify(
-                vec![&comm_1, &comm_2, &comm_3],
-                vec![64, 32, 32],
+                [&comm_1, &comm_2, &comm_3],
+                [64, 32, 32],
                 &mut transcript_verify,
             )
             .unwrap();
@@ -634,8 +777,13 @@ mod tests {
 
         let bits: usize = 8;
 
-        let proof = RangeProof::new(vec![42], vec![bits], vec![&open], &mut transcript_create)
-            .expect("proof create");
+        let proof = RangeProof::new(
+            slice::from_ref(&42),
+            slice::from_ref(&bits),
+            slice::from_ref(&open),
+            &mut transcript_create,
+        )
+        .expect("proof create");
 
         let enc = proof.to_bytes();
         assert!(!enc.is_empty());
@@ -645,7 +793,11 @@ mod tests {
         assert_eq!(enc, dec.to_bytes());
 
         assert!(dec
-            .verify(vec![&comm], vec![bits], &mut transcript_verify)
+            .verify(
+                slice::from_ref(&comm),
+                slice::from_ref(&bits),
+                &mut transcript_verify
+            )
             .is_ok());
     }
 
@@ -671,8 +823,8 @@ mod tests {
 
         proof
             .verify(
-                vec![&commitment_1, &commitment_2, &commitment_3],
-                vec![64, 32, 32],
+                [&commitment_1, &commitment_2, &commitment_3],
+                [64, 32, 32],
                 &mut transcript_verify,
             )
             .unwrap()

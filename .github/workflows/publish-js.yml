@@ -6,10 +6,11 @@ on:
       package-path:
         description: Path to directory with package to release
         required: true
-        default: 'clients/js'
+        default: "clients-js"
         type: choice
         options:
-          - clients/js
+          - clients-js
+          - zk-sdk-wasm-js
       level:
         description: Version level
         required: true
@@ -41,27 +42,42 @@ jobs:
     outputs:
       SOLANA_CLI_VERSION: ${{ steps.compute.outputs.SOLANA_CLI_VERSION }}
       TARGET: ${{ steps.compute.outputs.TARGET }}
+      WASM_PACK: ${{ steps.compute.outputs.WASM_PACK }}
     steps:
       - name: Git Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Environment
+        uses: solana-program/actions/setup-ubuntu@main
+
       - name: Compute variables
         id: compute
         shell: bash
+        env:
+          PACKAGE_PATH: ${{ inputs.package-path }}
         run: |
           echo "SOLANA_CLI_VERSION=$(make solana-cli-version)" >> "$GITHUB_OUTPUT"
-          TARGET=$(echo ${{ inputs.package-path }} | sed 's#/#-#')
+          TARGET=$(echo "$PACKAGE_PATH" | sed 's#/#-#')
           echo "TARGET=$TARGET" >> "$GITHUB_OUTPUT"
+          if [ "$TARGET" = "zk-sdk-wasm-js" ]; then
+            echo "WASM_PACK=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "WASM_PACK=false" >> "$GITHUB_OUTPUT"
+          fi
 
   main:
     needs: set_env
     uses: solana-program/actions/.github/workflows/publish-js.yml@main
+    permissions:
+      contents: write
+      id-token: write
     with:
-      sbpf-program-packages: "zk-sdk"
+      sbpf-program-packages: "interface zk-sdk-pod"
       solana-cli-version: ${{ needs.set_env.outputs.SOLANA_CLI_VERSION }}
       target: ${{ needs.set_env.outputs.TARGET }}
       package-path: ${{ inputs.package-path }}
       level: ${{ inputs.level }}
       tag: ${{ inputs.tag }}
       create-release: ${{ inputs.create-release }}
+      wasm-pack: ${{ needs.set_env.outputs.WASM_PACK == 'true' }}
     secrets: inherit

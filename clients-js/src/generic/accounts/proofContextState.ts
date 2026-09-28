@@ -49,13 +49,13 @@ export function getProofContextStateDecoder(): Decoder<ProofContextState> {
   const read = (bytes: ReadonlyUint8Array, offset = 0): [ProofContextState, number] => {
     const [contextStateAuthority, offsetAuth] = getAddressDecoder().read(bytes, offset);
 
-    const [proofTypeRaw, offsetType] = getU8Decoder().read(bytes, offsetAuth);
+    const [proofType, offsetType] = getU8Decoder().read(bytes, offsetAuth);
     const proofContext = bytes.slice(offsetType);
 
     return [
       {
         contextStateAuthority,
-        proofType: proofTypeRaw as ProofType,
+        proofType,
         proofContext,
       },
       bytes.length,

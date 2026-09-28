@@ -1,14 +1,29 @@
 {
   "name": "@solana/zk-sdk",
-  "version": "0.3.0",
+  "version": "0.5.3",
   "description": "Universal WASM package for the rust solana-zk-sdk",
   "type": "module",
   "files": [
     "dist"
   ],
+  "main": "./dist/node/index.js",
   "types": "./dist/node/index.d.ts",
   "browser": "./dist/bundler/index.js",
   "exports": {
+    ".": {
+      "node": {
+        "types": "./dist/node/index.d.ts",
+        "default": "./dist/node/index.js"
+      },
+      "browser": {
+        "types": "./dist/bundler/index.d.ts",
+        "default": "./dist/bundler/index.js"
+      },
+      "default": {
+        "types": "./dist/bundler/index.d.ts",
+        "default": "./dist/bundler/index.js"
+      }
+    },
     "./node": {
       "import": "./dist/node/index.js",
       "require": "./dist/node/index.js",
@@ -20,13 +35,26 @@
       "types": "./dist/web/index.d.ts"
     },
     "./bundler": {
+      "node": {
+        "types": "./dist/node/index.d.ts",
+        "default": "./dist/node/index.js"
+      },
+      "types": "./dist/bundler/index.d.ts",
       "import": "./dist/bundler/index.js",
-      "default": "./dist/bundler/index.js",
-      "types": "./dist/bundler/index.d.ts"
+      "default": "./dist/bundler/index.js"
     }
   },
   "scripts": {
     "build": "make -C .. build-wasm-js-zk-sdk-wasm-js",
     "prepublishOnly": "pnpm build"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/solana-program/zk-elgamal-proof.git",
+    "directory": "zk-sdk-wasm-js"
+  },
+  "bugs": {
+    "url": "https://github.com/solana-program/zk-elgamal-proof/issues"
+  },
+  "homepage": "https://github.com/solana-program/zk-elgamal-proof#readme"
 }

@@ -1,5 +1,6 @@
 use {
     js_sys::Uint8Array,
+    solana_seed_derivable::SeedDerivable,
     solana_zk_sdk::encryption::auth_encryption,
     solana_zk_sdk_pod::encryption::{AE_CIPHERTEXT_LEN, AE_KEY_LEN},
     wasm_bindgen::prelude::{wasm_bindgen, JsValue},
@@ -20,6 +21,34 @@ impl AeKey {
         Self {
             inner: auth_encryption::AeKey::new_rand(),
         }
+    }
+
+    /// Deterministically derives an `AeKey` from a seed.
+    ///
+    /// The seed must be between 16 and 65535 bytes in length.
+    #[wasm_bindgen(js_name = "fromSeed")]
+    pub fn from_seed(seed: Uint8Array) -> Result<AeKey, JsValue> {
+        let mut bytes = vec![0u8; seed.length() as usize];
+        seed.copy_to(&mut bytes);
+        <auth_encryption::AeKey as SeedDerivable>::from_seed(&bytes)
+            .map(|inner| Self { inner })
+            .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    /// Deterministically derives an `AeKey` from a BIP39 mnemonic seed
+    /// phrase and optional passphrase.
+    #[wasm_bindgen(js_name = "fromSeedPhraseAndPassphrase")]
+    pub fn from_seed_phrase_and_passphrase(
+        seed_phrase: &str,
+        passphrase: Option<String>,
+    ) -> Result<AeKey, JsValue> {
+        let passphrase = passphrase.as_deref().unwrap_or("");
+        <auth_encryption::AeKey as SeedDerivable>::from_seed_phrase_and_passphrase(
+            seed_phrase,
+            passphrase,
+        )
+        .map(|inner| Self { inner })
+        .map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     /// Deserializes an `AeKey` from a byte slice.
@@ -44,10 +73,7 @@ impl AeKey {
     /// Serializes the `AeKey` to a byte array.
     #[wasm_bindgen(js_name = "toBytes")]
     pub fn to_bytes(&self) -> Vec<u8> {
-        // Clone is needed here because the zk-sdk implements only `From<AeKey>` for
-        // `[u8; AE_KEY_LEN]` and not `From<&AeKey>`.
-        // TODO: Consider implementing `From<&AeKey>` for `[u8; AE_KEY_LEN]`.
-        let bytes: [u8; AE_KEY_LEN] = self.inner.clone().into();
+        let bytes: [u8; AE_KEY_LEN] = (&self.inner).into();
         bytes.to_vec()
     }
 
@@ -108,6 +134,28 @@ mod tests {
     use {super::*, wasm_bindgen_test::*};
 
     #[wasm_bindgen_test]
+    fn test_aes_ciphertext_compatibility() {
+        // Same fixed aes-gcm-siv 0.11.1 vector as the SDK test. Verify that
+        // ciphertext stored before the upgrade also decrypts in JS runtimes.
+        let key_bytes = [
+            0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d,
+            0x0e, 0x0f,
+        ];
+        let ciphertext_bytes = [
+            0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x5a, 0x37,
+            0xbc, 0xf1, 0x4e, 0x84, 0x2c, 0x24, 0x03, 0x54, 0x2b, 0x6b, 0x74, 0xe9, 0x8f, 0x1e,
+            0x17, 0x8a, 0x2a, 0xac, 0x29, 0x21, 0x05, 0xe4,
+        ];
+        let key = AeKey::from_bytes(Uint8Array::from(key_bytes.as_slice())).unwrap();
+        let ciphertext =
+            AeCiphertext::from_bytes(Uint8Array::from(ciphertext_bytes.as_slice())).unwrap();
+
+        assert_eq!(ciphertext.to_bytes(), ciphertext_bytes);
+        assert_eq!(key.decrypt(&ciphertext), Ok(0x0102_0304_0506_0708));
+        assert_eq!(ciphertext.decrypt(&key), Some(0x0102_0304_0506_0708));
+    }
+
+    #[wasm_bindgen_test]
     fn test_ae_key_roundtrip() {
         let key = AeKey::new_rand();
         let key_bytes = key.to_bytes();
@@ -159,5 +207,35 @@ mod tests {
         // Attempt to decrypt with wrong key
         let result = key2.decrypt(&ciphertext);
         assert!(!result.is_ok());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_from_seed_roundtrip() {
+        let seed = [9u8; 32];
+        let seed_arr = Uint8Array::from(seed.as_ref());
+        let key_a = AeKey::from_seed(seed_arr.clone()).unwrap();
+        let key_b = AeKey::from_seed(seed_arr).unwrap();
+        assert_eq!(key_a.to_bytes(), key_b.to_bytes());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_from_seed_rejects_short_seed() {
+        // `AeKey::from_seed` requires at least 16 bytes of seed material.
+        let too_short = vec![0u8; 8];
+        assert!(AeKey::from_seed(Uint8Array::from(too_short.as_slice())).is_err());
+    }
+
+    #[wasm_bindgen_test]
+    fn test_from_seed_phrase_roundtrip() {
+        let phrase =
+            "blanket tower apple sunset trigger muscle fame detect absent copper cram guard";
+
+        let a = AeKey::from_seed_phrase_and_passphrase(phrase, None).unwrap();
+        let b = AeKey::from_seed_phrase_and_passphrase(phrase, None).unwrap();
+        assert_eq!(a.to_bytes(), b.to_bytes());
+
+        let different =
+            AeKey::from_seed_phrase_and_passphrase(phrase, Some("pw".to_string())).unwrap();
+        assert_ne!(different.to_bytes(), a.to_bytes());
     }
 }

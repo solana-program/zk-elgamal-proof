@@ -1,5 +1,5 @@
 RUST_TOOLCHAIN_NIGHTLY = nightly-2026-01-22
-SOLANA_CLI_VERSION = 3.1.8
+SOLANA_CLI_VERSION = v4.0.0-beta.7
 
 nightly = +${RUST_TOOLCHAIN_NIGHTLY}
 
@@ -41,6 +41,14 @@ format-check-%:
 powerset-%:
 	cargo $(nightly) hack check --feature-powerset --all-targets --manifest-path $(call make-path,$*)/Cargo.toml $(ARGS)
 
+check-no-std-alloc-%:
+	cargo $(nightly) hack check \
+		--target bpfel-unknown-none \
+		--each-feature \
+		--manifest-path $(call make-path,$*)/Cargo.toml \
+		-Zbuild-std=alloc,core \
+		$(ARGS)
+
 semver-check-%:
 	cargo semver-checks --manifest-path $(call make-path,$*)/Cargo.toml $(ARGS)
 
@@ -63,12 +71,16 @@ build-wasm-js-%:
 	wasm-pack build --target nodejs --out-dir dist/node --out-name index $(call make-path,$*)
 	wasm-pack build --target web --out-dir dist/web --out-name index $(call make-path,$*)
 	wasm-pack build --target bundler --out-dir dist/bundler --out-name index $(call make-path,$*)
+	# Remove wasm-pack's generated `.gitignore` files; npm honours them when
+	# packing and would strip the build output from the published tarball.
+	find $(call make-path,$*)/dist -name .gitignore -exec rm -f {} +
 
 test-wasm-js-%:
 	wasm-pack test --node $(call make-path,$*) $(ARGS)
 	wasm-pack test --headless --firefox $(call make-path,$*) --features test-browser $(ARGS)
 	wasm-pack test --headless --chrome $(call make-path,$*) --features test-browser $(ARGS)
 	pnpm i --dir $(call make-path,$*)/examples/node-integration && pnpm test --dir $(call make-path,$*)/examples/node-integration
+	pnpm i --dir $(call make-path,$*)/examples/node-esm-integration && pnpm test --dir $(call make-path,$*)/examples/node-esm-integration
 	pnpm i --dir $(call make-path,$*)/examples/web-integration && \
 		pnpm i --dir $(call make-path,$*)/examples/vite-integration && \
 		pnpm i --dir $(call make-path,$*)/examples/webpack-integration && \
@@ -83,6 +95,16 @@ build-doc-%:
 
 test-doc-%:
 	cargo $(nightly) test --doc --all-features --manifest-path $(call make-path,$*)/Cargo.toml $(ARGS)
+
+format-check-js-zk-sdk-wasm-js:
+	@echo "No JS format check needed for zk-sdk-wasm-js"
+
+lint-js-zk-sdk-wasm-js:
+	@echo "No JS lint needed for zk-sdk-wasm-js"
+
+test-js-zk-sdk-wasm-js:
+	make build-wasm-js-zk-sdk-wasm-js
+	make test-wasm-js-zk-sdk-wasm-js
 
 format-check-js-%:
 	cd $(call make-path,$*) && pnpm install && pnpm format $(ARGS)

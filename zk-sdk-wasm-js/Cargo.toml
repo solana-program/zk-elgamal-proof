@@ -23,6 +23,8 @@ test-browser = []
 solana-zk-sdk = { workspace = true }
 solana-zk-sdk-pod = { workspace = true }
 solana-zk-elgamal-proof-interface = { workspace = true }
+solana-seed-derivable = { workspace = true }
+solana-signature = { workspace = true }
 bytemuck = { workspace = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
