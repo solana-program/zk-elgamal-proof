@@ -55,7 +55,7 @@ impl BatchedGroupedCiphertext2HandlesValidityProof {
     /// The function simply batches the input openings and invokes the standard grouped ciphertext
     /// validity proof constructor.
     ///
-    /// This function is randomized. It uses `OsRng` internally to generate random scalars.
+    /// This function is randomized. It uses `rand::rng()` internally to generate random scalars.
     #[allow(clippy::too_many_arguments)]
     pub fn new<T: Into<Scalar>>(
         first_pubkey: &ElGamalPubkey,

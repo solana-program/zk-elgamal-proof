@@ -44,7 +44,7 @@ pub struct ZeroCiphertextProof {
 impl ZeroCiphertextProof {
     /// Creates a zero-ciphertext proof.
     ///
-    /// This function is randomized. It uses `OsRng` internally to generate random scalars.
+    /// This function is randomized. It uses `rand::rng()` internally to generate random scalars.
     ///
     /// * `elgamal_keypair` - The ElGamal keypair associated with the ciphertext to be proved
     /// * `ciphertext` - The main ElGamal ciphertext to be proved
@@ -63,7 +63,7 @@ impl ZeroCiphertextProof {
         let D = ciphertext.handle.get_point();
 
         // generate a random masking factor that also serves as a nonce
-        let mut y = Scalar::random(&mut rand::rngs::OsRng);
+        let mut y = Scalar::random(&mut rand::rng());
         let Y_P = (&y * P).compress();
         let Y_D = (&y * D).compress();
 

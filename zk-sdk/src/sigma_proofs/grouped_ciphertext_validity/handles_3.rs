@@ -53,7 +53,7 @@ pub struct GroupedCiphertext3HandlesValidityProof {
 impl GroupedCiphertext3HandlesValidityProof {
     /// Creates a grouped ciphertext with 3 handles validity proof.
     ///
-    /// This function is randomized. It uses `OsRng` internally to generate random scalars.
+    /// This function is randomized. It uses `rand::rng()` internally to generate random scalars.
     ///
     /// * `first_pubkey` - The first ElGamal public key
     /// * `second_pubkey` - The second ElGamal public key
@@ -107,8 +107,8 @@ impl GroupedCiphertext3HandlesValidityProof {
         let r = opening.get_scalar();
 
         // generate random masking factors that also serves as nonces
-        let mut y_r = Scalar::random(&mut rand::rngs::OsRng);
-        let mut y_x = Scalar::random(&mut rand::rngs::OsRng);
+        let mut y_r = Scalar::random(&mut rand::rng());
+        let mut y_x = Scalar::random(&mut rand::rng());
 
         let Y_0 = RistrettoPoint::multiscalar_mul(vec![&y_r, &y_x], vec![&(*H), &G]).compress();
         let Y_1 = (&y_r * P_first).compress();

@@ -15,7 +15,7 @@
 //! discrete log to recover the originally encrypted value.
 
 #[cfg(test)]
-use curve25519_dalek::traits::Identity;
+use curve25519::traits::Identity;
 use {
     crate::{
         encryption::{
@@ -32,7 +32,6 @@ use {
         scalar::Scalar,
     },
     hkdf::Hkdf,
-    rand::rngs::OsRng,
     serde::{Deserialize, Serialize},
     sha2::Sha512,
     sha3::{Digest, Sha3_512},
@@ -61,10 +60,10 @@ pub struct ElGamal;
 impl ElGamal {
     /// Generates an ElGamal keypair.
     ///
-    /// This function is randomized. It internally samples a scalar element using `OsRng`.
+    /// This function is randomized. It internally samples a scalar element using `rand::rng()`.
     fn keygen() -> ElGamalKeypair {
         // secret scalar should be non-zero except with negligible probability
-        let s = Zeroizing::new(Scalar::random(&mut rand::rngs::OsRng));
+        let s = Zeroizing::new(Scalar::random(&mut rand::rng()));
         Self::keygen_with_scalar(&s)
     }
 
@@ -81,7 +80,7 @@ impl ElGamal {
     /// On input an ElGamal public key and an amount to be encrypted, the function returns a
     /// corresponding ElGamal ciphertext.
     ///
-    /// This function is randomized. It internally samples a scalar element using `OsRng`.
+    /// This function is randomized. It internally samples a scalar element using `rand::rng()`.
     fn encrypt<T: Into<Scalar>>(public: &ElGamalPubkey, amount: T) -> ElGamalCiphertext {
         let (commitment, opening) = Pedersen::new(amount);
         let handle = public.decrypt_handle(&opening);
@@ -162,7 +161,7 @@ pub struct ElGamalKeypair {
 impl ElGamalKeypair {
     /// Generates the public and secret keys for ElGamal encryption.
     ///
-    /// This function is randomized. It internally samples a scalar element using `OsRng`.
+    /// This function is randomized. It internally samples a scalar element using `rand::rng()`.
     pub fn new_rand() -> Self {
         ElGamal::keygen()
     }
@@ -403,7 +402,7 @@ impl ElGamalPubkey {
 
     /// Encrypts an amount under the public key.
     ///
-    /// This function is randomized. It internally samples a scalar element using `OsRng`.
+    /// This function is randomized. It internally samples a scalar element using `rand::rng()`.
     pub fn encrypt<T: Into<Scalar>>(&self, amount: T) -> ElGamalCiphertext {
         ElGamal::encrypt(self, amount)
     }
@@ -517,9 +516,9 @@ pub struct ElGamalSecretKey(Scalar);
 impl ElGamalSecretKey {
     /// Randomly samples an ElGamal secret key.
     ///
-    /// This function is randomized. It internally samples a scalar element using `OsRng`.
+    /// This function is randomized. It internally samples a scalar element using `rand::rng()`.
     pub fn new_rand() -> Self {
-        ElGamalSecretKey(Scalar::random(&mut rand::rngs::OsRng))
+        ElGamalSecretKey(Scalar::random(&mut rand::rng()))
     }
 
     /// Derive an ElGamal secret key from an entropy seed.

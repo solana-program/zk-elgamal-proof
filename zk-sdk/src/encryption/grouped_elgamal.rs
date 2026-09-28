@@ -42,7 +42,7 @@ pub struct GroupedElGamal<const N: usize>;
 impl<const N: usize> GroupedElGamal<N> {
     /// Encrypts an amount under an array of ElGamal public keys.
     ///
-    /// This function is randomized. It internally samples a scalar element using `OsRng`.
+    /// This function is randomized. It internally samples a scalar element using `rand::rng()`.
     pub fn encrypt<T: Into<Scalar>>(
         pubkeys: [&ElGamalPubkey; N],
         amount: T,

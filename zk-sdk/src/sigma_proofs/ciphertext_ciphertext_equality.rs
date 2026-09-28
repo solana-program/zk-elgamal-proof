@@ -48,7 +48,7 @@ pub struct CiphertextCiphertextEqualityProof {
 impl CiphertextCiphertextEqualityProof {
     /// Creates a ciphertext-ciphertext equality proof.
     ///
-    /// This function is randomized. It uses `OsRng` internally to generate random scalars.
+    /// This function is randomized. It uses `rand::rng()` internally to generate random scalars.
     ///
     /// * `first_keypair` - The ElGamal keypair associated with the first ciphertext to be proved
     /// * `second_pubkey` - The ElGamal pubkey associated with the second ElGamal ciphertext
@@ -87,9 +87,9 @@ impl CiphertextCiphertextEqualityProof {
         let r = second_opening.get_scalar();
 
         // generate random masking factors that also serves as nonces
-        let mut y_s = Scalar::random(&mut rand::rngs::OsRng);
-        let mut y_x = Scalar::random(&mut rand::rngs::OsRng);
-        let mut y_r = Scalar::random(&mut rand::rngs::OsRng);
+        let mut y_s = Scalar::random(&mut rand::rng());
+        let mut y_x = Scalar::random(&mut rand::rng());
+        let mut y_r = Scalar::random(&mut rand::rng());
 
         let Y_0 = (&y_s * P_first).compress();
         let Y_1 = RistrettoPoint::multiscalar_mul(vec![&y_x, &y_s], vec![&G, D_first]).compress();

@@ -54,7 +54,7 @@ use {
         },
         errors::ElGamalError,
     },
-    curve25519_dalek::scalar::Scalar,
+    curve25519::scalar::Scalar,
     hkdf::Hkdf,
     sha2::Sha512,
     solana_signature::Signature,

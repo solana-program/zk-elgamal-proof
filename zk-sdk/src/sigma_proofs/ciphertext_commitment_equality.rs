@@ -52,7 +52,7 @@ pub struct CiphertextCommitmentEqualityProof {
 impl CiphertextCommitmentEqualityProof {
     /// Creates a ciphertext-commitment equality proof.
     ///
-    /// This function is randomized. It uses `OsRng` internally to generate random scalars.
+    /// This function is randomized. It uses `rand::rng()` internally to generate random scalars.
     ///
     /// Note that the proof constructor does not take the actual Pedersen commitment as input; it
     /// takes the associated Pedersen opening instead.
@@ -83,9 +83,9 @@ impl CiphertextCommitmentEqualityProof {
         let r = opening.get_scalar();
 
         // generate random masking factors that also serves as nonces
-        let mut y_s = Scalar::random(&mut rand::rngs::OsRng);
-        let mut y_x = Scalar::random(&mut rand::rngs::OsRng);
-        let mut y_r = Scalar::random(&mut rand::rngs::OsRng);
+        let mut y_s = Scalar::random(&mut rand::rng());
+        let mut y_x = Scalar::random(&mut rand::rng());
+        let mut y_r = Scalar::random(&mut rand::rng());
 
         let Y_0 = (&y_s * P).compress();
         let Y_1 = RistrettoPoint::multiscalar_mul(vec![&y_x, &y_s], vec![&G, D]).compress();

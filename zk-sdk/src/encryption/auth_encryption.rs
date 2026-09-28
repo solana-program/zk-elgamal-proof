@@ -14,7 +14,6 @@ use {
     },
     base64::{prelude::BASE64_STANDARD, Engine},
     hkdf::Hkdf,
-    rand::{rngs::OsRng, Rng},
     sha2::Sha512,
     sha3::{Digest, Sha3_512},
     solana_derivation_path::DerivationPath,
@@ -44,7 +43,7 @@ struct AuthenticatedEncryption;
 impl AuthenticatedEncryption {
     /// Generates an authenticated encryption key.
     ///
-    /// This function is randomized. It internally samples a 128-bit key using `OsRng`.
+    /// This function is randomized. It internally samples a 128-bit key using `rand::rng()`.
     fn keygen() -> AeKey {
         AeKey(rand::random::<[u8; AE_KEY_LEN]>())
     }
@@ -215,7 +214,7 @@ impl AeKey {
 
     /// Generates a random authenticated encryption key.
     ///
-    /// This function is randomized. It internally samples a 128-bit key using `OsRng`.
+    /// This function is randomized. It internally samples a 128-bit key using `rand::rng()`.
     pub fn new_rand() -> Self {
         AuthenticatedEncryption::keygen()
     }
