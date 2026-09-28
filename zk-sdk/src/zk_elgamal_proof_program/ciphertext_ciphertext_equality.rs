@@ -11,8 +11,8 @@ use {
             VerifyZkProof,
         },
     },
-    curve25519::scalar::Scalar,
     merlin::Transcript,
+    solana_ed25519::scalar::Scalar,
     solana_zk_elgamal_proof_interface::proof_data::{
         CiphertextCiphertextEqualityProofContext, CiphertextCiphertextEqualityProofData,
     },

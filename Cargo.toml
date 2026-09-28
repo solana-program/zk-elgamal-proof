@@ -29,7 +29,6 @@ bip39 = { version = "3.0.0", features = ["rand"] }
 bytemuck = "1.25.0"
 bytemuck_derive = "1.10.2"
 criterion = { version = "0.8.2", default-features = false, features = ["cargo_bench_support"] }
-curve25519 = { package = "solana-ed25519", version = "0.2.4", features = ["digest", "rand_core"] }
 getrandom = "0.4.3"
 hkdf = "0.13.0"
 itertools = "0.15.0"
@@ -46,7 +45,8 @@ sha3 = "0.12.0"
 shake = "0.1.0"
 solana-address = { version = "2.5.0", default-features = false }
 solana-derivation-path = "3.0.0"
-solana-instruction = { version = "4.0.0", default-features = false }
+solana-ed25519 = { version = "0.2.4", features = ["digest", "rand_core"] }
+solana-instruction ={ version = "4.0.0", default-features = false }
 solana-instruction-error = "3.0.0"
 solana-keypair = "4.0.0"
 solana-nullable = "1.1.1"

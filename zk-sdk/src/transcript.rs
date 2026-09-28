@@ -1,7 +1,7 @@
 use {
     crate::{errors::TranscriptError, TRANSCRIPT_DOMAIN},
-    curve25519::{ristretto::CompressedRistretto, scalar::Scalar, traits::IsIdentity},
     merlin::Transcript,
+    solana_ed25519::{ristretto::CompressedRistretto, scalar::Scalar, traits::IsIdentity},
 };
 
 pub trait TranscriptProtocol {

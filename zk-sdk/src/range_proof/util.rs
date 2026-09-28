@@ -2,7 +2,7 @@
 //! This module provides common mathematical operations over scalars and vectors needed to
 //! construct and verify Bulletproofs.
 
-use {curve25519::scalar::Scalar, zeroize::Zeroize};
+use {solana_ed25519::scalar::Scalar, zeroize::Zeroize};
 
 /// Represents a degree-1 vector polynomial, such as `a + b*x`.
 ///

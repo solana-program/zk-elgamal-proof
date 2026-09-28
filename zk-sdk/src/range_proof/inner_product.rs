@@ -17,16 +17,16 @@ use {
         transcript::TranscriptProtocol,
     },
     core::iter,
-    curve25519::{
+    merlin::Transcript,
+    solana_ed25519::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
         traits::MultiscalarMul,
     },
-    merlin::Transcript,
     zeroize::Zeroize,
 };
 #[cfg(test)]
-use {curve25519::traits::VartimeMultiscalarMul, std::borrow::Borrow};
+use {solana_ed25519::traits::VartimeMultiscalarMul, std::borrow::Borrow};
 
 /// An inner-product proof.
 ///
