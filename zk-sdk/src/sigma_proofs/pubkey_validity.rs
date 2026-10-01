@@ -9,6 +9,7 @@ use {
             elgamal::{ElGamalKeypair, ElGamalPubkey},
             pedersen::H,
         },
+        random::random_scalar,
         sigma_proofs::{
             canonical_scalar_from_optional_slice,
             errors::{PubkeyValidityProofVerificationError, SigmaProofVerificationError},
@@ -22,7 +23,6 @@ use {
         traits::{IsIdentity, VartimeMultiscalarMul},
     },
     merlin::Transcript,
-    rand::rngs::OsRng,
     solana_zk_sdk_pod::{sigma_proofs::PodPubkeyValidityProof, UNIT_LEN},
     zeroize::Zeroize,
 };
@@ -44,7 +44,7 @@ pub struct PubkeyValidityProof {
 impl PubkeyValidityProof {
     /// Creates a public key validity proof.
     ///
-    /// This function is randomized. It uses `OsRng` internally to generate random scalars.
+    /// This function is randomized. It samples scalars internally using operating system randomness.
     ///
     /// This function panics if the provided keypair is not valid (i.e. secret key is not
     /// invertible).
@@ -63,7 +63,7 @@ impl PubkeyValidityProof {
         let mut s_inv = s.invert();
 
         // generate a random masking factor that also serves as a nonce
-        let mut y = Scalar::random(&mut OsRng);
+        let mut y = random_scalar();
         let Y = (&y * &(*H)).compress();
 
         // record masking factors in transcript and get challenges

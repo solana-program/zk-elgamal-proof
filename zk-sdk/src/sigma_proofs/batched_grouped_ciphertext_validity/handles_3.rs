@@ -102,7 +102,7 @@ impl BatchedGroupedCiphertext3HandlesValidityProof {
 
     /// Verifies a batched grouped ciphertext validity proof.
     ///
-    /// This function is randomized. It uses `OsRng` internally to generate random scalars.
+    /// This function is randomized. It samples scalars internally using operating system randomness.
     #[allow(clippy::too_many_arguments)]
     pub fn verify(
         self,

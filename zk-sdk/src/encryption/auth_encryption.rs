@@ -7,6 +7,7 @@ use {
     crate::{
         encryption::derivation::{AE_HKDF_INFO, HKDF_SALT},
         errors::AuthenticatedEncryptionError,
+        random::fill_random_bytes,
     },
     aes_gcm_siv::{
         aead::{Aead, KeyInit},
@@ -14,7 +15,6 @@ use {
     },
     base64::{prelude::BASE64_STANDARD, Engine},
     hkdf::Hkdf,
-    rand::{rngs::OsRng, Rng},
     sha2::Sha512,
     sha3::{Digest, Sha3_512},
     solana_derivation_path::DerivationPath,
@@ -44,16 +44,19 @@ struct AuthenticatedEncryption;
 impl AuthenticatedEncryption {
     /// Generates an authenticated encryption key.
     ///
-    /// This function is randomized. It internally samples a 128-bit key using `OsRng`.
+    /// This function is randomized. It samples a 128-bit key using operating system randomness.
     fn keygen() -> AeKey {
-        AeKey(OsRng.gen::<[u8; AE_KEY_LEN]>())
+        let mut key = Zeroizing::new([0u8; AE_KEY_LEN]);
+        fill_random_bytes(key.as_mut_slice());
+        AeKey(*key)
     }
 
     /// On input of an authenticated encryption key and an amount, the function returns a
     /// corresponding authenticated encryption ciphertext.
     fn encrypt(key: &AeKey, balance: u64) -> AeCiphertext {
         let plaintext = Zeroizing::new(balance.to_le_bytes());
-        let nonce: Nonce = OsRng.gen::<[u8; NONCE_LEN]>();
+        let mut nonce = [0u8; NONCE_LEN];
+        fill_random_bytes(&mut nonce);
 
         // The balance and the nonce have fixed length and therefore, encryption should not fail.
         let ciphertext = Aes128GcmSiv::new(&key.0.into())
@@ -215,7 +218,7 @@ impl AeKey {
 
     /// Generates a random authenticated encryption key.
     ///
-    /// This function is randomized. It internally samples a 128-bit key using `OsRng`.
+    /// This function is randomized. It samples a 128-bit key using operating system randomness.
     pub fn new_rand() -> Self {
         AuthenticatedEncryption::keygen()
     }
