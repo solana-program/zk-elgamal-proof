@@ -1,6 +1,6 @@
 use {
     crate::encryption::{
-        elgamal::{ElGamalPubkey, ElGamalSecretKey},
+        elgamal::{ElGamalCiphertext, ElGamalPubkey, ElGamalSecretKey},
         pedersen::PedersenOpening,
     },
     js_sys::Uint8Array,
@@ -26,6 +26,16 @@ crate::conversion::impl_inner_conversion!(
 
 #[wasm_bindgen]
 impl GroupedElGamalCiphertext2Handles {
+    /// Extracts an ElGamal ciphertext using the handle at a zero-based index (0 or 1).
+    /// Throws an error if the index is out of bounds. Does not modify the grouped ciphertext.
+    #[wasm_bindgen(js_name = "toElGamalCiphertext")]
+    pub fn to_elgamal_ciphertext(&self, index: usize) -> Result<ElGamalCiphertext, JsValue> {
+        self.inner
+            .to_elgamal_ciphertext(index)
+            .map(Into::into)
+            .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
     /// Encrypts a 64-bit amount under two ElGamal public keys.
     #[wasm_bindgen(js_name = "encrypt")]
     pub fn encrypt(
@@ -109,6 +119,16 @@ crate::conversion::impl_inner_conversion!(
 
 #[wasm_bindgen]
 impl GroupedElGamalCiphertext3Handles {
+    /// Extracts an ElGamal ciphertext using the handle at a zero-based index (0, 1, or 2).
+    /// Throws an error if the index is out of bounds. Does not modify the grouped ciphertext.
+    #[wasm_bindgen(js_name = "toElGamalCiphertext")]
+    pub fn to_elgamal_ciphertext(&self, index: usize) -> Result<ElGamalCiphertext, JsValue> {
+        self.inner
+            .to_elgamal_ciphertext(index)
+            .map(Into::into)
+            .map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
     /// Encrypts a 64-bit amount under three ElGamal public keys.
     #[wasm_bindgen(js_name = "encrypt")]
     pub fn encrypt(
@@ -193,6 +213,61 @@ impl GroupedElGamalCiphertext3Handles {
 #[cfg(test)]
 mod tests {
     use {super::*, crate::encryption::elgamal::ElGamalKeypair, wasm_bindgen_test::*};
+
+    #[wasm_bindgen_test]
+    fn test_extract_ciphertext_2_handles() {
+        let keypairs = [ElGamalKeypair::new_rand(), ElGamalKeypair::new_rand()];
+        let opening = PedersenOpening::new_rand();
+        let grouped = GroupedElGamalCiphertext2Handles::encrypt_with(
+            &keypairs[0].pubkey(),
+            &keypairs[1].pubkey(),
+            42,
+            &opening,
+        );
+        let grouped_bytes = grouped.to_bytes();
+
+        for (index, keypair) in keypairs.iter().enumerate() {
+            let extracted = grouped.to_elgamal_ciphertext(index).unwrap();
+            assert_eq!(
+                extracted.to_bytes(),
+                keypair.pubkey().encrypt_with(42, &opening).to_bytes()
+            );
+            assert_eq!(keypair.secret().decrypt(&extracted), Ok(42));
+        }
+        assert!(grouped.to_elgamal_ciphertext(2).is_err());
+        assert!(grouped.to_elgamal_ciphertext(usize::MAX).is_err());
+        assert_eq!(grouped.to_bytes(), grouped_bytes);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_extract_ciphertext_3_handles() {
+        let keypairs = [
+            ElGamalKeypair::new_rand(),
+            ElGamalKeypair::new_rand(),
+            ElGamalKeypair::new_rand(),
+        ];
+        let opening = PedersenOpening::new_rand();
+        let grouped = GroupedElGamalCiphertext3Handles::encrypt_with(
+            &keypairs[0].pubkey(),
+            &keypairs[1].pubkey(),
+            &keypairs[2].pubkey(),
+            55,
+            &opening,
+        );
+        let grouped_bytes = grouped.to_bytes();
+
+        for (index, keypair) in keypairs.iter().enumerate() {
+            let extracted = grouped.to_elgamal_ciphertext(index).unwrap();
+            assert_eq!(
+                extracted.to_bytes(),
+                keypair.pubkey().encrypt_with(55, &opening).to_bytes()
+            );
+            assert_eq!(keypair.secret().decrypt(&extracted), Ok(55));
+        }
+        assert!(grouped.to_elgamal_ciphertext(3).is_err());
+        assert!(grouped.to_elgamal_ciphertext(usize::MAX).is_err());
+        assert_eq!(grouped.to_bytes(), grouped_bytes);
+    }
 
     #[wasm_bindgen_test]
     fn test_grouped_elgamal_2_handles_cycle() {
