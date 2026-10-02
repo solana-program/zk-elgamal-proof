@@ -64,6 +64,12 @@ impl ElGamalPubkey {
     pub fn encrypt_with(&self, amount: u64, opening: &PedersenOpening) -> ElGamalCiphertext {
         self.inner.encrypt_with(amount, &opening.inner).into()
     }
+
+    /// Creates a decryption handle using the public key and a Pedersen opening.
+    #[wasm_bindgen(js_name = "decryptHandle")]
+    pub fn decrypt_handle(&self, opening: &PedersenOpening) -> DecryptHandle {
+        self.inner.decrypt_handle(&opening.inner).into()
+    }
 }
 
 #[wasm_bindgen]
@@ -293,6 +299,10 @@ impl ElGamalCiphertext {
     }
 }
 
+/// A decryption handle for a Pedersen commitment.
+///
+/// Arithmetic returns new handles without modifying the inputs and operates
+/// modulo the group order.
 #[wasm_bindgen]
 pub struct DecryptHandle {
     pub(crate) inner: elgamal::DecryptHandle,
@@ -301,7 +311,17 @@ pub struct DecryptHandle {
 crate::conversion::impl_inner_conversion!(DecryptHandle, elgamal::DecryptHandle);
 
 #[wasm_bindgen]
+#[allow(
+    clippy::arithmetic_side_effects,
+    reason = "Handle operations use modular curve arithmetic."
+)]
 impl DecryptHandle {
+    /// Creates a decryption handle from an ElGamal public key and a Pedersen opening.
+    #[wasm_bindgen(constructor)]
+    pub fn new(pubkey: &ElGamalPubkey, opening: &PedersenOpening) -> Self {
+        elgamal::DecryptHandle::new(&pubkey.inner, &opening.inner).into()
+    }
+
     /// Deserializes a decryption handle from a byte slice.
     /// Returns `undefined` if the bytes are invalid.
     #[wasm_bindgen(js_name = "fromBytes")]
@@ -320,6 +340,24 @@ impl DecryptHandle {
     #[wasm_bindgen(js_name = "toBytes")]
     pub fn to_bytes(&self) -> Vec<u8> {
         self.inner.to_bytes().to_vec()
+    }
+
+    /// Adds another decryption handle.
+    #[wasm_bindgen(js_name = "add")]
+    pub fn add(&self, other: &DecryptHandle) -> DecryptHandle {
+        (self.inner + other.inner).into()
+    }
+
+    /// Subtracts another decryption handle.
+    #[wasm_bindgen(js_name = "subtract")]
+    pub fn subtract(&self, other: &DecryptHandle) -> DecryptHandle {
+        (self.inner - other.inner).into()
+    }
+
+    /// Multiplies a decryption handle by a 64-bit scalar.
+    #[wasm_bindgen(js_name = "multiplyByU64")]
+    pub fn multiply_by_u64(&self, scalar: u64) -> DecryptHandle {
+        (self.inner * scalar).into()
     }
 }
 
@@ -444,6 +482,81 @@ mod tests {
         assert_eq!(ciphertext.add_amount(0).to_bytes(), ciphertext_bytes);
         assert_eq!(ciphertext.subtract_amount(0).to_bytes(), ciphertext_bytes);
         assert_eq!(ciphertext.to_bytes(), ciphertext_bytes);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_handle_construction() {
+        let opening = PedersenOpening::new_rand();
+        let opening_bytes = opening.to_bytes();
+
+        for _ in 0..2 {
+            let pubkey = ElGamalKeypair::new_rand().pubkey();
+            let pubkey_bytes = pubkey.to_bytes();
+            let expected = pubkey.encrypt_with(42, &opening).handle().to_bytes();
+
+            assert_eq!(DecryptHandle::new(&pubkey, &opening).to_bytes(), expected);
+            assert_eq!(pubkey.decrypt_handle(&opening).to_bytes(), expected);
+            assert_eq!(
+                DecryptHandle::new(&pubkey, &PedersenOpening::zero()).to_bytes(),
+                [0; DECRYPT_HANDLE_LEN]
+            );
+            assert_eq!(pubkey.to_bytes(), pubkey_bytes);
+        }
+        assert_eq!(opening.to_bytes(), opening_bytes);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_handle_add_and_subtract() {
+        let pubkey = ElGamalKeypair::new_rand().pubkey();
+        let opening = PedersenOpening::new_rand();
+        let other_opening = PedersenOpening::new_rand();
+        let handle = DecryptHandle::new(&pubkey, &opening);
+        let other = DecryptHandle::new(&pubkey, &other_opening);
+        let handle_bytes = handle.to_bytes();
+        let other_bytes = other.to_bytes();
+
+        let sum = handle.add(&other);
+        let difference = handle.subtract(&other);
+        assert_eq!(
+            sum.to_bytes(),
+            pubkey
+                .decrypt_handle(&opening.add(&other_opening))
+                .to_bytes()
+        );
+        assert_eq!(
+            difference.to_bytes(),
+            pubkey
+                .decrypt_handle(&opening.subtract(&other_opening))
+                .to_bytes()
+        );
+        assert_eq!(sum.subtract(&other).to_bytes(), handle_bytes);
+        assert_eq!(difference.add(&other).to_bytes(), handle_bytes);
+        assert_eq!(handle.subtract(&handle).to_bytes(), [0; DECRYPT_HANDLE_LEN]);
+        assert_eq!(handle.to_bytes(), handle_bytes);
+        assert_eq!(other.to_bytes(), other_bytes);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_handle_multiply_by_u64() {
+        let pubkey = ElGamalKeypair::new_rand().pubkey();
+        let opening = PedersenOpening::new_rand();
+        let handle = DecryptHandle::new(&pubkey, &opening);
+        let handle_bytes = handle.to_bytes();
+
+        for scalar in [0, 1, 7, u64::MAX] {
+            assert_eq!(
+                handle.multiply_by_u64(scalar).to_bytes(),
+                pubkey
+                    .decrypt_handle(&opening.multiply_by_u64(scalar))
+                    .to_bytes()
+            );
+        }
+        assert_eq!(
+            handle.multiply_by_u64(0).to_bytes(),
+            [0; DECRYPT_HANDLE_LEN]
+        );
+        assert_eq!(handle.multiply_by_u64(1).to_bytes(), handle_bytes);
+        assert_eq!(handle.to_bytes(), handle_bytes);
     }
 
     #[wasm_bindgen_test]
