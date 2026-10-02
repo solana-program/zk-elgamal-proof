@@ -115,6 +115,9 @@ lint-js-%:
 	cd $(call make-path,$*) && pnpm install && pnpm lint $(ARGS)
 
 test-js-clients-js: build-wasm-js-node-zk-sdk-wasm-js
+	make restart-test-validator
+	cd $(call make-path,clients-js) && pnpm install && pnpm build && pnpm test $(ARGS)
+	make stop-test-validator
 
 test-js-%:
 	make restart-test-validator
