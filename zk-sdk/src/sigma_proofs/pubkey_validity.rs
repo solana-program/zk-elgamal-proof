@@ -16,13 +16,12 @@ use {
         },
         transcript::TranscriptProtocol,
     },
-    curve25519_dalek::{
+    merlin::Transcript,
+    solana_ed25519::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
         traits::{IsIdentity, VartimeMultiscalarMul},
     },
-    merlin::Transcript,
-    rand::rngs::OsRng,
     solana_zk_sdk_pod::{sigma_proofs::PodPubkeyValidityProof, UNIT_LEN},
     zeroize::Zeroize,
 };
@@ -44,7 +43,7 @@ pub struct PubkeyValidityProof {
 impl PubkeyValidityProof {
     /// Creates a public key validity proof.
     ///
-    /// This function is randomized. It uses `OsRng` internally to generate random scalars.
+    /// This function is randomized. It uses `rand::rng()` internally to generate random scalars.
     ///
     /// This function panics if the provided keypair is not valid (i.e. secret key is not
     /// invertible).
@@ -63,7 +62,7 @@ impl PubkeyValidityProof {
         let mut s_inv = s.invert();
 
         // generate a random masking factor that also serves as a nonce
-        let mut y = Scalar::random(&mut OsRng);
+        let mut y = Scalar::random(&mut rand::rng());
         let Y = (&y * &(*H)).compress();
 
         // record masking factors in transcript and get challenges
@@ -165,7 +164,7 @@ mod test {
     use {
         super::*,
         bytemuck::Zeroable,
-        curve25519_dalek::traits::Identity,
+        solana_ed25519::traits::Identity,
         solana_keypair::Keypair,
         solana_zk_sdk_pod::{
             encryption::elgamal::PodElGamalPubkey, sigma_proofs::PodPubkeyValidityProof,

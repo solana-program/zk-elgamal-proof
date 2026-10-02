@@ -33,8 +33,8 @@ use {
         },
         transcript::TranscriptProtocol,
     },
-    curve25519_dalek::{scalar::Scalar, traits::IsIdentity},
     merlin::Transcript,
+    solana_ed25519::{scalar::Scalar, traits::IsIdentity},
     solana_zk_sdk_pod::{sigma_proofs::PodBatchedGroupedCiphertext3HandlesValidityProof, UNIT_LEN},
     zeroize::Zeroize,
 };
@@ -102,7 +102,7 @@ impl BatchedGroupedCiphertext3HandlesValidityProof {
 
     /// Verifies a batched grouped ciphertext validity proof.
     ///
-    /// This function is randomized. It uses `OsRng` internally to generate random scalars.
+    /// This function is randomized. It uses `rand::rng()` internally to generate random scalars.
     #[allow(clippy::too_many_arguments)]
     pub fn verify(
         self,
