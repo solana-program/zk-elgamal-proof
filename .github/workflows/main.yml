@@ -53,6 +53,7 @@ jobs:
       rust-packages: ${{ needs.set_env.outputs.RUST_PACKAGES }}
       wasm-packages: ${{ needs.set_env.outputs.WASM_PACKAGES }}
       wasm-js-packages: ${{ needs.set_env.outputs.WASM_JS_PACKAGES }}
+      wasm-pack: true
       rustfmt-toolchain: ${{ needs.set_env.outputs.RUST_TOOLCHAIN_NIGHTLY }}
       clippy-toolchain: ${{ needs.set_env.outputs.RUST_TOOLCHAIN_NIGHTLY }}
       solana-cli-version: ${{ needs.set_env.outputs.SOLANA_CLI_VERSION }}

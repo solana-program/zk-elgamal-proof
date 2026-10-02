@@ -53,7 +53,7 @@
     "@solana-program/record": "^0.5.0",
     "@solana/kit": "^8.4.0",
     "@solana/sysvars": "^8.4.0",
-    "@solana/zk-sdk": "0.4.1",
+    "@solana/zk-sdk": "workspace:*",
     "@types/node": "^26.6.3",
     "ava": "^8.0.1",
     "oxfmt": "^0.71.0",
