@@ -1,5 +1,5 @@
 use {
-    crate::encryption::pedersen::{PedersenCommitment, PedersenOpening},
+    crate::encryption::pedersen::{lo_hi_multiplier, PedersenCommitment, PedersenOpening},
     js_sys::Uint8Array,
     solana_seed_derivable::SeedDerivable,
     solana_zk_sdk::encryption::elgamal,
@@ -63,6 +63,12 @@ impl ElGamalPubkey {
     #[wasm_bindgen(js_name = "encryptWith")]
     pub fn encrypt_with(&self, amount: u64, opening: &PedersenOpening) -> ElGamalCiphertext {
         self.inner.encrypt_with(amount, &opening.inner).into()
+    }
+
+    /// Creates a decryption handle using the public key and a Pedersen opening.
+    #[wasm_bindgen(js_name = "decryptHandle")]
+    pub fn decrypt_handle(&self, opening: &PedersenOpening) -> DecryptHandle {
+        self.inner.decrypt_handle(&opening.inner).into()
     }
 }
 
@@ -266,6 +272,16 @@ impl ElGamalCiphertext {
         (self.inner * scalar).into()
     }
 
+    /// Combines low and high ElGamal ciphertexts as `lo + hi * 2^bit_length`.
+    #[wasm_bindgen(js_name = "combineLoHi")]
+    pub fn combine_lo_hi(
+        lo: &ElGamalCiphertext,
+        hi: &ElGamalCiphertext,
+        bit_length: u8,
+    ) -> Result<ElGamalCiphertext, JsValue> {
+        Ok(lo.add(&hi.multiply_by_u64(lo_hi_multiplier(bit_length)?)))
+    }
+
     /// Adds a 64-bit plaintext amount, preserving the opening and decryption handle.
     #[wasm_bindgen(js_name = "addAmount")]
     pub fn add_amount(&self, amount: u64) -> ElGamalCiphertext {
@@ -293,6 +309,10 @@ impl ElGamalCiphertext {
     }
 }
 
+/// A decryption handle for a Pedersen commitment.
+///
+/// Arithmetic returns new handles without modifying the inputs and operates
+/// modulo the group order.
 #[wasm_bindgen]
 pub struct DecryptHandle {
     pub(crate) inner: elgamal::DecryptHandle,
@@ -301,6 +321,10 @@ pub struct DecryptHandle {
 crate::conversion::impl_inner_conversion!(DecryptHandle, elgamal::DecryptHandle);
 
 #[wasm_bindgen]
+#[allow(
+    clippy::arithmetic_side_effects,
+    reason = "Handle operations use modular curve arithmetic."
+)]
 impl DecryptHandle {
     /// Deserializes a decryption handle from a byte slice.
     /// Returns `undefined` if the bytes are invalid.
@@ -320,6 +344,24 @@ impl DecryptHandle {
     #[wasm_bindgen(js_name = "toBytes")]
     pub fn to_bytes(&self) -> Vec<u8> {
         self.inner.to_bytes().to_vec()
+    }
+
+    /// Adds another decryption handle associated with the same public key.
+    #[wasm_bindgen(js_name = "add")]
+    pub fn add(&self, other: &DecryptHandle) -> DecryptHandle {
+        (self.inner + other.inner).into()
+    }
+
+    /// Subtracts another decryption handle associated with the same public key.
+    #[wasm_bindgen(js_name = "subtract")]
+    pub fn subtract(&self, other: &DecryptHandle) -> DecryptHandle {
+        (self.inner - other.inner).into()
+    }
+
+    /// Multiplies a decryption handle by a 64-bit scalar.
+    #[wasm_bindgen(js_name = "multiplyByU64")]
+    pub fn multiply_by_u64(&self, scalar: u64) -> DecryptHandle {
+        (self.inner * scalar).into()
     }
 }
 
@@ -416,6 +458,30 @@ mod tests {
     }
 
     #[wasm_bindgen_test]
+    fn test_ciphertext_combine_lo_hi() {
+        let keypair = ElGamalKeypair::new_rand();
+        let pubkey = keypair.pubkey();
+        let opening_lo = PedersenOpening::new_rand();
+        let opening_hi = PedersenOpening::new_rand();
+        let ciphertext_lo = pubkey.encrypt_with(5, &opening_lo);
+        let ciphertext_hi = pubkey.encrypt_with(7, &opening_hi);
+
+        let combined =
+            ElGamalCiphertext::combine_lo_hi(&ciphertext_lo, &ciphertext_hi, 16).unwrap();
+        let combined_opening =
+            PedersenOpening::combine_lo_hi(&opening_lo, &opening_hi, 16).unwrap();
+        let combined_amount = 5 + (7 << 16);
+        assert_eq!(
+            combined.to_bytes(),
+            pubkey
+                .encrypt_with(combined_amount, &combined_opening)
+                .to_bytes()
+        );
+        assert_eq!(keypair.secret().decrypt(&combined), Ok(combined_amount));
+        assert!(ElGamalCiphertext::combine_lo_hi(&ciphertext_lo, &ciphertext_hi, 64).is_err());
+    }
+
+    #[wasm_bindgen_test]
     fn test_ciphertext_add_and_subtract_amount() {
         let keypair = ElGamalKeypair::new_rand();
         let pubkey = keypair.pubkey();
@@ -444,6 +510,75 @@ mod tests {
         assert_eq!(ciphertext.add_amount(0).to_bytes(), ciphertext_bytes);
         assert_eq!(ciphertext.subtract_amount(0).to_bytes(), ciphertext_bytes);
         assert_eq!(ciphertext.to_bytes(), ciphertext_bytes);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_pubkey_decrypt_handle() {
+        let pubkey = ElGamalKeypair::new_rand().pubkey();
+        let opening = PedersenOpening::new_rand();
+
+        assert_eq!(
+            pubkey.decrypt_handle(&opening).to_bytes(),
+            pubkey.encrypt_with(42, &opening).handle().to_bytes()
+        );
+        assert_eq!(
+            pubkey.decrypt_handle(&PedersenOpening::zero()).to_bytes(),
+            [0; DECRYPT_HANDLE_LEN]
+        );
+    }
+
+    #[wasm_bindgen_test]
+    fn test_handle_add_and_subtract() {
+        let pubkey = ElGamalKeypair::new_rand().pubkey();
+        let opening = PedersenOpening::new_rand();
+        let other_opening = PedersenOpening::new_rand();
+        let handle = pubkey.decrypt_handle(&opening);
+        let other = pubkey.decrypt_handle(&other_opening);
+        let handle_bytes = handle.to_bytes();
+        let other_bytes = other.to_bytes();
+
+        let sum = handle.add(&other);
+        let difference = handle.subtract(&other);
+        assert_eq!(
+            sum.to_bytes(),
+            pubkey
+                .decrypt_handle(&opening.add(&other_opening))
+                .to_bytes()
+        );
+        assert_eq!(
+            difference.to_bytes(),
+            pubkey
+                .decrypt_handle(&opening.subtract(&other_opening))
+                .to_bytes()
+        );
+        assert_eq!(sum.subtract(&other).to_bytes(), handle_bytes);
+        assert_eq!(difference.add(&other).to_bytes(), handle_bytes);
+        assert_eq!(handle.subtract(&handle).to_bytes(), [0; DECRYPT_HANDLE_LEN]);
+        assert_eq!(handle.to_bytes(), handle_bytes);
+        assert_eq!(other.to_bytes(), other_bytes);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_handle_multiply_by_u64() {
+        let pubkey = ElGamalKeypair::new_rand().pubkey();
+        let opening = PedersenOpening::new_rand();
+        let handle = pubkey.decrypt_handle(&opening);
+        let handle_bytes = handle.to_bytes();
+
+        for scalar in [0, 1, 7, u64::MAX] {
+            assert_eq!(
+                handle.multiply_by_u64(scalar).to_bytes(),
+                pubkey
+                    .decrypt_handle(&opening.multiply_by_u64(scalar))
+                    .to_bytes()
+            );
+        }
+        assert_eq!(
+            handle.multiply_by_u64(0).to_bytes(),
+            [0; DECRYPT_HANDLE_LEN]
+        );
+        assert_eq!(handle.multiply_by_u64(1).to_bytes(), handle_bytes);
+        assert_eq!(handle.to_bytes(), handle_bytes);
     }
 
     #[wasm_bindgen_test]
