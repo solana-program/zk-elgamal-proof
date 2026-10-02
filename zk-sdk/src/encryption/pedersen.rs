@@ -1,7 +1,7 @@
 //! Pedersen commitment implementation using the Ristretto prime-order group.
 
 use {
-    crate::errors::ElGamalError,
+    crate::{errors::ElGamalError, random::random_scalar},
     core::ops::{Add, Mul, Sub},
     curve25519_dalek::{
         constants::{RISTRETTO_BASEPOINT_COMPRESSED, RISTRETTO_BASEPOINT_POINT},
@@ -9,7 +9,6 @@ use {
         scalar::Scalar,
         traits::MultiscalarMul,
     },
-    rand::rngs::OsRng,
     serde::{Deserialize, Serialize},
     sha3::Sha3_512,
     solana_zk_sdk_pod::encryption::{
@@ -33,7 +32,7 @@ impl Pedersen {
     /// On input a message (numeric amount), the function returns a Pedersen commitment of the
     /// message and the corresponding opening.
     ///
-    /// This function is randomized. It internally samples a Pedersen opening using `OsRng`.
+    /// This function is randomized. It samples a Pedersen opening using operating system randomness.
     #[allow(clippy::new_ret_no_self)]
     pub fn new<T: Into<Scalar>>(amount: T) -> (PedersenCommitment, PedersenOpening) {
         let opening = PedersenOpening::new_rand();
@@ -81,7 +80,7 @@ pub struct PedersenOpening(Scalar);
 
 impl PedersenOpening {
     pub fn new_rand() -> Self {
-        PedersenOpening(Scalar::random(&mut OsRng))
+        PedersenOpening(random_scalar())
     }
 }
 
@@ -343,9 +342,8 @@ mod tests {
         let amount_0: u64 = 77;
         let amount_1: u64 = 57;
 
-        let rng = &mut OsRng;
-        let opening_0 = PedersenOpening(Scalar::random(rng));
-        let opening_1 = PedersenOpening(Scalar::random(rng));
+        let opening_0 = PedersenOpening(random_scalar());
+        let opening_1 = PedersenOpening(random_scalar());
 
         let commitment_0 = Pedersen::with(amount_0, &opening_0);
         let commitment_1 = Pedersen::with(amount_1, &opening_1);
@@ -359,9 +357,8 @@ mod tests {
         let amount_0: u64 = 77;
         let amount_1: u64 = 57;
 
-        let rng = &mut OsRng;
-        let opening_0 = PedersenOpening(Scalar::random(rng));
-        let opening_1 = PedersenOpening(Scalar::random(rng));
+        let opening_0 = PedersenOpening(random_scalar());
+        let opening_1 = PedersenOpening(random_scalar());
 
         let commitment_0 = Pedersen::with(amount_0, &opening_0);
         let commitment_1 = Pedersen::with(amount_1, &opening_1);
@@ -399,7 +396,7 @@ mod tests {
 
     #[test]
     fn test_pedersen_opening_bytes() {
-        let opening = PedersenOpening(Scalar::random(&mut OsRng));
+        let opening = PedersenOpening(random_scalar());
 
         let encoded = opening.to_bytes();
         let decoded = PedersenOpening::from_bytes(&encoded).unwrap();
