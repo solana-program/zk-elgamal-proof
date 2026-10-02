@@ -12,7 +12,6 @@ env:
   RUST_PACKAGES: "['interface', 'zk-sdk', 'zk-sdk-pod', 'zk-sdk-wasm-js']"
   WASM_PACKAGES: "['zk-sdk-wasm-js']"
   WASM_JS_PACKAGES: "['zk-sdk-wasm-js']"
-  WASM_PACK: "true"
   NO_STD_ALLOC_PACKAGES: "['interface', 'zk-sdk-pod']"
 
 jobs:
@@ -25,7 +24,6 @@ jobs:
       RUST_PACKAGES: ${{ steps.compute.outputs.RUST_PACKAGES }}
       WASM_PACKAGES: ${{ steps.compute.outputs.WASM_PACKAGES }}
       WASM_JS_PACKAGES: ${{ steps.compute.outputs.WASM_JS_PACKAGES }}
-      WASM_PACK: ${{ steps.compute.outputs.WASM_PACK }}
       RUST_TOOLCHAIN_NIGHTLY: ${{ steps.compute.outputs.RUST_TOOLCHAIN_NIGHTLY }}
       SOLANA_CLI_VERSION: ${{ steps.compute.outputs.SOLANA_CLI_VERSION }}
       NO_STD_ALLOC_PACKAGES: ${{ steps.compute.outputs.NO_STD_ALLOC_PACKAGES }}
@@ -42,7 +40,6 @@ jobs:
           echo "RUST_PACKAGES=${{ env.RUST_PACKAGES }}" >> $GITHUB_OUTPUT
           echo "WASM_PACKAGES=${{ env.WASM_PACKAGES }}" >> $GITHUB_OUTPUT
           echo "WASM_JS_PACKAGES=${{ env.WASM_JS_PACKAGES }}" >> $GITHUB_OUTPUT
-          echo "WASM_PACK=${{ env.WASM_PACK }}" >> "$GITHUB_OUTPUT"
           echo "RUST_TOOLCHAIN_NIGHTLY=$(make rust-toolchain-nightly)" >> "$GITHUB_OUTPUT"
           echo "SOLANA_CLI_VERSION=$(make solana-cli-version)" >> "$GITHUB_OUTPUT"
           echo "NO_STD_ALLOC_PACKAGES=${{ env.NO_STD_ALLOC_PACKAGES }}" >> $GITHUB_OUTPUT
@@ -56,7 +53,7 @@ jobs:
       rust-packages: ${{ needs.set_env.outputs.RUST_PACKAGES }}
       wasm-packages: ${{ needs.set_env.outputs.WASM_PACKAGES }}
       wasm-js-packages: ${{ needs.set_env.outputs.WASM_JS_PACKAGES }}
-      wasm-pack: ${{ needs.set_env.outputs.WASM_PACK == 'true' }}
+      wasm-pack: true
       rustfmt-toolchain: ${{ needs.set_env.outputs.RUST_TOOLCHAIN_NIGHTLY }}
       clippy-toolchain: ${{ needs.set_env.outputs.RUST_TOOLCHAIN_NIGHTLY }}
       solana-cli-version: ${{ needs.set_env.outputs.SOLANA_CLI_VERSION }}
