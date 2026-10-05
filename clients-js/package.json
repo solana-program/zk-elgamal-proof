@@ -54,7 +54,7 @@
     "@solana/kit": "^8.4.0",
     "@solana/sysvars": "^8.4.0",
     "@solana/zk-sdk": "0.4.1",
-    "@types/node": "^26.6.3",
+    "@types/node": "^26.6.4",
     "ava": "^8.0.1",
     "oxfmt": "^0.71.0",
     "oxlint": "^1.86.0",
