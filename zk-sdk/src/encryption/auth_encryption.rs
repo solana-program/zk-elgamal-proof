@@ -29,6 +29,7 @@ use {
         convert::TryInto,
         error, fmt,
         io::{Read, Write},
+        mem::MaybeUninit,
     },
     subtle::ConstantTimeEq,
     zeroize::{Zeroize, Zeroizing},
@@ -46,17 +47,16 @@ impl AuthenticatedEncryption {
     ///
     /// This function is randomized. It samples a 128-bit key using operating system randomness.
     fn keygen() -> AeKey {
-        let mut key = Zeroizing::new([0u8; AE_KEY_LEN]);
-        fill_random_bytes(key.as_mut_slice());
-        AeKey(*key)
+        let mut key = Zeroizing::new([MaybeUninit::uninit(); AE_KEY_LEN]);
+        AeKey(*fill_random_bytes(&mut key))
     }
 
     /// On input of an authenticated encryption key and an amount, the function returns a
     /// corresponding authenticated encryption ciphertext.
     fn encrypt(key: &AeKey, balance: u64) -> AeCiphertext {
         let plaintext = Zeroizing::new(balance.to_le_bytes());
-        let mut nonce = [0u8; NONCE_LEN];
-        fill_random_bytes(&mut nonce);
+        let mut nonce = [MaybeUninit::uninit(); NONCE_LEN];
+        let nonce = *fill_random_bytes(&mut nonce);
 
         // The balance and the nonce have fixed length and therefore, encryption should not fail.
         let ciphertext = Aes128GcmSiv::new(&key.0.into())
