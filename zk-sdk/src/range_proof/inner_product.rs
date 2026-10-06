@@ -17,12 +17,12 @@ use {
         transcript::TranscriptProtocol,
     },
     core::iter,
-    merlin::Transcript,
     solana_ed25519::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
         traits::MultiscalarMul,
     },
+    merlin::Transcript,
     zeroize::Zeroize,
 };
 #[cfg(test)]
@@ -467,7 +467,11 @@ impl InnerProductProof {
 
 #[cfg(test)]
 mod tests {
-    use {super::*, crate::range_proof::generators::RangeProofGens, sha3::Sha3_512};
+    use {
+        super::*,
+        crate::{random::random_scalar, range_proof::generators::RangeProofGens},
+        sha3::Sha3_512,
+    };
 
     #[test]
     #[allow(non_snake_case)]
@@ -480,13 +484,13 @@ mod tests {
 
         let Q = RistrettoPoint::hash_from_bytes::<Sha3_512>(b"test point");
 
-        let a: Vec<_> = (0..n).map(|_| Scalar::random(&mut rand::rng())).collect();
-        let b: Vec<_> = (0..n).map(|_| Scalar::random(&mut rand::rng())).collect();
+        let a: Vec<_> = (0..n).map(|_| random_scalar()).collect();
+        let b: Vec<_> = (0..n).map(|_| random_scalar()).collect();
         let c = util::inner_product(&a, &b).unwrap();
 
         let G_factors: Vec<Scalar> = iter::repeat_n(Scalar::ONE, n).collect();
 
-        let y_inv = Scalar::random(&mut rand::rng());
+        let y_inv = random_scalar();
         let H_factors: Vec<Scalar> = util::exp_iter(y_inv).take(n).collect();
 
         // P would be determined upstream, but we need a correct P to check the proof.

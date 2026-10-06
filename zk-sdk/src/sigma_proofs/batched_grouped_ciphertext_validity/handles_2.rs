@@ -29,8 +29,8 @@ use {
         },
         transcript::TranscriptProtocol,
     },
-    merlin::Transcript,
     solana_ed25519::{scalar::Scalar, traits::IsIdentity},
+    merlin::Transcript,
     solana_zk_sdk_pod::sigma_proofs::PodBatchedGroupedCiphertext2HandlesValidityProof,
     zeroize::Zeroize,
 };
@@ -55,7 +55,7 @@ impl BatchedGroupedCiphertext2HandlesValidityProof {
     /// The function simply batches the input openings and invokes the standard grouped ciphertext
     /// validity proof constructor.
     ///
-    /// This function is randomized. It uses `rand::rng()` internally to generate random scalars.
+    /// This function is randomized. It samples scalars internally using operating system randomness.
     #[allow(clippy::too_many_arguments)]
     pub fn new<T: Into<Scalar>>(
         first_pubkey: &ElGamalPubkey,

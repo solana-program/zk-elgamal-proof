@@ -7,6 +7,7 @@ use {
     crate::{
         encryption::derivation::{AE_HKDF_INFO, HKDF_SALT},
         errors::AuthenticatedEncryptionError,
+        random::fill_random_bytes,
     },
     aes_gcm_siv::{
         aead::{Aead, KeyInit},
@@ -28,6 +29,7 @@ use {
         convert::TryInto,
         error, fmt,
         io::{Read, Write},
+        mem::MaybeUninit,
     },
     subtle::ConstantTimeEq,
     zeroize::{Zeroize, Zeroizing},
@@ -43,16 +45,18 @@ struct AuthenticatedEncryption;
 impl AuthenticatedEncryption {
     /// Generates an authenticated encryption key.
     ///
-    /// This function is randomized. It internally samples a 128-bit key using `rand::rng()`.
+    /// This function is randomized. It samples a 128-bit key using operating system randomness.
     fn keygen() -> AeKey {
-        AeKey(rand::random::<[u8; AE_KEY_LEN]>())
+        let mut key = Zeroizing::new([MaybeUninit::uninit(); AE_KEY_LEN]);
+        AeKey(*fill_random_bytes(&mut key))
     }
 
     /// On input of an authenticated encryption key and an amount, the function returns a
     /// corresponding authenticated encryption ciphertext.
     fn encrypt(key: &AeKey, balance: u64) -> AeCiphertext {
         let plaintext = Zeroizing::new(balance.to_le_bytes());
-        let nonce: Nonce = rand::random::<[u8; NONCE_LEN]>();
+        let mut nonce = [MaybeUninit::uninit(); NONCE_LEN];
+        let nonce = *fill_random_bytes(&mut nonce);
 
         // The balance and the nonce have fixed length and therefore, encryption should not fail.
         let ciphertext = Aes128GcmSiv::new(&key.0.into())
@@ -214,7 +218,7 @@ impl AeKey {
 
     /// Generates a random authenticated encryption key.
     ///
-    /// This function is randomized. It internally samples a 128-bit key using `rand::rng()`.
+    /// This function is randomized. It samples a 128-bit key using operating system randomness.
     pub fn new_rand() -> Self {
         AuthenticatedEncryption::keygen()
     }

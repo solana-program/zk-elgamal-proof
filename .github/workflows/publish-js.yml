@@ -42,7 +42,6 @@ jobs:
     outputs:
       SOLANA_CLI_VERSION: ${{ steps.compute.outputs.SOLANA_CLI_VERSION }}
       TARGET: ${{ steps.compute.outputs.TARGET }}
-      WASM_PACK: ${{ steps.compute.outputs.WASM_PACK }}
     steps:
       - name: Git Checkout
         uses: actions/checkout@v4
@@ -59,11 +58,6 @@ jobs:
           echo "SOLANA_CLI_VERSION=$(make solana-cli-version)" >> "$GITHUB_OUTPUT"
           TARGET=$(echo "$PACKAGE_PATH" | sed 's#/#-#')
           echo "TARGET=$TARGET" >> "$GITHUB_OUTPUT"
-          if [ "$TARGET" = "zk-sdk-wasm-js" ]; then
-            echo "WASM_PACK=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "WASM_PACK=false" >> "$GITHUB_OUTPUT"
-          fi
 
   main:
     needs: set_env
@@ -79,5 +73,5 @@ jobs:
       level: ${{ inputs.level }}
       tag: ${{ inputs.tag }}
       create-release: ${{ inputs.create-release }}
-      wasm-pack: ${{ needs.set_env.outputs.WASM_PACK == 'true' }}
+      wasm-pack: true
     secrets: inherit

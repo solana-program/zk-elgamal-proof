@@ -211,6 +211,10 @@ impl ElGamalKeypair {
     }
 }
 
+/// An ElGamal ciphertext.
+///
+/// Arithmetic returns new ciphertexts without modifying the inputs. It operates
+/// modulo the group order and does not check for amount overflow or underflow.
 #[wasm_bindgen]
 pub struct ElGamalCiphertext {
     pub(crate) inner: elgamal::ElGamalCiphertext,
@@ -219,6 +223,10 @@ pub struct ElGamalCiphertext {
 crate::conversion::impl_inner_conversion!(ElGamalCiphertext, elgamal::ElGamalCiphertext);
 
 #[wasm_bindgen]
+#[allow(
+    clippy::arithmetic_side_effects,
+    reason = "Ciphertext operations use modular curve arithmetic."
+)]
 impl ElGamalCiphertext {
     /// Deserializes an ElGamal ciphertext from a byte slice.
     /// Returns `undefined` if the bytes are invalid.
@@ -238,6 +246,36 @@ impl ElGamalCiphertext {
     #[wasm_bindgen(js_name = "toBytes")]
     pub fn to_bytes(&self) -> Vec<u8> {
         self.inner.to_bytes().to_vec()
+    }
+
+    /// Adds another ciphertext encrypted under the same public key.
+    #[wasm_bindgen(js_name = "add")]
+    pub fn add(&self, other: &ElGamalCiphertext) -> ElGamalCiphertext {
+        (self.inner + other.inner).into()
+    }
+
+    /// Subtracts another ciphertext encrypted under the same public key.
+    #[wasm_bindgen(js_name = "subtract")]
+    pub fn subtract(&self, other: &ElGamalCiphertext) -> ElGamalCiphertext {
+        (self.inner - other.inner).into()
+    }
+
+    /// Multiplies the encrypted amount and opening by a 64-bit scalar.
+    #[wasm_bindgen(js_name = "multiplyByU64")]
+    pub fn multiply_by_u64(&self, scalar: u64) -> ElGamalCiphertext {
+        (self.inner * scalar).into()
+    }
+
+    /// Adds a 64-bit plaintext amount, preserving the opening and decryption handle.
+    #[wasm_bindgen(js_name = "addAmount")]
+    pub fn add_amount(&self, amount: u64) -> ElGamalCiphertext {
+        self.inner.add_amount(amount).into()
+    }
+
+    /// Subtracts a 64-bit plaintext amount, preserving the opening and decryption handle.
+    #[wasm_bindgen(js_name = "subtractAmount")]
+    pub fn subtract_amount(&self, amount: u64) -> ElGamalCiphertext {
+        self.inner.subtract_amount(amount).into()
     }
 
     /// Returns the commitment component of the ciphertext.
@@ -333,6 +371,79 @@ mod tests {
         let ciphertext = pubkey.encrypt_u64(amount_to_encrypt);
         let decrypted_amount = secret_key.decrypt(&ciphertext);
         assert_eq!(decrypted_amount, Ok(amount_to_encrypt));
+    }
+
+    #[wasm_bindgen_test]
+    fn test_ciphertext_add_and_subtract() {
+        let keypair = ElGamalKeypair::new_rand();
+        let pubkey = keypair.pubkey();
+        let secret = keypair.secret();
+        let ciphertext = pubkey.encrypt_u64(55);
+        let other = pubkey.encrypt_u64(13);
+        let ciphertext_bytes = ciphertext.to_bytes();
+        let other_bytes = other.to_bytes();
+
+        let sum = ciphertext.add(&other);
+        let difference = ciphertext.subtract(&other);
+        assert_eq!(secret.decrypt(&sum), Ok(68));
+        assert_eq!(secret.decrypt(&difference), Ok(42));
+        assert_eq!(sum.subtract(&other).to_bytes(), ciphertext_bytes);
+        assert_eq!(difference.add(&other).to_bytes(), ciphertext_bytes);
+        assert_eq!(
+            ciphertext.subtract(&ciphertext).to_bytes(),
+            [0; ELGAMAL_CIPHERTEXT_LEN]
+        );
+        assert_eq!(ciphertext.to_bytes(), ciphertext_bytes);
+        assert_eq!(other.to_bytes(), other_bytes);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_ciphertext_multiply_by_u64() {
+        let keypair = ElGamalKeypair::new_rand();
+        let ciphertext = keypair.pubkey().encrypt_u64(7);
+        let ciphertext_bytes = ciphertext.to_bytes();
+
+        assert_eq!(
+            keypair.secret().decrypt(&ciphertext.multiply_by_u64(6)),
+            Ok(42)
+        );
+        assert_eq!(ciphertext.multiply_by_u64(1).to_bytes(), ciphertext_bytes);
+        assert_eq!(
+            ciphertext.multiply_by_u64(0).to_bytes(),
+            [0; ELGAMAL_CIPHERTEXT_LEN]
+        );
+        assert_eq!(ciphertext.to_bytes(), ciphertext_bytes);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_ciphertext_add_and_subtract_amount() {
+        let keypair = ElGamalKeypair::new_rand();
+        let pubkey = keypair.pubkey();
+        let opening = PedersenOpening::new_rand();
+        let ciphertext = pubkey.encrypt_with(55, &opening);
+        let ciphertext_bytes = ciphertext.to_bytes();
+
+        let increased = ciphertext.add_amount(13);
+        let decreased = ciphertext.subtract_amount(13);
+        assert_eq!(
+            increased.to_bytes(),
+            pubkey.encrypt_with(68, &opening).to_bytes()
+        );
+        assert_eq!(
+            decreased.to_bytes(),
+            pubkey.encrypt_with(42, &opening).to_bytes()
+        );
+        assert_eq!(
+            increased.handle().to_bytes(),
+            ciphertext.handle().to_bytes()
+        );
+        assert_eq!(
+            decreased.handle().to_bytes(),
+            ciphertext.handle().to_bytes()
+        );
+        assert_eq!(ciphertext.add_amount(0).to_bytes(), ciphertext_bytes);
+        assert_eq!(ciphertext.subtract_amount(0).to_bytes(), ciphertext_bytes);
+        assert_eq!(ciphertext.to_bytes(), ciphertext_bytes);
     }
 
     #[wasm_bindgen_test]

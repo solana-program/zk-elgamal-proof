@@ -15,6 +15,7 @@ use {
             grouped_elgamal::GroupedElGamalCiphertext,
             pedersen::{PedersenOpening, G, H},
         },
+        random::random_scalar,
         sigma_proofs::{
             canonical_scalar_from_optional_slice,
             errors::{SigmaProofVerificationError, ValidityProofVerificationError},
@@ -22,12 +23,12 @@ use {
         },
         transcript::TranscriptProtocol,
     },
-    merlin::Transcript,
     solana_ed25519::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
         traits::{IsIdentity, MultiscalarMul, VartimeMultiscalarMul},
     },
+    merlin::Transcript,
     solana_zk_sdk_pod::{sigma_proofs::PodGroupedCiphertext2HandlesValidityProof, UNIT_LEN},
     zeroize::Zeroize,
 };
@@ -52,7 +53,7 @@ pub struct GroupedCiphertext2HandlesValidityProof {
 impl GroupedCiphertext2HandlesValidityProof {
     /// Creates a grouped ciphertext validity proof for 2 handles.
     ///
-    /// This function is randomized. It uses `rand::rng()` internally to generate random scalars.
+    /// This function is randomized. It samples scalars internally using operating system randomness.
     ///
     /// * `first_pubkey` - The first ElGamal public key
     /// * `second_pubkey` - The second ElGamal public key
@@ -94,8 +95,8 @@ impl GroupedCiphertext2HandlesValidityProof {
         let r = opening.get_scalar();
 
         // generate random masking factors that also serves as nonces
-        let mut y_r = Scalar::random(&mut rand::rng());
-        let mut y_x = Scalar::random(&mut rand::rng());
+        let mut y_r = random_scalar();
+        let mut y_x = random_scalar();
 
         let Y_0 = RistrettoPoint::multiscalar_mul(vec![&y_r, &y_x], vec![&(*H), &G]).compress();
         let Y_1 = (&y_r * P_first).compress();

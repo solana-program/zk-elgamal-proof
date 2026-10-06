@@ -21,6 +21,7 @@
 
 pub mod encryption;
 pub mod errors;
+mod random;
 #[doc(hidden)]
 mod range_proof;
 mod sigma_proofs;

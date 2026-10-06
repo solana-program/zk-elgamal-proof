@@ -39,6 +39,7 @@
 use {
     crate::{
         encryption::pedersen::{PedersenCommitment, PedersenOpening, G, H},
+        random::random_scalar,
         sigma_proofs::{
             canonical_scalar_from_optional_slice,
             errors::{PercentageWithCapProofVerificationError, SigmaProofVerificationError},
@@ -46,12 +47,12 @@ use {
         },
         transcript::TranscriptProtocol,
     },
-    merlin::Transcript,
     solana_ed25519::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
         traits::{IsIdentity, MultiscalarMul, VartimeMultiscalarMul},
     },
+    merlin::Transcript,
     solana_zk_sdk_pod::{sigma_proofs::PodPercentageWithCapProof, UNIT_LEN},
     subtle::{Choice, ConditionallySelectable, ConstantTimeGreater},
     zeroize::Zeroize,
@@ -219,10 +220,10 @@ impl PercentageWithCapProof {
         let C_delta = delta_commitment.get_point();
         let C_claimed = claimed_commitment.get_point();
 
-        let z_x = Scalar::random(&mut rand::rng());
-        let z_delta = Scalar::random(&mut rand::rng());
-        let z_claimed = Scalar::random(&mut rand::rng());
-        let mut c_equality = Scalar::random(&mut rand::rng());
+        let z_x = random_scalar();
+        let z_delta = random_scalar();
+        let z_claimed = random_scalar();
+        let mut c_equality = random_scalar();
 
         let Y_delta = RistrettoPoint::multiscalar_mul(
             vec![z_x, z_delta, -c_equality],
@@ -247,7 +248,7 @@ impl PercentageWithCapProof {
         // generate max proof properly
         let r_percentage = percentage_opening.get_scalar();
 
-        let mut y_max_proof = Scalar::random(&mut rand::rng()); // blinding factor for the percentage opening
+        let mut y_max_proof = random_scalar(); // blinding factor for the percentage opening
         let Y_max_proof = (y_max_proof * &(*H)).compress(); // commitment to blinding factor
 
         // provide the simulated `Y_max_proof`, `Y_delta`, and the properly generated `Y_claimed`
@@ -319,8 +320,8 @@ impl PercentageWithCapProof {
         let m = Scalar::from(max_value);
         let C_percentage = percentage_commitment.get_point();
 
-        let z_max_proof = Scalar::random(&mut rand::rng());
-        let c_max_proof = Scalar::random(&mut rand::rng()); // random challenge
+        let z_max_proof = random_scalar();
+        let c_max_proof = random_scalar(); // random challenge
 
         // solve for Y_max in the verification algebraic relation
         let Y_max_proof = RistrettoPoint::multiscalar_mul(
@@ -341,9 +342,9 @@ impl PercentageWithCapProof {
         let r_delta = delta_opening.get_scalar();
         let r_claimed = claimed_opening.get_scalar();
 
-        let mut y_x = Scalar::random(&mut rand::rng()); // generate blinding factors
-        let mut y_delta = Scalar::random(&mut rand::rng());
-        let mut y_claimed = Scalar::random(&mut rand::rng());
+        let mut y_x = random_scalar(); // generate blinding factors
+        let mut y_delta = random_scalar();
+        let mut y_claimed = random_scalar();
 
         // commitment to blinding factors
         let Y_delta =

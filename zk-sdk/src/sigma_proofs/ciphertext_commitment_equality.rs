@@ -14,6 +14,7 @@ use {
             elgamal::{ElGamalCiphertext, ElGamalKeypair, ElGamalPubkey},
             pedersen::{PedersenCommitment, PedersenOpening, G, H},
         },
+        random::random_scalar,
         sigma_proofs::{
             canonical_scalar_from_optional_slice,
             errors::{EqualityProofVerificationError, SigmaProofVerificationError},
@@ -21,12 +22,12 @@ use {
         },
         transcript::TranscriptProtocol,
     },
-    merlin::Transcript,
     solana_ed25519::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
         traits::{IsIdentity, MultiscalarMul, VartimeMultiscalarMul},
     },
+    merlin::Transcript,
     solana_zk_sdk_pod::{sigma_proofs::PodCiphertextCommitmentEqualityProof, UNIT_LEN},
     zeroize::Zeroize,
 };
@@ -52,7 +53,7 @@ pub struct CiphertextCommitmentEqualityProof {
 impl CiphertextCommitmentEqualityProof {
     /// Creates a ciphertext-commitment equality proof.
     ///
-    /// This function is randomized. It uses `rand::rng()` internally to generate random scalars.
+    /// This function is randomized. It samples scalars internally using operating system randomness.
     ///
     /// Note that the proof constructor does not take the actual Pedersen commitment as input; it
     /// takes the associated Pedersen opening instead.
@@ -83,9 +84,9 @@ impl CiphertextCommitmentEqualityProof {
         let r = opening.get_scalar();
 
         // generate random masking factors that also serves as nonces
-        let mut y_s = Scalar::random(&mut rand::rng());
-        let mut y_x = Scalar::random(&mut rand::rng());
-        let mut y_r = Scalar::random(&mut rand::rng());
+        let mut y_s = random_scalar();
+        let mut y_x = random_scalar();
+        let mut y_r = random_scalar();
 
         let Y_0 = (&y_s * P).compress();
         let Y_1 = RistrettoPoint::multiscalar_mul(vec![&y_x, &y_s], vec![&G, D]).compress();
