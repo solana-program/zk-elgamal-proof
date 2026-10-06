@@ -67,8 +67,10 @@ format-rust:
 build-sbf-%:
 	cargo build-sbf --manifest-path $(call make-path,$*)/Cargo.toml $(ARGS)
 
-build-wasm-js-%:
+build-wasm-js-node-%:
 	wasm-pack build --target nodejs --out-dir dist/node --out-name index $(call make-path,$*)
+
+build-wasm-js-%: build-wasm-js-node-%
 	wasm-pack build --target web --out-dir dist/web --out-name index $(call make-path,$*)
 	wasm-pack build --target bundler --out-dir dist/bundler --out-name index $(call make-path,$*)
 	# Remove wasm-pack's generated `.gitignore` files; npm honours them when
@@ -111,6 +113,11 @@ format-check-js-%:
 
 lint-js-%:
 	cd $(call make-path,$*) && pnpm install && pnpm lint $(ARGS)
+
+test-js-clients-js: build-wasm-js-node-zk-sdk-wasm-js
+	make restart-test-validator
+	cd $(call make-path,clients-js) && pnpm install && pnpm build && pnpm test $(ARGS)
+	make stop-test-validator
 
 test-js-%:
 	make restart-test-validator
