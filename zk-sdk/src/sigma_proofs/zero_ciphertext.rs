@@ -9,6 +9,7 @@ use {
             elgamal::{ElGamalCiphertext, ElGamalKeypair, ElGamalPubkey},
             pedersen::H,
         },
+        random::random_scalar,
         sigma_proofs::{
             canonical_scalar_from_optional_slice,
             errors::{SigmaProofVerificationError, ZeroCiphertextProofVerificationError},
@@ -22,7 +23,6 @@ use {
         traits::{IsIdentity, MultiscalarMul},
     },
     merlin::Transcript,
-    rand::rngs::OsRng,
     solana_zk_sdk_pod::{sigma_proofs::PodZeroCiphertextProof, UNIT_LEN},
     zeroize::Zeroize,
 };
@@ -45,7 +45,7 @@ pub struct ZeroCiphertextProof {
 impl ZeroCiphertextProof {
     /// Creates a zero-ciphertext proof.
     ///
-    /// This function is randomized. It uses `OsRng` internally to generate random scalars.
+    /// This function is randomized. It samples scalars internally using operating system randomness.
     ///
     /// * `elgamal_keypair` - The ElGamal keypair associated with the ciphertext to be proved
     /// * `ciphertext` - The main ElGamal ciphertext to be proved
@@ -64,7 +64,7 @@ impl ZeroCiphertextProof {
         let D = ciphertext.handle.get_point();
 
         // generate a random masking factor that also serves as a nonce
-        let mut y = Scalar::random(&mut OsRng);
+        let mut y = random_scalar();
         let Y_P = (&y * P).compress();
         let Y_D = (&y * D).compress();
 
