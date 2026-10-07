@@ -1,12 +1,12 @@
 //! Internal randomness helpers that do not depend on random number generator traits.
 
-use {solana_ed25519::scalar::Scalar, std::mem::MaybeUninit, zeroize::Zeroizing};
+use {curve25519_dalek::scalar::Scalar, std::mem::MaybeUninit, zeroize::Zeroizing};
 
 /// Fills a buffer with cryptographically secure randomness and returns the initialized bytes.
 ///
 /// Panics if the operating system's entropy source fails.
 pub(crate) fn fill_random_bytes<const N: usize>(bytes: &mut [MaybeUninit<u8>; N]) -> &mut [u8; N] {
-    getrandom::fill_uninit(bytes)
+    getrandom::getrandom_uninit(bytes)
         .expect("secure randomness unavailable")
         .try_into()
         .expect("getrandom returns a slice with the same length")
