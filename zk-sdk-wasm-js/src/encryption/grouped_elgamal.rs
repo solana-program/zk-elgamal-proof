@@ -13,13 +13,14 @@ const GROUPED_ELGAMAL_CIPHERTEXT_2_HANDLES_LEN: usize =
     DECRYPT_HANDLE_LEN * 2 + PEDERSEN_COMMITMENT_LEN;
 const GROUPED_ELGAMAL_CIPHERTEXT_3_HANDLES_LEN: usize =
     DECRYPT_HANDLE_LEN * 3 + PEDERSEN_COMMITMENT_LEN;
+const HANDLE_INDEX_EPSILON: f64 = 1e-10;
 
 /// Handle indices are taken from JavaScript as `f64` because wasm-bindgen wraps
 /// a `usize` argument to 32 bits, which would turn invalid indices such as
 /// `2 ** 32` or `1.5` into valid ones. `NaN` fails every comparison, so it is
 /// rejected along with `undefined`, which JavaScript converts to `NaN`.
 fn handle_index<const N: usize>(index: f64) -> Result<usize, JsValue> {
-    if index >= 0.0 && index < N as f64 && index.fract() == 0.0 {
+    if index >= 0.0 && index < N as f64 && index.fract().abs() < HANDLE_INDEX_EPSILON {
         Ok(index as usize)
     } else {
         Err(JsValue::from_str(&format!(
