@@ -23,12 +23,12 @@ use {
         },
         transcript::TranscriptProtocol,
     },
+    merlin::Transcript,
     solana_ed25519::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
         traits::{IsIdentity, MultiscalarMul, VartimeMultiscalarMul},
     },
-    merlin::Transcript,
     solana_zk_sdk_pod::{sigma_proofs::PodGroupedCiphertext3HandlesValidityProof, UNIT_LEN},
     zeroize::Zeroize,
 };

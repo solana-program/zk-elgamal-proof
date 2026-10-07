@@ -17,12 +17,12 @@ use {
         transcript::TranscriptProtocol,
     },
     core::iter,
+    merlin::Transcript,
     solana_ed25519::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
         traits::MultiscalarMul,
     },
-    merlin::Transcript,
     zeroize::Zeroize,
 };
 #[cfg(test)]

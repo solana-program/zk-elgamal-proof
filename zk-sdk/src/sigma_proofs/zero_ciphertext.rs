@@ -17,12 +17,12 @@ use {
         },
         transcript::TranscriptProtocol,
     },
+    merlin::Transcript,
     solana_ed25519::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
         traits::{IsIdentity, MultiscalarMul},
     },
-    merlin::Transcript,
     solana_zk_sdk_pod::{sigma_proofs::PodZeroCiphertextProof, UNIT_LEN},
     zeroize::Zeroize,
 };
