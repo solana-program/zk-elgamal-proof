@@ -23,106 +23,93 @@ macro_rules! test_batched_range_proof_inputs {
             const BIT_LENGTHS: [usize; 4] = [$total_bits / 4; 4];
 
             #[test]
-            fn accepts_vectors_arrays_and_slices() {
+            fn accepts_vector_inputs() {
                 let (commitments, openings) = commitments_and_openings();
-                let commitment_refs = commitments.each_ref();
-                let opening_refs = openings.each_ref();
-
-                let proofs = [
-                    // Preserve the original Vec<&T> calling convention.
-                    build(
-                        commitments.iter().collect::<Vec<_>>(),
-                        AMOUNTS.to_vec(),
-                        BIT_LENGTHS.to_vec(),
-                        openings.iter().collect::<Vec<_>>(),
-                    )
-                    .unwrap(),
-                    build(
-                        commitments.as_slice(),
-                        AMOUNTS.as_slice(),
-                        BIT_LENGTHS.as_slice(),
-                        openings.as_slice(),
-                    )
-                    .unwrap(),
-                    build(
-                        commitment_refs.as_slice(),
-                        AMOUNTS.as_slice(),
-                        BIT_LENGTHS.as_slice(),
-                        opening_refs.as_slice(),
-                    )
-                    .unwrap(),
-                    build(commitments, AMOUNTS, BIT_LENGTHS, openings.clone()).unwrap(),
-                    build(
-                        Vec::from(commitments),
-                        Vec::from(AMOUNTS),
-                        Vec::from(BIT_LENGTHS),
-                        Vec::from(openings),
-                    )
-                    .unwrap(),
-                ];
-
-                let expected_context = proofs[0].context;
-                for proof in proofs {
-                    assert_eq!(proof.context, expected_context);
-                    proof.verify_proof().unwrap();
-                }
+                let proof = build(
+                    commitments.iter().collect(),
+                    AMOUNTS.to_vec(),
+                    BIT_LENGTHS.to_vec(),
+                    openings.iter().collect(),
+                )
+                .unwrap();
+                proof.verify_proof().unwrap();
             }
 
             #[test]
             fn rejects_invalid_inputs() {
                 let (commitments, openings) = commitments_and_openings();
                 assert_eq!(
-                    build(&commitments[..3], AMOUNTS, BIT_LENGTHS, openings.as_slice())
-                        .unwrap_err(),
+                    build(
+                        commitments[..3].iter().collect(),
+                        AMOUNTS.to_vec(),
+                        BIT_LENGTHS.to_vec(),
+                        openings.iter().collect(),
+                    )
+                    .unwrap_err(),
                     ProofGenerationError::IllegalCommitmentLength,
-                );
-                assert_eq!(
-                    build(commitments, &AMOUNTS[..3], BIT_LENGTHS, openings.as_slice())
-                        .unwrap_err(),
-                    ProofGenerationError::IllegalCommitmentLength,
-                );
-                assert_eq!(
-                    build(commitments, AMOUNTS, BIT_LENGTHS, &openings[..3]).unwrap_err(),
-                    ProofGenerationError::IllegalCommitmentLength,
-                );
-                assert_eq!(
-                    build(commitments, AMOUNTS, &BIT_LENGTHS[..3], openings.as_slice())
-                        .unwrap_err(),
-                    ProofGenerationError::IllegalAmountBitLength,
                 );
                 assert_eq!(
                     build(
-                        Vec::<PedersenCommitment>::new(),
-                        Vec::<u64>::new(),
-                        Vec::<usize>::new(),
-                        Vec::<PedersenOpening>::new(),
+                        commitments.iter().collect(),
+                        AMOUNTS[..3].to_vec(),
+                        BIT_LENGTHS.to_vec(),
+                        openings.iter().collect(),
+                    )
+                    .unwrap_err(),
+                    ProofGenerationError::IllegalCommitmentLength,
+                );
+                assert_eq!(
+                    build(
+                        commitments.iter().collect(),
+                        AMOUNTS.to_vec(),
+                        BIT_LENGTHS.to_vec(),
+                        openings[..3].iter().collect(),
+                    )
+                    .unwrap_err(),
+                    ProofGenerationError::IllegalCommitmentLength,
+                );
+                assert_eq!(
+                    build(
+                        commitments.iter().collect(),
+                        AMOUNTS.to_vec(),
+                        BIT_LENGTHS[..3].to_vec(),
+                        openings.iter().collect(),
                     )
                     .unwrap_err(),
                     ProofGenerationError::IllegalAmountBitLength,
                 );
+                assert_eq!(
+                    build(vec![], vec![], vec![], vec![]).unwrap_err(),
+                    ProofGenerationError::IllegalAmountBitLength,
+                );
 
                 let (commitment, opening) = Pedersen::new(1_u64);
-                let mut too_many_bit_lengths = [$total_bits / 9; 9];
+                let mut too_many_bit_lengths = vec![$total_bits / 9; 9];
                 too_many_bit_lengths[8] = $total_bits / 9 + $total_bits % 9;
                 assert_eq!(
-                    build([commitment; 9], [1; 9], too_many_bit_lengths, [&opening; 9],)
-                        .unwrap_err(),
+                    build(
+                        vec![&commitment; 9],
+                        vec![1; 9],
+                        too_many_bit_lengths,
+                        vec![&opening; 9],
+                    )
+                    .unwrap_err(),
                     ProofGenerationError::IllegalCommitmentLength,
                 );
 
                 // Keep the total valid so that rejection depends on the zero component.
                 assert!(matches!(
                     build(
-                        [commitment; 5],
-                        [1; 5],
-                        [
+                        vec![&commitment; 5],
+                        vec![1; 5],
+                        vec![
                             0,
                             $total_bits / 4,
                             $total_bits / 4,
                             $total_bits / 4,
                             $total_bits / 4
                         ],
-                        [&opening; 5],
+                        vec![&opening; 5],
                     ),
                     Err(ProofGenerationError::RangeProof(_)),
                 ));
@@ -131,10 +118,10 @@ macro_rules! test_batched_range_proof_inputs {
                 identity_commitments[0] = PedersenCommitment::default();
                 assert_eq!(
                     build(
-                        identity_commitments,
-                        AMOUNTS,
-                        BIT_LENGTHS,
-                        openings.as_slice()
+                        identity_commitments.iter().collect(),
+                        AMOUNTS.to_vec(),
+                        BIT_LENGTHS.to_vec(),
+                        openings.iter().collect(),
                     )
                     .unwrap_err(),
                     ProofGenerationError::InvalidCommitment,
@@ -144,7 +131,13 @@ macro_rules! test_batched_range_proof_inputs {
             #[test]
             fn rejects_invalid_context_and_padding() {
                 let (commitments, openings) = commitments_and_openings();
-                let proof = build(commitments, AMOUNTS, BIT_LENGTHS, openings).unwrap();
+                let proof = build(
+                    commitments.iter().collect(),
+                    AMOUNTS.to_vec(),
+                    BIT_LENGTHS.to_vec(),
+                    openings.iter().collect(),
+                )
+                .unwrap();
                 proof.verify_proof().unwrap();
 
                 for bit_length in [0, 65] {

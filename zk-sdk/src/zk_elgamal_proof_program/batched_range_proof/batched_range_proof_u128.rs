@@ -12,41 +12,23 @@ use {
         },
     },
     solana_zk_elgamal_proof_interface::proof_data::BatchedRangeProofU128Data,
-    std::{borrow::Borrow, convert::TryInto},
+    std::convert::TryInto,
 };
 
 /// Builds a batched range proof with a total bit length of 128.
-///
-/// Inputs may be vectors, arrays, or slices. Commitments and openings may contain
-/// owned values or references. Arrays and slices avoid allocating input vectors;
-/// proof generation still allocates internally.
 ///
 /// All inputs must have the same length, with 1 to 8 active commitments. Each bit
 /// length must be in `1..=64`, and their sum must be 128.
 /// Supply only active components; unused context slots are zero-padded automatically.
 /// For example, `[64, 64]` is valid, but `[128]` is not.
 ///
-/// See [`super::build_batched_range_proof_u64_data`] for an example and notes on
-/// collection type inference.
-pub fn build_batched_range_proof_u128_data<C, PC, A, B, O, PO>(
-    commitments: C,
-    amounts: A,
-    bit_lengths: B,
-    openings: O,
-) -> Result<BatchedRangeProofU128Data, ProofGenerationError>
-where
-    C: AsRef<[PC]>,
-    PC: Borrow<PedersenCommitment>,
-    A: AsRef<[u64]>,
-    B: AsRef<[usize]>,
-    O: AsRef<[PO]>,
-    PO: Borrow<PedersenOpening>,
-{
-    let commitments = commitments.as_ref();
-    let amounts = amounts.as_ref();
-    let bit_lengths = bit_lengths.as_ref();
-    let openings = openings.as_ref();
-
+/// See [`super::build_batched_range_proof_u64_data`] for an example.
+pub fn build_batched_range_proof_u128_data(
+    commitments: Vec<&PedersenCommitment>,
+    amounts: Vec<u64>,
+    bit_lengths: Vec<usize>,
+    openings: Vec<&PedersenOpening>,
+) -> Result<BatchedRangeProofU128Data, ProofGenerationError> {
     // the sum of the bit lengths must be 128
     let batched_bit_length = bit_lengths
         .iter()
@@ -61,7 +43,8 @@ where
         return Err(ProofGenerationError::IllegalAmountBitLength);
     }
 
-    let context = build_batched_range_proof_context(commitments, amounts, bit_lengths, openings)?;
+    let context =
+        build_batched_range_proof_context(&commitments, &amounts, &bit_lengths, &openings)?;
 
     let mut transcript = batched_range_proof_transcript(&context);
     let proof = RangeProof::new(amounts, bit_lengths, openings, &mut transcript)?
@@ -130,7 +113,7 @@ mod test {
         let (commitment_8, opening_8) = Pedersen::new(amount_8);
 
         let proof_data = build_batched_range_proof_u128_data(
-            [
+            vec![
                 &commitment_1,
                 &commitment_2,
                 &commitment_3,
@@ -140,11 +123,11 @@ mod test {
                 &commitment_7,
                 &commitment_8,
             ],
-            [
+            vec![
                 amount_1, amount_2, amount_3, amount_4, amount_5, amount_6, amount_7, amount_8,
             ],
-            [16, 16, 16, 16, 16, 16, 16, 16],
-            [
+            vec![16, 16, 16, 16, 16, 16, 16, 16],
+            vec![
                 &opening_1, &opening_2, &opening_3, &opening_4, &opening_5, &opening_6, &opening_7,
                 &opening_8,
             ],
@@ -172,7 +155,7 @@ mod test {
         let (commitment_8, opening_8) = Pedersen::new(amount_8);
 
         let proof_data = build_batched_range_proof_u128_data(
-            [
+            vec![
                 &commitment_1,
                 &commitment_2,
                 &commitment_3,
@@ -182,11 +165,11 @@ mod test {
                 &commitment_7,
                 &commitment_8,
             ],
-            [
+            vec![
                 amount_1, amount_2, amount_3, amount_4, amount_5, amount_6, amount_7, amount_8,
             ],
-            [16, 16, 16, 16, 16, 16, 16, 16],
-            [
+            vec![16, 16, 16, 16, 16, 16, 16, 16],
+            vec![
                 &opening_1, &opening_2, &opening_3, &opening_4, &opening_5, &opening_6, &opening_7,
                 &opening_8,
             ],
