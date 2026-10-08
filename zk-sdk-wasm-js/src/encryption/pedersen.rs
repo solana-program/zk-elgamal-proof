@@ -5,7 +5,7 @@ use {
     wasm_bindgen::prelude::{wasm_bindgen, JsValue},
 };
 
-fn lo_hi_multiplier(bit_length: u8) -> Result<u64, JsValue> {
+pub(crate) fn lo_hi_multiplier(bit_length: u8) -> Result<u64, JsValue> {
     1u64.checked_shl(bit_length.into())
         .ok_or_else(|| JsValue::from_str("bit length must be less than 64"))
 }

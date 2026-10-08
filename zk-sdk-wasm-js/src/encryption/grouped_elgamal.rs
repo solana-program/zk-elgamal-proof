@@ -1,6 +1,6 @@
 use {
     crate::encryption::{
-        elgamal::{ElGamalPubkey, ElGamalSecretKey},
+        elgamal::{ElGamalCiphertext, ElGamalPubkey, ElGamalSecretKey},
         pedersen::PedersenOpening,
     },
     js_sys::Uint8Array,
@@ -13,6 +13,22 @@ const GROUPED_ELGAMAL_CIPHERTEXT_2_HANDLES_LEN: usize =
     DECRYPT_HANDLE_LEN * 2 + PEDERSEN_COMMITMENT_LEN;
 const GROUPED_ELGAMAL_CIPHERTEXT_3_HANDLES_LEN: usize =
     DECRYPT_HANDLE_LEN * 3 + PEDERSEN_COMMITMENT_LEN;
+const HANDLE_INDEX_EPSILON: f64 = 1e-10;
+
+/// Handle indices are taken from JavaScript as `f64` because wasm-bindgen wraps
+/// a `usize` argument to 32 bits, which would turn invalid indices such as
+/// `2 ** 32` or `1.5` into valid ones. `NaN` fails every comparison, so it is
+/// rejected along with `undefined`, which JavaScript converts to `NaN`.
+fn handle_index<const N: usize>(index: f64) -> Result<usize, JsValue> {
+    if index >= 0.0 && index < N as f64 && index.fract().abs() < HANDLE_INDEX_EPSILON {
+        Ok(index as usize)
+    } else {
+        Err(JsValue::from_str(&format!(
+            "Invalid handle index {}: expected a non-negative integer less than {}",
+            index, N
+        )))
+    }
+}
 
 #[wasm_bindgen]
 pub struct GroupedElGamalCiphertext2Handles {
@@ -59,7 +75,8 @@ impl GroupedElGamalCiphertext2Handles {
     /// Decrypts the ciphertext using a secret key and a handle index.
     /// Returns the decrypted amount as a `u64`, or `undefined` if decryption fails.
     #[wasm_bindgen(js_name = "decrypt")]
-    pub fn decrypt(&self, secret_key: &ElGamalSecretKey, index: usize) -> Result<u64, JsValue> {
+    pub fn decrypt(&self, secret_key: &ElGamalSecretKey, index: f64) -> Result<u64, JsValue> {
+        let index = handle_index::<2>(index)?;
         match self.inner.decrypt_u32(&secret_key.inner, index) {
             Ok(Some(amount)) => Ok(amount),
             Ok(None) => Err(JsValue::from_str(
@@ -67,6 +84,17 @@ impl GroupedElGamalCiphertext2Handles {
             )),
             Err(e) => Err(JsValue::from_str(&format!("Decryption failed: {}", e))),
         }
+    }
+
+    /// Extracts an ElGamal ciphertext using the handle at a zero-based index (0 or 1).
+    /// Throws an error for any other index. Does not modify the grouped ciphertext.
+    #[wasm_bindgen(js_name = "toElGamalCiphertext")]
+    pub fn to_elgamal_ciphertext(&self, index: f64) -> Result<ElGamalCiphertext, JsValue> {
+        let index = handle_index::<2>(index)?;
+        self.inner
+            .to_elgamal_ciphertext(index)
+            .map(Into::into)
+            .map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     /// Deserializes a 2-handle grouped ElGamal ciphertext from a byte slice.
@@ -152,7 +180,8 @@ impl GroupedElGamalCiphertext3Handles {
     /// Decrypts the ciphertext using a secret key and a handle index.
     /// Returns the decrypted amount as a `u64`, or `undefined` if decryption fails.
     #[wasm_bindgen(js_name = "decrypt")]
-    pub fn decrypt(&self, secret_key: &ElGamalSecretKey, index: usize) -> Result<u64, JsValue> {
+    pub fn decrypt(&self, secret_key: &ElGamalSecretKey, index: f64) -> Result<u64, JsValue> {
+        let index = handle_index::<3>(index)?;
         match self.inner.decrypt_u32(&secret_key.inner, index) {
             Ok(Some(amount)) => Ok(amount),
             Ok(None) => Err(JsValue::from_str(
@@ -160,6 +189,17 @@ impl GroupedElGamalCiphertext3Handles {
             )),
             Err(e) => Err(JsValue::from_str(&format!("Decryption failed: {}", e))),
         }
+    }
+
+    /// Extracts an ElGamal ciphertext using the handle at a zero-based index (0, 1, or 2).
+    /// Throws an error for any other index. Does not modify the grouped ciphertext.
+    #[wasm_bindgen(js_name = "toElGamalCiphertext")]
+    pub fn to_elgamal_ciphertext(&self, index: f64) -> Result<ElGamalCiphertext, JsValue> {
+        let index = handle_index::<3>(index)?;
+        self.inner
+            .to_elgamal_ciphertext(index)
+            .map(Into::into)
+            .map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     /// Deserializes a 3-handle grouped ElGamal ciphertext from a byte slice.
@@ -195,6 +235,59 @@ mod tests {
     use {super::*, crate::encryption::elgamal::ElGamalKeypair, wasm_bindgen_test::*};
 
     #[wasm_bindgen_test]
+    fn test_extract_ciphertext_2_handles() {
+        let keypairs = [ElGamalKeypair::new_rand(), ElGamalKeypair::new_rand()];
+        let opening = PedersenOpening::new_rand();
+        let grouped = GroupedElGamalCiphertext2Handles::encrypt_with(
+            &keypairs[0].pubkey(),
+            &keypairs[1].pubkey(),
+            42,
+            &opening,
+        );
+
+        for (index, keypair) in keypairs.iter().enumerate() {
+            let extracted = grouped.to_elgamal_ciphertext(index as f64).unwrap();
+            assert_eq!(
+                extracted.to_bytes(),
+                keypair.pubkey().encrypt_with(42, &opening).to_bytes()
+            );
+            assert_eq!(keypair.secret().decrypt(&extracted), Ok(42));
+        }
+        for index in [2.0, -1.0, 0.5, f64::NAN, f64::INFINITY, 4294967296.0] {
+            assert!(grouped.to_elgamal_ciphertext(index).is_err());
+        }
+    }
+
+    #[wasm_bindgen_test]
+    fn test_extract_ciphertext_3_handles() {
+        let keypairs = [
+            ElGamalKeypair::new_rand(),
+            ElGamalKeypair::new_rand(),
+            ElGamalKeypair::new_rand(),
+        ];
+        let opening = PedersenOpening::new_rand();
+        let grouped = GroupedElGamalCiphertext3Handles::encrypt_with(
+            &keypairs[0].pubkey(),
+            &keypairs[1].pubkey(),
+            &keypairs[2].pubkey(),
+            55,
+            &opening,
+        );
+
+        for (index, keypair) in keypairs.iter().enumerate() {
+            let extracted = grouped.to_elgamal_ciphertext(index as f64).unwrap();
+            assert_eq!(
+                extracted.to_bytes(),
+                keypair.pubkey().encrypt_with(55, &opening).to_bytes()
+            );
+            assert_eq!(keypair.secret().decrypt(&extracted), Ok(55));
+        }
+        for index in [3.0, -1.0, 0.5, f64::NAN, f64::INFINITY, 4294967296.0] {
+            assert!(grouped.to_elgamal_ciphertext(index).is_err());
+        }
+    }
+
+    #[wasm_bindgen_test]
     fn test_grouped_elgamal_2_handles_cycle() {
         let keypair1 = ElGamalKeypair::new_rand();
         let keypair2 = ElGamalKeypair::new_rand();
@@ -207,21 +300,26 @@ mod tests {
         );
 
         // Decrypt with first key
-        let decrypted1 = ciphertext.decrypt(&keypair1.secret(), 0);
+        let decrypted1 = ciphertext.decrypt(&keypair1.secret(), 0.0);
         assert_eq!(decrypted1, Ok(amount));
 
         // Decrypt with second key
-        let decrypted2 = ciphertext.decrypt(&keypair2.secret(), 1);
+        let decrypted2 = ciphertext.decrypt(&keypair2.secret(), 1.0);
         assert_eq!(decrypted2, Ok(amount));
 
         // Decrypt with wrong key fails
         let keypair_wrong = ElGamalKeypair::new_rand();
-        let decrypted_wrong = ciphertext.decrypt(&keypair_wrong.secret(), 0);
+        let decrypted_wrong = ciphertext.decrypt(&keypair_wrong.secret(), 0.0);
         assert!(decrypted_wrong.is_err());
 
         // Decrypt with wrong index fails
-        let decrypted_wrong_index = ciphertext.decrypt(&keypair1.secret(), 1);
+        let decrypted_wrong_index = ciphertext.decrypt(&keypair1.secret(), 1.0);
         assert!(decrypted_wrong_index.is_err());
+
+        // Decrypt with invalid index fails
+        for index in [2.0, -1.0, 0.5, f64::NAN, f64::INFINITY, 4294967296.0] {
+            assert!(ciphertext.decrypt(&keypair1.secret(), index).is_err());
+        }
     }
 
     #[wasm_bindgen_test]
@@ -239,13 +337,18 @@ mod tests {
         );
 
         // Decrypt with each key
-        assert_eq!(ciphertext.decrypt(&keypair1.secret(), 0), Ok(amount));
-        assert_eq!(ciphertext.decrypt(&keypair2.secret(), 1), Ok(amount));
-        assert_eq!(ciphertext.decrypt(&keypair3.secret(), 2), Ok(amount));
+        assert_eq!(ciphertext.decrypt(&keypair1.secret(), 0.0), Ok(amount));
+        assert_eq!(ciphertext.decrypt(&keypair2.secret(), 1.0), Ok(amount));
+        assert_eq!(ciphertext.decrypt(&keypair3.secret(), 2.0), Ok(amount));
 
         // Decrypt with wrong key fails
         let keypair_wrong = ElGamalKeypair::new_rand();
-        assert!(ciphertext.decrypt(&keypair_wrong.secret(), 1).is_err());
+        assert!(ciphertext.decrypt(&keypair_wrong.secret(), 1.0).is_err());
+
+        // Decrypt with invalid index fails
+        for index in [3.0, -1.0, 0.5, f64::NAN, f64::INFINITY, 4294967296.0] {
+            assert!(ciphertext.decrypt(&keypair1.secret(), index).is_err());
+        }
     }
 
     #[wasm_bindgen_test]
@@ -267,8 +370,8 @@ mod tests {
             GroupedElGamalCiphertext2Handles::from_bytes(&Uint8Array::from(bytes.as_slice()))
                 .unwrap();
 
-        assert_eq!(recovered.decrypt(&keypair1.secret(), 0), Ok(amount));
-        assert_eq!(recovered.decrypt(&keypair2.secret(), 1), Ok(amount));
+        assert_eq!(recovered.decrypt(&keypair1.secret(), 0.0), Ok(amount));
+        assert_eq!(recovered.decrypt(&keypair2.secret(), 1.0), Ok(amount));
     }
 
     #[wasm_bindgen_test]
@@ -292,9 +395,9 @@ mod tests {
             GroupedElGamalCiphertext3Handles::from_bytes(&Uint8Array::from(bytes.as_slice()))
                 .unwrap();
 
-        assert_eq!(recovered.decrypt(&keypair1.secret(), 0), Ok(amount));
-        assert_eq!(recovered.decrypt(&keypair2.secret(), 1), Ok(amount));
-        assert_eq!(recovered.decrypt(&keypair3.secret(), 2), Ok(amount));
+        assert_eq!(recovered.decrypt(&keypair1.secret(), 0.0), Ok(amount));
+        assert_eq!(recovered.decrypt(&keypair2.secret(), 1.0), Ok(amount));
+        assert_eq!(recovered.decrypt(&keypair3.secret(), 2.0), Ok(amount));
     }
 
     #[wasm_bindgen_test]
@@ -312,8 +415,8 @@ mod tests {
             &opening,
         );
 
-        assert_eq!(ciphertext.decrypt(&keypair1.secret(), 0), Ok(amount));
-        assert_eq!(ciphertext.decrypt(&keypair2.secret(), 1), Ok(amount));
+        assert_eq!(ciphertext.decrypt(&keypair1.secret(), 0.0), Ok(amount));
+        assert_eq!(ciphertext.decrypt(&keypair2.secret(), 1.0), Ok(amount));
     }
 
     #[wasm_bindgen_test]
@@ -333,8 +436,8 @@ mod tests {
             &opening,
         );
 
-        assert_eq!(ciphertext.decrypt(&keypair1.secret(), 0), Ok(amount));
-        assert_eq!(ciphertext.decrypt(&keypair2.secret(), 1), Ok(amount));
-        assert_eq!(ciphertext.decrypt(&keypair3.secret(), 2), Ok(amount));
+        assert_eq!(ciphertext.decrypt(&keypair1.secret(), 0.0), Ok(amount));
+        assert_eq!(ciphertext.decrypt(&keypair2.secret(), 1.0), Ok(amount));
+        assert_eq!(ciphertext.decrypt(&keypair3.secret(), 2.0), Ok(amount));
     }
 }
