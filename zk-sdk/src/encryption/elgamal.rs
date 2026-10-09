@@ -145,6 +145,22 @@ impl ElGamal {
         let discrete_log_instance = Self::decrypt(secret, ciphertext);
         discrete_log_instance.decode_u32()
     }
+
+    /// On input a secret key, a ciphertext, and a lower bound, the function returns the decrypted
+    /// amount assuming it falls in `[lower_bound, lower_bound + 2^32)`.
+    ///
+    /// If the originally encrypted amount falls outside that window, then the function returns
+    /// `None`.
+    ///
+    /// NOTE: This function is not constant time.
+    fn decrypt_u32_with_lower_bound(
+        secret: &ElGamalSecretKey,
+        ciphertext: &ElGamalCiphertext,
+        lower_bound: u64,
+    ) -> Option<u64> {
+        let residual = ciphertext.subtract_amount(lower_bound);
+        Self::decrypt_u32(secret, &residual).and_then(|offset| lower_bound.checked_add(offset))
+    }
 }
 
 /// A (twisted) ElGamal encryption keypair.
@@ -572,6 +588,20 @@ impl ElGamalSecretKey {
     pub fn decrypt_u32(&self, ciphertext: &ElGamalCiphertext) -> Option<u64> {
         ElGamal::decrypt_u32(self, ciphertext)
     }
+
+    /// Decrypts a ciphertext using the ElGamal secret key, searching the 32-bit window that starts
+    /// at `lower_bound` instead of the window that starts at zero.
+    ///
+    /// Returns `None` if the message falls outside `[lower_bound, lower_bound + 2^32)`.
+    ///
+    /// NOTE: This function is not constant time.
+    pub fn decrypt_u32_with_lower_bound(
+        &self,
+        ciphertext: &ElGamalCiphertext,
+        lower_bound: u64,
+    ) -> Option<u64> {
+        ElGamal::decrypt_u32_with_lower_bound(self, ciphertext, lower_bound)
+    }
 }
 
 impl ElGamalSecretKey {
@@ -847,6 +877,23 @@ impl ElGamalCiphertext {
     pub fn decrypt_u32(&self, secret: &ElGamalSecretKey) -> Option<u64> {
         ElGamal::decrypt_u32(secret, self)
     }
+
+    /// Decrypts the ciphertext using an ElGamal secret key, searching the 32-bit window that
+    /// starts at `lower_bound` instead of the window that starts at zero.
+    ///
+    /// A confidential transfer available balance is a `u64`, so amounts past `2^32` are out of
+    /// reach of `decrypt_u32`. A caller that knows a floor for the balance can recover it here.
+    ///
+    /// Returns `None` if the amount falls outside `[lower_bound, lower_bound + 2^32)`.
+    ///
+    /// NOTE: This function is not constant time.
+    pub fn decrypt_u32_with_lower_bound(
+        &self,
+        secret: &ElGamalSecretKey,
+        lower_bound: u64,
+    ) -> Option<u64> {
+        ElGamal::decrypt_u32_with_lower_bound(secret, self, lower_bound)
+    }
 }
 
 impl fmt::Display for ElGamalCiphertext {
@@ -1115,6 +1162,51 @@ mod tests {
         let mut instance = ElGamal::decrypt(secret, &ciphertext);
         instance.num_threads(4.try_into().unwrap()).unwrap();
         assert_eq!(57_u64, instance.decode_u32().unwrap());
+    }
+
+    #[test]
+    fn test_decrypt_u32_with_lower_bound() {
+        const TWO32: u64 = 1 << 32;
+
+        let keypair = ElGamalKeypair::new_rand();
+        let public = keypair.pubkey();
+        let secret = keypair.secret();
+
+        let amount = 1_000_000_000_000_u64;
+        let ciphertext = public.encrypt_u64(amount);
+
+        // out of reach of the zero-based window
+        assert_eq!(None, ciphertext.decrypt_u32(secret));
+
+        // exact bound, and a bound just inside the window
+        assert_eq!(
+            Some(amount),
+            ciphertext.decrypt_u32_with_lower_bound(secret, amount)
+        );
+        assert_eq!(
+            Some(amount),
+            ciphertext.decrypt_u32_with_lower_bound(secret, amount - TWO32 + 1)
+        );
+
+        // bound above the amount, and bound low enough that the amount falls past the window
+        assert_eq!(
+            None,
+            ciphertext.decrypt_u32_with_lower_bound(secret, amount + 1)
+        );
+        assert_eq!(
+            None,
+            ciphertext.decrypt_u32_with_lower_bound(secret, amount - TWO32)
+        );
+
+        // a `u64::MAX` bound must not wrap
+        assert_eq!(
+            None,
+            ciphertext.decrypt_u32_with_lower_bound(secret, u64::MAX)
+        );
+
+        // zero bound matches the zero-based window
+        let small = public.encrypt_u64(57);
+        assert_eq!(Some(57), small.decrypt_u32_with_lower_bound(secret, 0));
     }
 
     #[test]
