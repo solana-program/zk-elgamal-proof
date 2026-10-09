@@ -12,7 +12,7 @@ jobs:
       github.actor == 'dependabot[bot]' &&
       github.repository_owner == 'solana-program' &&
       !contains(github.event.pull_request.title, 'aes-gcm-siv') &&
-      !contains(github.event.pull_request.title, 'curve25519-dalek') &&
+      !contains(github.event.pull_request.title, 'solana-ed25519') &&
       !contains(github.event.pull_request.title, 'sha3')
 
     steps:

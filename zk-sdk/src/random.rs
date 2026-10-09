@@ -1,6 +1,6 @@
 //! Internal randomness helpers that do not depend on random number generator traits.
 
-use {curve25519_dalek::scalar::Scalar, std::mem::MaybeUninit, zeroize::Zeroizing};
+use {solana_ed25519::scalar::Scalar, std::mem::MaybeUninit, zeroize::Zeroizing};
 
 /// Fills a buffer with cryptographically secure randomness and returns the initialized bytes.
 ///

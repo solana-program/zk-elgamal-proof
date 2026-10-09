@@ -3,7 +3,7 @@
 //!
 //! The module contains implementations of the following cryptographic objects:
 //! - Pedersen commitments that uses the prime-order Ristretto representation of Curve25519.
-//!   [curve25519-dalek](https://docs.rs/curve25519-dalek/latest/curve25519_dalek/ristretto/index.html)
+//!   [solana-ed25519](https://docs.rs/solana-ed25519/latest/solana_ed25519/ristretto/index.html)
 //!   is used for the Ristretto group implementation.
 //! - The twisted ElGamal scheme, which converts Pedersen commitments into a public-key encryption
 //!   scheme.

@@ -15,7 +15,7 @@
 //! discrete log to recover the originally encrypted value.
 
 #[cfg(test)]
-use curve25519_dalek::traits::Identity;
+use solana_ed25519::traits::Identity;
 use {
     crate::{
         encryption::{
@@ -28,15 +28,15 @@ use {
     },
     base64::{prelude::BASE64_STANDARD, Engine},
     core::ops::{Add, Mul, Sub},
-    curve25519_dalek::{
-        ristretto::{CompressedRistretto, RistrettoPoint},
-        scalar::Scalar,
-    },
     hkdf::Hkdf,
     serde::{Deserialize, Serialize},
     sha2::Sha512,
     sha3::{Digest, Sha3_512},
     solana_derivation_path::DerivationPath,
+    solana_ed25519::{
+        ristretto::{CompressedRistretto, RistrettoPoint},
+        scalar::Scalar,
+    },
     solana_seed_derivable::SeedDerivable,
     solana_seed_phrase::generate_seed_from_seed_phrase_and_passphrase,
     solana_signature::Signature,

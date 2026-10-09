@@ -23,12 +23,12 @@ use {
         },
         transcript::TranscriptProtocol,
     },
-    curve25519_dalek::{
+    merlin::Transcript,
+    solana_ed25519::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
         traits::{IsIdentity, MultiscalarMul, VartimeMultiscalarMul},
     },
-    merlin::Transcript,
     solana_zk_sdk_pod::{sigma_proofs::PodGroupedCiphertext2HandlesValidityProof, UNIT_LEN},
     zeroize::Zeroize,
 };

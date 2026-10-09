@@ -11,12 +11,12 @@ use {
         transcript::TranscriptProtocol,
     },
     core::iter,
-    curve25519_dalek::{
+    merlin::Transcript,
+    solana_ed25519::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
         traits::{IsIdentity, MultiscalarMul, VartimeMultiscalarMul},
     },
-    merlin::Transcript,
     solana_zk_sdk_pod::{
         range_proof::{
             PodRangeProofU128, PodRangeProofU256, PodRangeProofU64, INNER_PRODUCT_PROOF_U128_LEN,

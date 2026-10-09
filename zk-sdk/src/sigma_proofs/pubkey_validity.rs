@@ -17,12 +17,12 @@ use {
         },
         transcript::TranscriptProtocol,
     },
-    curve25519_dalek::{
+    merlin::Transcript,
+    solana_ed25519::{
         ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
         traits::{IsIdentity, VartimeMultiscalarMul},
     },
-    merlin::Transcript,
     solana_zk_sdk_pod::{sigma_proofs::PodPubkeyValidityProof, UNIT_LEN},
     zeroize::Zeroize,
 };
@@ -165,7 +165,7 @@ mod test {
     use {
         super::*,
         bytemuck::Zeroable,
-        curve25519_dalek::traits::Identity,
+        solana_ed25519::traits::Identity,
         solana_keypair::Keypair,
         solana_zk_sdk_pod::{
             encryption::elgamal::PodElGamalPubkey, sigma_proofs::PodPubkeyValidityProof,

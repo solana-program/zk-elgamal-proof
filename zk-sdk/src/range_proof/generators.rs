@@ -10,11 +10,11 @@
 
 use {
     crate::range_proof::errors::RangeProofGeneratorError,
-    curve25519_dalek::ristretto::RistrettoPoint,
     shake::{
         digest::{ExtendableOutput, Update, XofReader},
         Shake256, Shake256Reader,
     },
+    solana_ed25519::ristretto::RistrettoPoint,
     std::sync::LazyLock,
 };
 

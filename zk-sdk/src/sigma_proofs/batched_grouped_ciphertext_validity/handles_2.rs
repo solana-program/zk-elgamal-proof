@@ -29,8 +29,8 @@ use {
         },
         transcript::TranscriptProtocol,
     },
-    curve25519_dalek::{scalar::Scalar, traits::IsIdentity},
     merlin::Transcript,
+    solana_ed25519::{scalar::Scalar, traits::IsIdentity},
     solana_zk_sdk_pod::sigma_proofs::PodBatchedGroupedCiphertext2HandlesValidityProof,
     zeroize::Zeroize,
 };
