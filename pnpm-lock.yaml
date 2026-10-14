@@ -37,8 +37,8 @@ importers:
         specifier: workspace:*
         version: link:../zk-sdk-wasm-js
       '@types/node':
-        specifier: ^26.6.4
-        version: 26.6.4
+        specifier: ^26.6.5
+        version: 26.6.5
       ava:
         specifier: ^8.0.1
         version: 8.0.1(@ava/typescript@7.0.0)(rollup@4.62.5)
@@ -83,10 +83,10 @@ importers:
     devDependencies:
       vite:
         specifier: ^8.3.3
-        version: 8.3.3(@types/node@26.6.4)(esbuild@0.27.7)(terser@5.51.2)(yaml@2.9.0)
+        version: 8.3.3(@types/node@26.6.5)(esbuild@0.27.7)(terser@5.51.2)(yaml@2.9.0)
       vite-plugin-wasm:
         specifier: ^3.6.0
-        version: 3.6.0(vite@8.3.3(@types/node@26.6.4)(esbuild@0.27.7)(terser@5.51.2)(yaml@2.9.0))
+        version: 3.6.0(vite@8.3.3(@types/node@26.6.5)(esbuild@0.27.7)(terser@5.51.2)(yaml@2.9.0))
 
   zk-sdk-wasm-js/examples/web-integration:
     dependencies:
@@ -1431,8 +1431,8 @@ packages:
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
 
-  '@types/node@26.6.4':
-    resolution: {integrity: sha512-ldVPDCzj7fsaGZrLB0NuHuTvJcsNasysBAqMolr/cgxrLd1xbqxIr3XJiPnHHJUCxj5sNF1vnRj9aWnrVh5Jcg==}
+  '@types/node@26.6.5':
+    resolution: {integrity: sha512-uMzsv9stDdofIZBx4UGh4Z9ZgXnGC9seRDscilBcTHAeOFk67MZg/k9bWVfO+bk4qZmG+l52hRnLwUiH2LnJTg==}
 
   '@types/qs@6.15.1':
     resolution: {integrity: sha512-GZHUBZR9hckSUhrxmp1nG6NwdpM9fCunJwyThLW1X3AyHgd9IlHb6VANpQQqDr2o/qQp6McZ3y/IA2rVzKzSbw==}
@@ -3304,8 +3304,8 @@ packages:
   ufo@1.6.4:
     resolution: {integrity: sha512-JFNbkD1Svwe0KvGi8GOeLcP4kAWQ609twvCdcHxq1oSL8svv39ZuSvajcD8B+5D0eL4+s1Is2D/O6KN3qcTeRA==}
 
-  undici-types@8.11.2:
-    resolution: {integrity: sha512-iMVNmWZ0leK/goS6eXMizSzmm9CDWtyphwbaCms3DNLqRxDL+mMoNVcZMTyyVgXP0N+Z8neAMzDoUOUJL8veKg==}
+  undici-types@8.12.1:
+    resolution: {integrity: sha512-nCiEcIx87oMw9u3Yzj2DuRBzv6p0e7akhy4HUPtpBiVWmAY3o6Phznst8QhmY1oLMttLgJ2tlAvsKuzCgBSoAw==}
 
   undici-types@8.9.0:
     resolution: {integrity: sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg==}
@@ -4558,7 +4558,7 @@ snapshots:
       '@solana/errors': 8.4.0(typescript@6.0.3)
       '@solana/rpc-spec': 8.4.0(typescript@6.0.3)
       '@solana/rpc-spec-types': 8.4.0(typescript@6.0.3)
-      undici-types: 8.11.2
+      undici-types: 8.12.1
     optionalDependencies:
       typescript: 6.0.3
 
@@ -4700,26 +4700,26 @@ snapshots:
   '@types/body-parser@1.19.6':
     dependencies:
       '@types/connect': 3.4.38
-      '@types/node': 26.6.4
+      '@types/node': 26.6.5
 
   '@types/bonjour@3.5.13':
     dependencies:
-      '@types/node': 26.6.4
+      '@types/node': 26.6.5
 
   '@types/connect-history-api-fallback@1.5.4':
     dependencies:
       '@types/express-serve-static-core': 5.1.3
-      '@types/node': 26.6.4
+      '@types/node': 26.6.5
 
   '@types/connect@3.4.38':
     dependencies:
-      '@types/node': 26.6.4
+      '@types/node': 26.6.5
 
   '@types/estree@1.0.9': {}
 
   '@types/express-serve-static-core@5.1.3':
     dependencies:
-      '@types/node': 26.6.4
+      '@types/node': 26.6.5
       '@types/qs': 6.15.1
       '@types/range-parser': 1.2.7
       '@types/send': 1.2.1
@@ -4740,7 +4740,7 @@ snapshots:
 
   '@types/json-schema@7.0.15': {}
 
-  '@types/node@26.6.4':
+  '@types/node@26.6.5':
     dependencies:
       undici-types: 8.9.0
 
@@ -4750,7 +4750,7 @@ snapshots:
 
   '@types/send@1.2.1':
     dependencies:
-      '@types/node': 26.6.4
+      '@types/node': 26.6.5
 
   '@types/serve-index@1.9.4':
     dependencies:
@@ -4759,13 +4759,13 @@ snapshots:
   '@types/serve-static@2.2.0':
     dependencies:
       '@types/http-errors': 2.0.5
-      '@types/node': 26.6.4
+      '@types/node': 26.6.5
 
   '@types/unist@3.0.3': {}
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 26.6.4
+      '@types/node': 26.6.5
 
   '@vercel/nft@1.11.0(rollup@4.62.5)':
     dependencies:
@@ -5727,7 +5727,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 26.6.4
+      '@types/node': 26.6.5
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
@@ -6637,7 +6637,7 @@ snapshots:
 
   ufo@1.6.4: {}
 
-  undici-types@8.11.2: {}
+  undici-types@8.12.1: {}
 
   undici-types@8.9.0: {}
 
@@ -6663,11 +6663,11 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vite-plugin-wasm@3.6.0(vite@8.3.3(@types/node@26.6.4)(esbuild@0.27.7)(terser@5.51.2)(yaml@2.9.0)):
+  vite-plugin-wasm@3.6.0(vite@8.3.3(@types/node@26.6.5)(esbuild@0.27.7)(terser@5.51.2)(yaml@2.9.0)):
     dependencies:
-      vite: 8.3.3(@types/node@26.6.4)(esbuild@0.27.7)(terser@5.51.2)(yaml@2.9.0)
+      vite: 8.3.3(@types/node@26.6.5)(esbuild@0.27.7)(terser@5.51.2)(yaml@2.9.0)
 
-  vite@8.3.3(@types/node@26.6.4)(esbuild@0.27.7)(terser@5.51.2)(yaml@2.9.0):
+  vite@8.3.3(@types/node@26.6.5)(esbuild@0.27.7)(terser@5.51.2)(yaml@2.9.0):
     dependencies:
       lightningcss: 1.33.0
       picomatch: 4.0.7
@@ -6675,7 +6675,7 @@ snapshots:
       rolldown: 1.2.13
       tinyglobby: 0.2.17
     optionalDependencies:
-      '@types/node': 26.6.4
+      '@types/node': 26.6.5
       esbuild: 0.27.7
       fsevents: 2.3.3
       terser: 5.51.2
