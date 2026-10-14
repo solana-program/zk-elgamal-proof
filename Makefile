@@ -77,10 +77,13 @@ build-wasm-js-%: build-wasm-js-node-%
 	# packing and would strip the build output from the published tarball.
 	find $(call make-path,$*)/dist -name .gitignore -exec rm -f {} +
 
+# wasm-bindgen-test-runner fails a headless run once WASM_BINDGEN_TEST_TIMEOUT
+# (default 20s) is used up, and the browser suite can take longer than that on
+# slower CI runners.
 test-wasm-js-%:
 	wasm-pack test --node $(call make-path,$*) $(ARGS)
-	wasm-pack test --headless --firefox $(call make-path,$*) --features test-browser $(ARGS)
-	wasm-pack test --headless --chrome $(call make-path,$*) --features test-browser $(ARGS)
+	WASM_BINDGEN_TEST_TIMEOUT=120 wasm-pack test --headless --firefox $(call make-path,$*) --features test-browser $(ARGS)
+	WASM_BINDGEN_TEST_TIMEOUT=120 wasm-pack test --headless --chrome $(call make-path,$*) --features test-browser $(ARGS)
 	pnpm i --dir $(call make-path,$*)/examples/node-integration && pnpm test --dir $(call make-path,$*)/examples/node-integration
 	pnpm i --dir $(call make-path,$*)/examples/node-esm-integration && pnpm test --dir $(call make-path,$*)/examples/node-esm-integration
 	pnpm i --dir $(call make-path,$*)/examples/web-integration && \
