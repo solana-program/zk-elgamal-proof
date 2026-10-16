@@ -1,5 +1,6 @@
 import {
   Address,
+  HasAddress,
   GetMinimumBalanceForRentExemptionApi,
   Instruction,
   Rpc,
@@ -9,6 +10,7 @@ import { getCreateAccountInstruction } from '@solana-program/system';
 import { getVerifyProofInstruction, VerifyProofInput } from '../generic/instructions';
 import { ZK_ELGAMAL_PROOF_PROGRAM_ADDRESS, ZkElGamalProofInstruction } from '../generic/programs';
 import { CIPHERTEXT_CIPHERTEXT_EQUALITY_CONTEXT_ACCOUNT_SIZE } from '../constants';
+import { toAddress } from './internal';
 import { ContextStateArgs, ProofDataInput } from './shared';
 
 export interface VerifyCiphertextCiphertextEqualityArgs {
@@ -17,7 +19,7 @@ export interface VerifyCiphertextCiphertextEqualityArgs {
   proofData: ProofDataInput;
   // Optional: If provided, we create a context account to store the proof
   contextState?: ContextStateArgs;
-  programId?: Address;
+  programId?: Address | HasAddress;
 }
 
 /**
@@ -34,6 +36,7 @@ export async function verifyCiphertextCiphertextEquality({
   contextState,
   programId = ZK_ELGAMAL_PROOF_PROGRAM_ADDRESS,
 }: VerifyCiphertextCiphertextEqualityArgs): Promise<Instruction[]> {
+  const programAddress = toAddress(programId);
   const ixs: Instruction[] = [];
 
   // Handle Context State Creation (if requested)
@@ -47,7 +50,7 @@ export async function verifyCiphertextCiphertextEquality({
         newAccount: contextState.contextAccount,
         lamports,
         space,
-        programAddress: programId,
+        programAddress,
       }),
     );
   }
@@ -55,7 +58,7 @@ export async function verifyCiphertextCiphertextEquality({
   const instructionInput: VerifyProofInput = {
     discriminator: ZkElGamalProofInstruction.VerifyCiphertextCiphertextEquality,
     contextState: contextState?.contextAccount.address,
-    contextStateAuthority: contextState?.authority,
+    contextStateAuthority: contextState && toAddress(contextState.authority),
   };
 
   if (ArrayBuffer.isView(proofData)) {
@@ -63,12 +66,12 @@ export async function verifyCiphertextCiphertextEquality({
     instructionInput.proofData = proofData;
   } else {
     // Proof is in a record account
-    instructionInput.proofAccount = proofData.account;
+    instructionInput.proofAccount = toAddress(proofData.account);
     instructionInput.offset = proofData.offset;
   }
 
   // Create Verification Instruction
-  const verifyIx = getVerifyProofInstruction(instructionInput, { programAddress: programId });
+  const verifyIx = getVerifyProofInstruction(instructionInput, { programAddress });
 
   ixs.push(verifyIx);
 

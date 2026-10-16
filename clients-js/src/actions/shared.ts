@@ -1,8 +1,8 @@
-import { Address, KeyPairSigner } from '@solana/kit';
+import { Address, HasAddress, KeyPairSigner } from '@solana/kit';
 
-export type ProofDataInput = Uint8Array | { account: Address; offset: number };
+export type ProofDataInput = Uint8Array | { account: Address | HasAddress; offset: number };
 
 export interface ContextStateArgs {
   contextAccount: KeyPairSigner;
-  authority: Address;
+  authority: Address | HasAddress;
 }
