@@ -1,12 +1,13 @@
-import { Address, Instruction, TransactionSigner } from '@solana/kit';
+import { Address, HasAddress, Instruction, TransactionSigner } from '@solana/kit';
 import { getCloseContextStateInstruction } from '../generic/instructions';
 import { ZK_ELGAMAL_PROOF_PROGRAM_ADDRESS } from '../generic/programs';
+import { toAddress } from './internal';
 
 export interface CloseContextStateArgs {
-  contextState: Address;
+  contextState: Address | HasAddress;
   authority: TransactionSigner;
-  destination: Address;
-  programId?: Address;
+  destination: Address | HasAddress;
+  programId?: Address | HasAddress;
 }
 
 export function closeContextStateProof({
@@ -17,10 +18,10 @@ export function closeContextStateProof({
 }: CloseContextStateArgs): Instruction {
   return getCloseContextStateInstruction(
     {
-      contextState,
+      contextState: toAddress(contextState),
       authority,
-      destination,
+      destination: toAddress(destination),
     },
-    { programAddress: programId },
+    { programAddress: toAddress(programId) },
   );
 }
