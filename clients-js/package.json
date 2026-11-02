@@ -45,13 +45,13 @@
     "@solana-program/system": "^0.16.0"
   },
   "peerDependencies": {
-    "@solana/kit": "^8.5.0"
+    "@solana/kit": "^8.6.0"
   },
   "devDependencies": {
     "@ava/typescript": "^7.0.0",
     "@solana-program/compute-budget": "^0.20.0",
     "@solana-program/record": "^0.6.0",
-    "@solana/kit": "^8.5.0",
+    "@solana/kit": "^8.6.0",
     "@solana/sysvars": "^8.5.0",
     "@solana/zk-sdk": "workspace:*",
     "@types/node": "^26.6.6",
