@@ -82,12 +82,16 @@ fn decode_u32_precomputation() -> DecodePrecomputation {
     DecodePrecomputation(hashmap)
 }
 
+static DECODE_PRECOMPUTATION_FOR_G_BYTES: &[u8] =
+    include_bytes!("decode_u32_precomputation_for_G.bincode");
+
 /// Pre-computed `HashMap` needed for decryption. The `HashMap` is independent of (works for) any key.
 pub static DECODE_PRECOMPUTATION_FOR_G: std::sync::LazyLock<DecodePrecomputation> =
     std::sync::LazyLock::new(|| {
-        static DECODE_PRECOMPUTATION_FOR_G_BINCODE: &[u8] =
-            include_bytes!("decode_u32_precomputation_for_G.bincode");
-        bincode::deserialize(DECODE_PRECOMPUTATION_FOR_G_BINCODE).unwrap_or_default()
+        DecodePrecomputation(
+            wincode::deserialize(DECODE_PRECOMPUTATION_FOR_G_BYTES)
+                .expect("embedded discrete log precomputation is malformed"),
+        )
     });
 
 /// Solves the discrete log instance using a 16/16 bit offline/online split
@@ -258,10 +262,32 @@ mod tests {
                 "src/encryption/decode_u32_precomputation_for_G.bincode",
             ))
             .unwrap();
-            f.write_all(&bincode::serialize(&decode_u32_precomputation_for_G).unwrap())
+            f.write_all(&wincode::serialize(&decode_u32_precomputation_for_G.0).unwrap())
                 .unwrap();
             panic!("Rebuild and run this test again");
         }
+    }
+
+    #[test]
+    fn test_wincode_decodes_embedded_precomputation() {
+        let decoded: HashMap<[u8; RISTRETTO_POINT_LEN], u16> =
+            wincode::deserialize(DECODE_PRECOMPUTATION_FOR_G_BYTES).unwrap();
+        assert_eq!(decoded.len(), TWO16 as usize);
+        assert_eq!(decoded, decode_u32_precomputation().0);
+
+        let bincode_decoded: DecodePrecomputation =
+            bincode::deserialize(DECODE_PRECOMPUTATION_FOR_G_BYTES).unwrap();
+        assert_eq!(decoded, bincode_decoded.0);
+    }
+
+    #[test]
+    fn test_wincode_serialize_matches_embedded_layout() {
+        let encoded = wincode::serialize(&DECODE_PRECOMPUTATION_FOR_G.0).unwrap();
+        assert_eq!(encoded.len(), DECODE_PRECOMPUTATION_FOR_G_BYTES.len());
+
+        let decoded: HashMap<[u8; RISTRETTO_POINT_LEN], u16> =
+            wincode::deserialize(&encoded).unwrap();
+        assert_eq!(decoded, DECODE_PRECOMPUTATION_FOR_G.0);
     }
 
     #[test]
