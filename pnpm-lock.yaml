@@ -40,8 +40,8 @@ importers:
         specifier: ^26.6.6
         version: 26.6.6
       ava:
-        specifier: ^8.1.2
-        version: 8.1.2(@ava/typescript@7.0.0)(rollup@4.64.10)
+        specifier: ^8.2.0
+        version: 8.2.0(@ava/typescript@7.0.0)(rollup@4.64.10)
       oxfmt:
         specifier: ^0.75.0
         version: 0.75.0
@@ -1712,8 +1712,8 @@ packages:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
     engines: {node: '>=8'}
 
-  ansi-regex@6.4.0:
-    resolution: {integrity: sha512-KzTVk2tCWAHtYrvvvaP8bJKJq2pVinhLcGEQdtLIYPbmNGNyYe8QwNaTUYQp2J7/vIsUKt5QCqAfUkYyG9DkOw==}
+  ansi-regex@6.5.0:
+    resolution: {integrity: sha512-zhvbbbdt1kbw7EJ9OQoxmQcuaNR9P5kTj7e/YdmOSU10aHWbycofJxA6jKfoEy3vlLdctOF9ZHaxLtmSm998wQ==}
     engines: {node: '>=12'}
 
   ansi-styles@4.3.0:
@@ -1759,8 +1759,8 @@ packages:
   async@3.2.6:
     resolution: {integrity: sha512-htCUDlxyyCLMgaM3xXg0C0LW2xqfuQ6p05pCEIsXuyQ+a1koYKTuBMzRNwmybfLgvJDMd0r1LTn4+E0Ti6C2AA==}
 
-  ava@8.1.2:
-    resolution: {integrity: sha512-oJnF53liq0Sf5K0AzZ7GwkH6HxwgsqukGMIOb/hV9QnTKlzj3lV6EXLHJksvlBcHOop6cqdAWa00u8uzqwpxFg==}
+  ava@8.2.0:
+    resolution: {integrity: sha512-9THsZEBUhwvA3e1oVqyJx9o4cBaLSkxScfP0oPlA9I7TDga51UDLMQJRy6bMDqMl3eubFCqxlj12h5IHEsLO7g==}
     engines: {node: ^22.20 || ^24.12 || >=26}
     hasBin: true
     peerDependencies:
@@ -1899,8 +1899,8 @@ packages:
     resolution: {integrity: sha512-D5J+kHaVb/wKSFcyyV75uCn8fiY4sV38XJoe4CUyGQ+mOU/fMVYUdH1hJC+CJQ5uY3EnW27SbJYS4X8BiLrAFg==}
     engines: {node: '>= 10.0'}
 
-  cli-truncate@6.1.1:
-    resolution: {integrity: sha512-06p9vyLahLa4zkGcgsGxU6iEkSOiuI4fhCH6Emhe2lPAcoUv73n72DnODsnHA+5wwXGnV0n9M9/qOQJSjYhFhw==}
+  cli-truncate@6.2.0:
+    resolution: {integrity: sha512-5uyZew3nYoDgyltqSI8OER6DuyecorYOSVDAXl9wQ9Y8Re/HaQ/5qP0HmTUOUQqmvtpB+mlsf1gG/FUS3U1gLQ==}
     engines: {node: '>=22'}
 
   cliui@9.0.1:
@@ -2438,10 +2438,6 @@ packages:
   is-extglob@2.1.1:
     resolution: {integrity: sha512-SbKbANkN603Vi4jEZv49LeVJMn4yGwsbzZworEoyEiutsN3nJYdbO36zfhGJ6QEDpOZIFkDtnq5JRxmvl3jsoQ==}
     engines: {node: '>=0.10.0'}
-
-  is-fullwidth-code-point@5.1.0:
-    resolution: {integrity: sha512-5XHYaSyiqADb4RnZ1Bdad6cPp8Toise4TzEjcOYDHZkTCbKgiUl7WTUCpNWHuxmDt91wnsZBc9xinNzopv3JMQ==}
-    engines: {node: '>=18'}
 
   is-glob@4.0.3:
     resolution: {integrity: sha512-xelSayHH36ZgE7ZWhli7pW34hNbNl8Ojv5KVmkJD4hBdD3th8Tfk9vYasLM+mXWOZhFkgZfxhLSnrwRr4elSSg==}
@@ -3244,8 +3240,8 @@ packages:
     resolution: {integrity: sha512-ZA6oR3T/pEyuqwMgAKT0/hAv8oAXckzbkmR0UkUosQ+Mc4RxGoJkRmwHgHufaenlyAgE1Mxgpdcrf75y6XcnDg==}
     engines: {node: '>=14.16'}
 
-  slice-ansi@9.0.1:
-    resolution: {integrity: sha512-aBY19bn/XA+hKOKX0qL7Z0UfdBsbQvc9hn993U8ALUjzxCvDcuZqLoRXjGJrUARWAlwMnsRVD9sw2AFNOYvalA==}
+  slice-ansi@10.0.0:
+    resolution: {integrity: sha512-2rOYDG420YH3p2PbRAu6LdYnGuMZldshqZS2qqFh/WEzAytVo7b8n1HhubLtRunvqjao74MmGfW4sY4ex0YvpQ==}
     engines: {node: '>=22'}
 
   source-map-js@1.2.2:
@@ -5185,7 +5181,7 @@ snapshots:
 
   ansi-regex@5.0.1: {}
 
-  ansi-regex@6.4.0: {}
+  ansi-regex@6.5.0: {}
 
   ansi-styles@4.3.0:
     dependencies:
@@ -5219,7 +5215,7 @@ snapshots:
 
   async@3.2.6: {}
 
-  ava@8.1.2(@ava/typescript@7.0.0)(rollup@4.64.10):
+  ava@8.2.0(@ava/typescript@7.0.0)(rollup@4.64.10):
     dependencies:
       '@vercel/nft': 1.11.0(rollup@4.64.10)
       acorn: 8.19.0
@@ -5233,7 +5229,7 @@ snapshots:
       chunkd: 2.0.1
       ci-info: 4.4.0
       ci-parallel-vars: 1.0.1
-      cli-truncate: 6.1.1
+      cli-truncate: 6.2.0
       code-excerpt: 4.0.0
       common-path-prefix: 3.0.0
       concordance: 5.0.4
@@ -5388,9 +5384,9 @@ snapshots:
     dependencies:
       source-map: 0.6.1
 
-  cli-truncate@6.1.1:
+  cli-truncate@6.2.0:
     dependencies:
-      slice-ansi: 9.0.1
+      slice-ansi: 10.0.0
       string-width: 8.3.0
 
   cliui@9.0.1:
@@ -5954,10 +5950,6 @@ snapshots:
   is-docker@3.0.0: {}
 
   is-extglob@2.1.1: {}
-
-  is-fullwidth-code-point@5.1.0:
-    dependencies:
-      get-east-asian-width: 1.7.0
 
   is-glob@4.0.3:
     dependencies:
@@ -6705,10 +6697,10 @@ snapshots:
 
   slash@5.1.0: {}
 
-  slice-ansi@9.0.1:
+  slice-ansi@10.0.0:
     dependencies:
-      ansi-styles: 6.2.3
-      is-fullwidth-code-point: 5.1.0
+      ansi-styles: 7.0.0
+      string-width: 8.3.0
 
   source-map-js@1.2.2: {}
 
@@ -6746,7 +6738,7 @@ snapshots:
 
   strip-ansi@7.2.0:
     dependencies:
-      ansi-regex: 6.4.0
+      ansi-regex: 6.5.0
 
   strip-final-newline@4.0.0: {}
 
