@@ -62,6 +62,7 @@ subtle = "2.6.1"
 thiserror = { version = "2.0.18", default-features = false }
 wasm-bindgen = "0.2"
 wasm-bindgen-test = "0.3"
+wincode = { version = "0.6.3", default-features = false }
 zeroize = { version = "1.8", default-features = false }
 
 [profile.release]

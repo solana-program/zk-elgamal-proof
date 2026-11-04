@@ -15,7 +15,6 @@ crate-type = ["rlib"]
 [dependencies]
 aes-gcm-siv = { workspace = true }
 base64 = { workspace = true }
-bincode = { workspace = true }
 bytemuck = { workspace = true }
 getrandom = { workspace = true }
 hkdf = { workspace = true }
@@ -38,9 +37,11 @@ solana-zk-elgamal-proof-interface = { workspace = true }
 solana-zk-sdk-pod = { workspace = true }
 subtle = { workspace = true }
 thiserror = { workspace = true }
+wincode = { workspace = true, features = ["std"] }
 zeroize = { workspace = true, features = ["zeroize_derive"] }
 
 [dev-dependencies]
+bincode = { workspace = true }
 bip39 = { workspace = true }
 criterion = { workspace = true }
 solana-address = { workspace = true, features = ["atomic", "bytemuck"] }
