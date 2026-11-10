@@ -56,7 +56,7 @@
     "@solana/zk-sdk": "workspace:*",
     "@types/node": "^26.6.6",
     "ava": "^8.3.0",
-    "oxfmt": "^0.76.0",
+    "oxfmt": "^0.77.0",
     "oxlint": "^1.91.0",
     "rimraf": "^6.1.4",
     "tsup": "^9.0.0",
