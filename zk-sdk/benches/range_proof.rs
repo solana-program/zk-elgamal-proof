@@ -10,7 +10,7 @@ use {
     std::hint::black_box,
 };
 
-fn bench_range_proof_verification(c: &mut Criterion) {
+fn bench_range_proof(c: &mut Criterion) {
     let amounts = [
         u64::MAX,
         u64::from(u16::MAX),
@@ -21,27 +21,49 @@ fn bench_range_proof_verification(c: &mut Criterion) {
     let (commitments, openings): (Vec<_>, Vec<_>) =
         amounts.iter().map(|&amount| Pedersen::new(amount)).unzip();
 
-    let proof_u64 = build_batched_range_proof_u64_data(
-        commitments[..1].iter().collect(),
-        amounts[..1].to_vec(),
-        vec![64],
-        openings[..1].iter().collect(),
-    )
-    .unwrap();
-    let proof_u128 = build_batched_range_proof_u128_data(
-        commitments[..4].iter().collect(),
-        amounts[..4].to_vec(),
-        vec![64, 16, 32, 16],
-        openings[..4].iter().collect(),
-    )
-    .unwrap();
-    let proof_u256 = build_batched_range_proof_u256_data(
-        commitments.iter().collect(),
-        amounts.to_vec(),
-        vec![64, 64, 64, 32, 32],
-        openings.iter().collect(),
-    )
-    .unwrap();
+    let build_u64 = || {
+        build_batched_range_proof_u64_data(
+            commitments[..1].iter().collect(),
+            amounts[..1].to_vec(),
+            vec![64],
+            openings[..1].iter().collect(),
+        )
+        .unwrap()
+    };
+    let build_u128 = || {
+        build_batched_range_proof_u128_data(
+            commitments[..4].iter().collect(),
+            amounts[..4].to_vec(),
+            vec![64, 16, 32, 16],
+            openings[..4].iter().collect(),
+        )
+        .unwrap()
+    };
+    let build_u256 = || {
+        build_batched_range_proof_u256_data(
+            commitments.iter().collect(),
+            amounts.to_vec(),
+            vec![64, 64, 64, 32, 32],
+            openings.iter().collect(),
+        )
+        .unwrap()
+    };
+
+    let mut group = c.benchmark_group("range_proof_generation");
+    group.bench_function("u64", |b| {
+        b.iter(build_u64);
+    });
+    group.bench_function("u128", |b| {
+        b.iter(build_u128);
+    });
+    group.bench_function("u256", |b| {
+        b.iter(build_u256);
+    });
+    group.finish();
+
+    let proof_u64 = build_u64();
+    let proof_u128 = build_u128();
+    let proof_u256 = build_u256();
 
     let mut group = c.benchmark_group("range_proof_verification");
     group.bench_function("u64", |b| {
@@ -56,5 +78,5 @@ fn bench_range_proof_verification(c: &mut Criterion) {
     group.finish();
 }
 
-criterion_group!(benches, bench_range_proof_verification);
+criterion_group!(benches, bench_range_proof);
 criterion_main!(benches);
