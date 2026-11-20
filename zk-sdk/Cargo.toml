@@ -48,7 +48,15 @@ solana-address = { workspace = true, features = ["atomic", "bytemuck"] }
 solana-keypair = { workspace = true }
 
 [[bench]]
+name = "encryption"
+harness = false
+
+[[bench]]
 name = "range_proof"
+harness = false
+
+[[bench]]
+name = "sigma_proofs"
 harness = false
 
 [lints]
