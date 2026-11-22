@@ -36,9 +36,6 @@ fn bench_elgamal_decryption(c: &mut Criterion) {
     group.bench_function("u32_max", |b| {
         b.iter(|| secret.decrypt_u32(black_box(&ciphertext)).unwrap());
     });
-    // `decode_u32` stops joining workers once one of them returns the result. `u32::MAX` is found
-    // by the last worker joined, so every worker has finished before the call returns and none
-    // overlaps with the next iteration.
     group.bench_function("u32_max_4_threads", |b| {
         b.iter(|| {
             let mut discrete_log = secret.decrypt(black_box(&ciphertext));

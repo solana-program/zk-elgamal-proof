@@ -24,7 +24,7 @@ use {
         traits::{Identity, IsIdentity},
     },
     solana_zk_sdk_pod::RISTRETTO_POINT_LEN,
-    std::{collections::HashMap, num::NonZeroUsize, thread},
+    std::{collections::HashMap, num::NonZeroUsize, panic, thread},
     thiserror::Error,
 };
 
@@ -147,7 +147,8 @@ impl DiscreteLog {
     pub fn decode_u32(self) -> Option<u64> {
         #[allow(unused_variables)]
         if let Some(num_threads) = self.num_threads {
-            {
+            // scoped threads are all joined before `scope` returns, so no worker outlives this call
+            thread::scope(|scope| {
                 let mut starting_point = self.target;
                 let handles = (0..num_threads.get())
                     .map(|i| {
@@ -156,7 +157,7 @@ impl DiscreteLog {
                             (-(&self.step_point), num_threads.get() as u64),
                         );
 
-                        let handle = thread::spawn(move || {
+                        let handle = scope.spawn(move || {
                             Self::decode_range(
                                 ristretto_iterator,
                                 self.range_bound,
@@ -169,12 +170,15 @@ impl DiscreteLog {
                     })
                     .collect::<Vec<_>>();
 
+                // a worker panic is re-raised here, as it would be without threads
                 handles
                     .into_iter()
-                    .map_while(|h| h.join().ok())
-                    .find(|x| x.is_some())
-                    .flatten()
-            }
+                    .map(|h| match h.join() {
+                        Ok(decoded) => decoded,
+                        Err(payload) => panic::resume_unwind(payload),
+                    })
+                    .fold(None, Option::or)
+            })
         } else {
             let ristretto_iterator =
                 RistrettoIterator::new((self.target, 0_u64), (-(&self.step_point), 1u64));
@@ -308,6 +312,14 @@ mod tests {
         assert_eq!(amount, decoded.unwrap());
 
         println!("single thread discrete log computation secs: {computation_secs:?} sec");
+
+        // amounts below 2^16 are found when the search reaches the identity, not through the table
+        for amount in 0..4_u64 {
+            let instance = DiscreteLog::new_for_g(Scalar::from(amount) * G);
+
+            let decoded = instance.decode_u32();
+            assert_eq!(amount, decoded.unwrap());
+        }
     }
 
     #[test]
@@ -327,44 +339,14 @@ mod tests {
 
         println!("4 thread discrete log computation: {computation_secs:?} sec");
 
-        // amount 0
-        let amount: u64 = 0;
+        // each of the 4 workers finds one small amount on its first step, where the point is the
+        // identity, and one large amount on its last step, through the table lookup
+        for amount in (0..4_u64).chain(((1_u64 << 32) - 4)..(1_u64 << 32)) {
+            let mut instance = DiscreteLog::new_for_g(Scalar::from(amount) * G);
+            instance.num_threads(4.try_into().unwrap()).unwrap();
 
-        let instance = DiscreteLog::new_for_g(Scalar::from(amount) * G);
-
-        let decoded = instance.decode_u32();
-        assert_eq!(amount, decoded.unwrap());
-
-        // amount 1
-        let amount: u64 = 1;
-
-        let instance = DiscreteLog::new_for_g(Scalar::from(amount) * G);
-
-        let decoded = instance.decode_u32();
-        assert_eq!(amount, decoded.unwrap());
-
-        // amount 2
-        let amount: u64 = 2;
-
-        let instance = DiscreteLog::new_for_g(Scalar::from(amount) * G);
-
-        let decoded = instance.decode_u32();
-        assert_eq!(amount, decoded.unwrap());
-
-        // amount 3
-        let amount: u64 = 3;
-
-        let instance = DiscreteLog::new_for_g(Scalar::from(amount) * G);
-
-        let decoded = instance.decode_u32();
-        assert_eq!(amount, decoded.unwrap());
-
-        // max amount
-        let amount: u64 = (1_u64 << 32) - 1;
-
-        let instance = DiscreteLog::new_for_g(Scalar::from(amount) * G);
-
-        let decoded = instance.decode_u32();
-        assert_eq!(amount, decoded.unwrap());
+            let decoded = instance.decode_u32();
+            assert_eq!(amount, decoded.unwrap());
+        }
     }
 }
