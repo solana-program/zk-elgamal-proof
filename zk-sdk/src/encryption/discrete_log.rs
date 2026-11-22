@@ -99,13 +99,16 @@ impl DiscreteLog {
     /// Discrete log instance constructor for a fixed generator.
     ///
     /// Default number of threads set to 1.
+    /// Default compression batch size set to 256.
     pub fn new_for_g(target: RistrettoPoint) -> Self {
         Self {
             target,
             num_threads: None,
             range_bound: (TWO16 as usize).try_into().unwrap(),
             step_point: G,
-            compression_batch_size: 32.try_into().unwrap(),
+            // the gain from sharing an inversion flattens out past 256, and a batch of 4096
+            // measured slower than one of 32
+            compression_batch_size: 256.try_into().unwrap(),
         }
     }
 
