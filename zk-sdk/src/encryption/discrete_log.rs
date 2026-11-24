@@ -7,11 +7,17 @@
 //! table. More details on the baby-step giant-step algorithm and the implementation can be found
 //! in the [spl documentation](https://spl.solana.com).
 //!
+//! The hash table holds the points `x_lo * G` for the low 16 bits `x_lo` of a solution. The online
+//! phase subtracts multiples of `2^16 * G` from the discrete log instance and looks each result up
+//! in the table. The table is keyed by truncated points, so the online phase confirms each match
+//! on the full point before it accepts it.
+//!
 //! The implementation is NOT intended to run in constant-time. There are some measures to prevent
 //! straightforward timing attacks. For instance, it does not short-circuit the search when a
-//! solution is found. However, the use of hash tables, batching, and threads make the
-//! implementation inherently not constant-time. This may theoretically allow an adversary to gain
-//! information on a discrete log solution depending on the execution time of the implementation.
+//! solution is found. However, the use of hash tables, batching, threads, and the confirmation of
+//! truncated matches, whose number depends on the discrete log instance, make the implementation
+//! inherently not constant-time. This may theoretically allow an adversary to gain information on
+//! a discrete log solution depending on the execution time of the implementation.
 //!
 
 use {
@@ -19,20 +25,25 @@ use {
     serde::{Deserialize, Serialize},
     solana_ed25519::{
         constants::RISTRETTO_BASEPOINT_POINT as G,
-        ristretto::RistrettoPoint,
+        ristretto::{CompressedRistretto, RistrettoPoint},
         scalar::Scalar,
         traits::{Identity, IsIdentity},
     },
-    solana_zk_sdk_pod::RISTRETTO_POINT_LEN,
     std::{collections::HashMap, num::NonZeroUsize, panic, thread},
     thiserror::Error,
 };
 
 const TWO16: u64 = 65536; // 2^16
-const TWO17: u64 = 131072; // 2^17
 
 /// Maximum number of threads permitted for discrete log computation
 const MAX_THREAD: usize = 65536;
+
+/// Number of bytes of a compressed Ristretto point that the precomputed table keeps as a key
+const PRECOMPUTATION_KEY_LEN: usize = 4;
+
+/// Offset of those bytes in the compressed point. The keys of the table have to be distinct, and
+/// the first four bytes of its points are not.
+const PRECOMPUTATION_KEY_OFFSET: usize = 4;
 
 #[derive(Error, Clone, Debug, Eq, PartialEq)]
 pub enum DiscreteLogError {
@@ -61,22 +72,29 @@ pub struct DiscreteLog {
 }
 
 #[derive(Serialize, Deserialize, Default)]
-pub struct DecodePrecomputation(HashMap<[u8; RISTRETTO_POINT_LEN], u16>);
+pub struct DecodePrecomputation(HashMap<[u8; PRECOMPUTATION_KEY_LEN], u16>);
+
+/// Truncates a compressed Ristretto point to its key in the precomputed table
+fn precomputation_key(point: &CompressedRistretto) -> [u8; PRECOMPUTATION_KEY_LEN] {
+    point.as_bytes()[PRECOMPUTATION_KEY_OFFSET..PRECOMPUTATION_KEY_OFFSET + PRECOMPUTATION_KEY_LEN]
+        .try_into()
+        .unwrap()
+}
 
 /// Builds a `HashMap` of `2^16` elements
 #[allow(dead_code)]
 fn decode_u32_precomputation() -> DecodePrecomputation {
     let mut hashmap = HashMap::new();
 
-    let two17_scalar = Scalar::from(TWO17);
+    // the online search compresses the doubles of its points, so the points are doubled here too
     let identity = RistrettoPoint::identity(); // 0 * G
-    let generator = two17_scalar * G; // 2^17 * G
+    let generator = Scalar::from(2_u64) * G; // 2 * G
 
-    // iterator for 2^17*0G , 2^17*1G, 2^17*2G, ...
+    // iterator for 2*0G , 2*1G, 2*2G, ...
     let ristretto_iter = RistrettoIterator::new((identity, 0), (generator, 1));
-    for (point, x_hi) in ristretto_iter.take(TWO16 as usize) {
-        let key = point.compress().to_bytes();
-        hashmap.insert(key, x_hi as u16);
+    for (point, x_lo) in ristretto_iter.take(TWO16 as usize) {
+        let key = precomputation_key(&point.compress());
+        hashmap.insert(key, x_lo as u16);
     }
 
     DecodePrecomputation(hashmap)
@@ -94,6 +112,10 @@ pub static DECODE_PRECOMPUTATION_FOR_G: std::sync::LazyLock<DecodePrecomputation
         )
     });
 
+/// Giant step `2^16 * G` of the discrete log search
+static GIANT_STEP_FOR_G: std::sync::LazyLock<RistrettoPoint> =
+    std::sync::LazyLock::new(|| Scalar::from(TWO16) * G);
+
 /// Solves the discrete log instance using a 16/16 bit offline/online split
 impl DiscreteLog {
     /// Discrete log instance constructor for a fixed generator.
@@ -105,7 +127,7 @@ impl DiscreteLog {
             target,
             num_threads: None,
             range_bound: (TWO16 as usize).try_into().unwrap(),
-            step_point: G,
+            step_point: *GIANT_STEP_FOR_G,
             // the gain from sharing an inversion flattens out past 256, and a batch of 4096
             // measured slower than one of 32
             compression_batch_size: 256.try_into().unwrap(),
@@ -124,7 +146,7 @@ impl DiscreteLog {
             .checked_div(num_threads.get())
             .and_then(|range_bound| range_bound.try_into().ok())
             .unwrap(); // `num_threads` cannot exceed `TWO16`, so `range_bound` always non-zero
-        self.step_point = Scalar::from(num_threads.get() as u64) * G;
+        self.step_point = *GIANT_STEP_FOR_G * Scalar::from(num_threads.get() as u64);
 
         Ok(())
     }
@@ -165,7 +187,7 @@ impl DiscreteLog {
                             )
                         });
 
-                        starting_point -= G;
+                        starting_point -= *GIANT_STEP_FOR_G;
                         handle
                     })
                     .collect::<Vec<_>>();
@@ -207,7 +229,7 @@ impl DiscreteLog {
             let (batch_points, batch_indices): (Vec<_>, Vec<_>) = batch
                 .filter(|(point, index)| {
                     if point.is_identity() {
-                        decoded = Some(*index);
+                        decoded = Some(TWO16 * index);
                         return false;
                     }
                     true
@@ -216,11 +238,17 @@ impl DiscreteLog {
 
             let batch_compressed = RistrettoPoint::double_and_compress_batch(&batch_points);
 
-            for (point, x_lo) in batch_compressed.iter().zip(batch_indices.iter()) {
-                let key = point.to_bytes();
-                if hashmap.0.contains_key(&key) {
-                    let x_hi = hashmap.0[&key];
-                    decoded = Some(x_lo + TWO16 * x_hi as u64);
+            for ((point, compressed), x_hi) in batch_points
+                .iter()
+                .zip(batch_compressed.iter())
+                .zip(batch_indices.iter())
+            {
+                let key = precomputation_key(compressed);
+                if let Some(&x_lo) = hashmap.0.get(&key) {
+                    // the key is truncated, so the match is confirmed on the point itself
+                    if Scalar::from(x_lo as u64) * G == *point {
+                        decoded = Some(x_lo as u64 + TWO16 * x_hi);
+                    }
                 }
             }
         }
@@ -277,8 +305,9 @@ mod tests {
 
     #[test]
     fn test_wincode_decodes_embedded_precomputation() {
-        let decoded: HashMap<[u8; RISTRETTO_POINT_LEN], u16> =
+        let decoded: HashMap<[u8; PRECOMPUTATION_KEY_LEN], u16> =
             wincode::deserialize(DECODE_PRECOMPUTATION_FOR_G_BYTES).unwrap();
+        // no two of the truncated keys are equal
         assert_eq!(decoded.len(), TWO16 as usize);
         assert_eq!(decoded, decode_u32_precomputation().0);
 
@@ -292,7 +321,7 @@ mod tests {
         let encoded = wincode::serialize(&DECODE_PRECOMPUTATION_FOR_G.0).unwrap();
         assert_eq!(encoded.len(), DECODE_PRECOMPUTATION_FOR_G_BYTES.len());
 
-        let decoded: HashMap<[u8; RISTRETTO_POINT_LEN], u16> =
+        let decoded: HashMap<[u8; PRECOMPUTATION_KEY_LEN], u16> =
             wincode::deserialize(&encoded).unwrap();
         assert_eq!(decoded, DECODE_PRECOMPUTATION_FOR_G.0);
     }
@@ -313,13 +342,55 @@ mod tests {
 
         println!("single thread discrete log computation secs: {computation_secs:?} sec");
 
-        // amounts below 2^16 are found when the search reaches the identity, not through the table
-        for amount in 0..4_u64 {
+        // multiples of 2^16 are found when the search reaches the identity, not through the table
+        for amount in [0, 1 << 16, 0xffff_0000_u64] {
             let instance = DiscreteLog::new_for_g(Scalar::from(amount) * G);
 
             let decoded = instance.decode_u32();
             assert_eq!(amount, decoded.unwrap());
         }
+    }
+
+    /// Counts the points in the search for `target` that match a truncated key of the table
+    fn count_truncated_key_matches(target: RistrettoPoint) -> usize {
+        let points = RistrettoIterator::new((target, 0), (-*GIANT_STEP_FOR_G, 1))
+            .take(TWO16 as usize)
+            .map(|(point, _)| point)
+            .collect::<Vec<_>>();
+
+        RistrettoPoint::double_and_compress_batch(&points)
+            .iter()
+            .filter(|compressed| {
+                let key = precomputation_key(compressed);
+                DECODE_PRECOMPUTATION_FOR_G.0.contains_key(&key)
+            })
+            .count()
+    }
+
+    #[test]
+    fn test_decode_truncated_key_matches() {
+        // the search for each of these amounts meets points that match a truncated key of the
+        // table without being a solution
+
+        // the matches come after the solution, which is found on the first step
+        let amount: u64 = 1;
+        let target = Scalar::from(amount) * G;
+        assert!(count_truncated_key_matches(target) > 1);
+
+        let instance = DiscreteLog::new_for_g(target);
+
+        let decoded = instance.decode_u32();
+        assert_eq!(amount, decoded.unwrap());
+
+        // there is no solution in the 32-bit range
+        let amount: u64 = (1_u64 << 32) + 1;
+        let target = Scalar::from(amount) * G;
+        assert!(count_truncated_key_matches(target) > 0);
+
+        let instance = DiscreteLog::new_for_g(target);
+
+        let decoded = instance.decode_u32();
+        assert!(decoded.is_none());
     }
 
     #[test]
@@ -339,9 +410,9 @@ mod tests {
 
         println!("4 thread discrete log computation: {computation_secs:?} sec");
 
-        // each of the 4 workers finds one small amount on its first step, where the point is the
-        // identity, and one large amount on its last step, through the table lookup
-        for amount in (0..4_u64).chain(((1_u64 << 32) - 4)..(1_u64 << 32)) {
+        // each of the 4 workers finds one amount on its first step, where the point is the
+        // identity, and one amount on its last step, through the table lookup
+        for amount in (0..4_u64).flat_map(|i| [i << 16, u64::from(u32::MAX) - (i << 16)]) {
             let mut instance = DiscreteLog::new_for_g(Scalar::from(amount) * G);
             instance.num_threads(4.try_into().unwrap()).unwrap();
 
